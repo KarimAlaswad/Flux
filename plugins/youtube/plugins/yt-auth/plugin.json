@@ -1,0 +1,7 @@
+{
+  "name": "yt-auth",
+  "version": "1.0.0",
+  "hooks": ["auth"],
+  "run": "bun ./main.ts",
+  "methods": ["login", "logout", "status"]
+}

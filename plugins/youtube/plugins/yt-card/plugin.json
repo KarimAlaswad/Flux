@@ -1,0 +1,5 @@
+{
+  "name": "yt-card",
+  "version": "1.0.0",
+  "components": ["yt-video-card"]
+}
