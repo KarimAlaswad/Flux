@@ -38,7 +38,7 @@ startStdin(async (request, send) => {
       const fresh = loadCookie();
       if (fresh) cookieStr = fresh;
       if (!cookieStr) {
-        send(reqId, null, "BACKEND_HOT_RELOAD: Not Authenticated");
+        send(reqId, null, "Not Authenticated");
         return;
       }
       const tube = await Innertube.create({
