@@ -28,9 +28,11 @@ function loadCookie(): string | null {
   } catch {}
   return null;
 }
+
 function saveCookie(cookie: string) {
   writeFileSync(cookieFile, cookie, "utf-8");
 }
+
 function deleteCookie() {
   try {
     if (existsSync(cookieFile)) unlinkSync(cookieFile);
@@ -57,6 +59,7 @@ function getSearchRoots(): string[] {
   if (OS === "darwin") return [join(HOME, "Library", "Application Support")];
   return [join(HOME, "AppData", "Local"), join(HOME, "AppData", "Roaming")];
 }
+
 function runFind(
   roots: string[],
   fileName: string,
@@ -88,10 +91,12 @@ function runFind(
   }
   return results;
 }
+
 interface CookieEntry {
   name: string;
   value: string;
 }
+
 function readFirefoxCookies(filePath: string): CookieEntry[] {
   try {
     const tmpDir = join(HOME, ".cache", "yt-plugin");
@@ -113,6 +118,7 @@ function readFirefoxCookies(filePath: string): CookieEntry[] {
     return [];
   }
 }
+
 async function discoverAllCookies(): Promise<CookieEntry[] | null> {
   const all: CookieEntry[] = [];
   const seen = new Set<string>();
@@ -172,17 +178,16 @@ async function discoverAllCookies(): Promise<CookieEntry[] | null> {
   return all;
 }
 
-startStdin(async (request, send) => {
-  const method = request.method;
-  const reqId = request.id;
+startStdin(async ({ method, id }, send) => {
+
   try {
     if (method === "status") {
-      send(reqId, { loggedIn: !!cookieStr, accountName });
+      send(id, { loggedIn: !!cookieStr, accountName });
     } else if (method === "login") {
       const entries = await discoverAllCookies();
       if (!entries) {
         send(
-          reqId,
+          id,
           null,
           "No YouTube session found in any browser. Sign in to youtube.com in your browser first.",
         );
@@ -202,16 +207,16 @@ startStdin(async (request, send) => {
       } catch {
         accountName = null;
       }
-      send(reqId, { success: true, accountName });
+      send(id, { success: true, accountName });
     } else if (method === "logout") {
       deleteCookie();
       cookieStr = null;
       accountName = null;
-      send(reqId, { success: true });
+      send(id, { success: true });
     } else {
-      send(reqId, null, "Method not found: " + method);
+      send(id, null, "Method not found: " + method);
     }
   } catch (e: any) {
-    send(reqId, null, e.message || String(e));
+    send(id, null, e.message || String(e));
   }
 })

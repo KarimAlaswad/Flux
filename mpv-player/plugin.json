@@ -1,0 +1,10 @@
+{
+  "name": "mpv-player",
+  "version": "1.0.0",
+  "description": "Video player using mpv via libmpv",
+  "author": "Me",
+  "run": "bun ./main.ts",
+  "hooks": ["video.player"],
+  "methods": ["load"],
+  "ui": "player-modal"
+}

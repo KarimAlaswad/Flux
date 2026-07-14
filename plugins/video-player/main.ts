@@ -1,8 +1,9 @@
-import { createInterface } from "readline"
-const rl = createInterface({ input: process.stdin })
-rl.on("line", (line) => {
-  const req = JSON.parse(line)
-  if (req.method === "load") {
-    process.stdout.write(JSON.stringify({ id: req.id, result: "ok" }) + "\n")
+import { startStdin } from "#shared/stdin.ts"
+
+startStdin(async ({ method, params, id }, send) => {
+  if (method === "load") {
+    send(id, "ok")
+  } else {
+    send(id, null, "Method not found: " + method)
   }
 })

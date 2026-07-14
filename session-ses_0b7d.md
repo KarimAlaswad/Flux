@@ -14,10 +14,10 @@ The goal is a compact instruction file that helps future OpenCode sessions avoid
 
 User-provided focus or constraints (honor these):
 
-
 ## How to investigate
 
 Read the highest-value sources first:
+
 - `README*`, root manifests, workspace config, lockfiles
 - build, test, lint, formatter, typecheck, and codegen config
 - CI workflows and pre-commit / task runner config
@@ -31,6 +31,7 @@ Prefer executable sources of truth over prose. If docs conflict with config or s
 ## What to extract
 
 Look for the highest-signal facts for an agent working in this repo:
+
 - exact developer commands, especially non-obvious ones
 - how to run a single test, a single package, or a focused verification step
 - required command order when it matters, such as `lint -> typecheck -> test`
@@ -47,6 +48,7 @@ Good `AGENTS.md` content is usually hard-earned context that took reading multip
 Only ask the user questions if the repo cannot answer something important. Use the `question` tool for one short batch at most.
 
 Good questions:
+
 - undocumented team conventions
 - branch / PR / release expectations
 - missing setup or test prerequisites that are known but not written down
@@ -56,6 +58,7 @@ Do not ask about anything the repo already makes clear.
 ## Writing rules
 
 Include only high-signal, repo-specific guidance such as:
+
 - exact commands and shortcuts the agent would otherwise guess wrong
 - architecture notes that are not obvious from filenames
 - conventions that differ from language or framework defaults
@@ -63,6 +66,7 @@ Include only high-signal, repo-specific guidance such as:
 - references to existing instruction sources that matter
 
 Exclude:
+
 - generic software advice
 - long tutorials or exhaustive file trees
 - obvious language conventions
@@ -79,13 +83,12 @@ If `AGENTS.md` already exists at `/mnt/5TB/Projects/electro-plugins`, improve it
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 5.9s)
 
-
-
 I'll start by loading the coding skill as instructed, then investigate the repo to build/update AGENTS.md
 
 **Tool: skill**
 
 **Input:**
+
 ```json
 {
   "name": "coding"
@@ -93,6 +96,7 @@ I'll start by loading the coding skill as instructed, then investigate the repo 
 ```
 
 **Error:**
+
 ```
 Skill "coding" not found. Available skills: brainstorming, cavecrew, caveman, caveman-commit, caveman-compress, caveman-help, caveman-review, caveman-stats, context-loader, customize-opencode, dispatching-parallel-agents, dream, executing-plans, export, finishing-a-development-branch, forget, health, import, list-projects, mem0, memory-reviewer, onboard, peek, pin, receiving-code-review, remember, requesting-code-review, stats, subagent-driven-development, switch-project, systematic-debugging, test-driven-development, tour, using-git-worktrees, using-superpowers, verification-before-completion, writing-plans, writing-skills
 ```
@@ -106,6 +110,7 @@ No coding skill available. Let me investigate the repo to understand what I'm wo
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins"
@@ -113,6 +118,7 @@ No coding skill available. Let me investigate the repo to understand what I'm wo
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins</path>
 <type>directory</type>
@@ -148,6 +154,7 @@ vite.config.ts
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/package.json"
@@ -155,6 +162,7 @@ vite.config.ts
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/package.json</path>
 <type>file</type>
@@ -207,6 +215,7 @@ vite.config.ts
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/opencode.jsonc"
@@ -214,6 +223,7 @@ vite.config.ts
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/opencode.jsonc</path>
 <type>file</type>
@@ -233,13 +243,10 @@ vite.config.ts
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 6.5s)
 
-
-
-
-
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/AGENTS.md"
@@ -247,41 +254,42 @@ vite.config.ts
 ```
 
 **Output:**
-```
+
+````
 <path>/mnt/5TB/Projects/electro-plugins/AGENTS.md</path>
 <type>file</type>
 <content>
 1: # Electro Plugins — Complete Project Knowledge Base
-2: 
+2:
 3: ## ALWAYS ON FIRST TURN: Load coding skill
 4: Use `skill` tool with name `"coding"` on every session's first turn before doing anything else.
-5: 
+5:
 6: ## CRITICAL: The Two-File Rule (ABSOLUTE)
 7: You (the AI agent) may ONLY modify two files:
 8: 1. **This file** (`AGENTS.md`) — all project-specific knowledge
 9: 2. **`~/.config/opencode/skills/coding/SKILL.md`** — all general coding/teaching rules
-10: 
+10:
 11: NEVER create, edit, or delete any other file in this project. The user does ALL code work.
-12: 
+12:
 13: You MUST update BOTH files with every single prompt — actively check if anything changed
 14: and record it. Never assume "the last agent already handled this." Always verify.
 15: See the "Auto-Update Protocol" section in SKILL.md for the full rule.
-16: 
+16:
 17: ---
-18: 
+18:
 19: ## Quick Summary
 20: Language-agnostic modular desktop app where every feature is a plugin communicating
 21: via subprocess stdin/stdout JSON-RPC. Built with Electrobun (Bun/TypeScript desktop
 22: framework). Frontend: React + Tailwind + Vite (HMR). Plugins can be any language.
 23: Plugin UIs use Web Components (any framework bundled to self-contained .js).
-24: 
+24:
 25: Phase 1 (Plugin System) IS COMPLETE — flat manifests, host manifest scanning at startup,
 26: plugin spawning with stdin/stdout pipes, JSON-RPC routing by method prefix, Web Component
 27: frontends (Preact + Vue), centralized build script (scripts/build-plugins.ts).
-28: 
+28:
 29: Phase 2 (YouTube Explorer) IS COMPLETE — Bun/TS backend with Innertube API, cookie auth
 30: via browser DB discovery, search + home feed + auth flow, WC frontend with embedded player.
-31: 
+31:
 32: Phase 3 (Unified Feed) IS COMPLETE — old per-plugin widget cards removed. App.tsx loads
 33: manifests, injects card frontend scripts, and mounts UI plugin elements from a `uiPlugins[]`
 34: array (not a single `uiPlugin`). A `<feed-widget>` discovers feed-contributing plugins at
@@ -289,7 +297,7 @@ vite.config.ts
 36: card WCs via `CardRenderer`. Plugin manifest simplified: `run` replaces `command`+`args`,
 37: `feeds` block replaces `frontendComponent`/`frontendFile`/`frontendSlot`, new `components`
 38: field for WC tags that need building but should NOT be mounted as main UI.
-39: 
+39:
 40: Current working state: Feed-widget displays all 5 render states (loading, auth-required,
 41: error per source, empty, cards). yt-feed (YouTube feed via Innertube API) works with
 42: lazy cookie reload. yt-auth plugin provides login/logout/status using browser DB discovery
@@ -298,35 +306,35 @@ vite.config.ts
 45: uses iframe and `player-load` custom event. peertube-card and peertube-feed are functional
 46: for PeerTube. Sign-in buttons per auth plugin are shown/hidden based on searching ALL
 47: manifests for a plugin with `methods.includes("login")`.
-48: 
+48:
 49: ---
-50: 
+50:
 51: ## Goal
 52: Build a language-agnostic, fully modular desktop app where every feature is a plugin.
 53: The plugin system is independent of the "skeleton" (the app framework). The same plugins
 54: work on any skeleton — Electrobun (desktop now), Tauri or zero-native (desktop + mobile later).
-55: 
+55:
 56: Long-term vision: a unified API client that aggregates every internet service into one
 57: interface. Content is categorized by MEDIA TYPE (posts, shorts, videos, images, DMs, etc.),
 58: not by service. Users get one feed per media type populated from all the services they
 59: choose. Features are generalized per media type — if someone builds auto-scroll for shorts,
 60: ALL shorts (TikTok, Reels, YT Shorts) get it automatically. This will be built GRADUALLY,
 61: starting with one simple API at a time.
-62: 
+62:
 63: ---
-64: 
+64:
 65: ## Long-Term Vision — Unified API Client
-66: 
+66:
 67: ### The Problem
 68: Currently every internet service has its own dedicated client app:
 69: - NewPipe for YouTube, Alicord for Discord
 70: - Separate apps for Twitter, Instagram, Telegram, Reddit, TikTok
 71: - Different UI, different features, different codebases — no sharing between them
-72: 
+72:
 73: ### The Solution: One App for Every API
 74: A single desktop app where every internet service is a plugin.
 75: Content is organized by MEDIA TYPE, not by service.
-76: 
+76:
 77: **Media Type Examples**
 78: - **Posts/Threads**: Reddit posts, Twitter threads, Bluesky, Hacker News stories
 79: - **Shorts**: TikTok, Instagram Reels, YouTube Shorts, Reddit Watch
@@ -340,11 +348,11 @@ vite.config.ts
 87: - **Anime/Manga**: MyAnimeList, AniList, Crunchyroll, MangaDex
 88: - **Recipes**: AllRecipes, SeriousEats, NYT Cooking
 89: - ...and anything else — theoretically infinite (one per API endpoint type)
-90: 
+90:
 91: Each media type has one feed in the app. The user adds/removes services from each
 92: feed freely. Adding a new service to a feed gives you ALL that service's content
 93: mixed in with everything else.
-94: 
+94:
 95: ### Generalized Features per Media Type
 96: Features attach to the MEDIA TYPE, not the service:
 97: - Auto-scroll for shorts feed → ALL shorts get it (TikTok + Reels + YT Shorts)
@@ -352,27 +360,27 @@ vite.config.ts
 99: - Download for images → ALL images from any service get it
 100: - Translation for posts → ALL posts get it
 101: - Any QoL feature built by the community → works everywhere instantly
-102: 
+102:
 103: No more waiting for YouTube to add a feature you want. No more missing auto-scroll
 104: on Reels while TikTok has it. The community builds features once, and they work for
 105: every service with that media type.
-106: 
+106:
 107: ### How We Get There (Gradual)
 108: 1. Start with simple individual API plugins (fetch data, show on screen)
 109: 2. When multiple plugins produce the same media type → build a unified feed
 110: 3. Build generalized features for that media type
 111: 4. Repeat for more APIs and media types as interest grows
 112: 5. Architecture evolves organically as patterns emerge (no premature abstraction)
-113: 
+113:
 114: **This is a long-term vision, not a right-now requirement. We're prototyping:
 115: building the first real API plugin to fetch internet data and show it on screen.**
-116: 
+116:
 117: ---
-118: 
+118:
 119: ## Core Architecture
-120: 
+120:
 121: ### Current Architecture (Phase 1 Complete)
-122: 
+122:
 123: ```
 124: ┌──────────────────────────────────────────────────────────────────┐
 125: │  WebView (React + Tailwind + Vite HMR)                           │
@@ -417,7 +425,7 @@ vite.config.ts
 164: │  └──────────────────┘  └──────────────────┘                     │
 165: └──────────────────────────────────────────────────────────────────┘
 166: ```
-167: 
+167:
 168: ### Data Flow (End-to-End — Phase 3)
 169: 1. App starts → Host spawns all backend plugins with `run` field via recursive manifest scan
 170: 2. WebView loads → App.tsx mounts (Electroview RPC bridge initialized)
@@ -435,11 +443,11 @@ vite.config.ts
 182: 11. Host reads stdout line, parses JSON, matches by `id`, resolves promise
 183: 12. Result flows back through RPC → `window.__pluginRpc` returns → feed-widget receives items
 184: 13. Feed-widget creates card WCs (`document.createElement(tag)`), sets `.item = rawItem`, appends to container
-185: 
+185:
 186: ---
-187: 
+187:
 188: ## File Structure (ACCURATE — matches code on disk as of July 2026)
-189: 
+189:
 190: ```
 191: /mnt/5TB/Projects/electro-plugins/
 192: ├── AGENTS.md                        ← THIS FILE (update every session!)
@@ -575,11 +583,11 @@ vite.config.ts
 322: ├── node_modules/                    # (in .gitignore)
 323: └── electro-plugins.log              # (obsolete — from old logger-py, in .gitignore)
 324: ```
-325: 
+325:
 326: ---
-327: 
+327:
 328: ## Plugin Protocol (Detailed)
-329: 
+329:
 330: ### Message Format
 331: ```json
 332: {"id": 1, "method": "greet.hello", "params": {"name": "Niri"}}
@@ -588,7 +596,7 @@ vite.config.ts
 335: - `method`: string — format is `namespace.action` (e.g., `greet.hello`, `log.info`)
 336: - `params`: optional object — any JSON structure the plugin expects
 337: - NO `jsonrpc` field (simplified from JSON-RPC spec)
-338: 
+338:
 339: ### Response Format
 340: ```json
 341: {"id": 1, "result": {"message": "Hello Niri from Go!"}}
@@ -596,7 +604,7 @@ vite.config.ts
 343: - On success: `{"id": <same id>, "result": <any>}`
 344: - On error:   `{"id": <same id>, "error": "<message>"}`
 345: - Messages are newline-delimited: one JSON object per line (`\n`)
-346: 
+346:
 347: ### Protocol Rules
 348: 1. Plugin reads exactly one line from stdin
 349: 2. Plugin processes the request
@@ -605,7 +613,7 @@ vite.config.ts
 352: 5. Host matches response to pending request by `id`
 353: 6. If no response within 10 seconds, the Promise rejects with timeout error
 354: 7. No connection keepalive, no persistent state between requests (each request is stateless)
-355: 
+355:
 356: ### Host Routing Logic
 357: ```typescript
 358: for (const plugin of plugins) {
@@ -621,11 +629,11 @@ vite.config.ts
 368: - The specific action (hello vs bye) is handled by the plugin, NOT the host
 369: - Adding 100+ plugins requires zero changes to routing code
 370: - Order matters: first matching plugin in the manifests array wins
-371: 
+371:
 372: ---
-373: 
+373:
 374: ## Host Behavior (src/bun/index.ts — ~340 lines)
-375: 
+375:
 376: ### Startup Sequence
 377: 1. `findProjectRoot(import.meta.dir)` — walks up directory tree until `package.json` found. Works in both dev and bundled modes.
 378: 2. `baseDir = findProjectRoot(...)` — store the project root absolute path
@@ -643,11 +651,11 @@ vite.config.ts
 390: 8. `new BrowserWindow({ title, url, frame, rpc })` — create the app window
 391: 9. `setInterval()` — health check every 5 seconds (logs dead plugins, no auto-restart)
 392: 10. `process.on("SIGINT")` — stop server, kill all plugin processes, exit
-393: 
+393:
 394: ### RPC Handlers
-395: 
+395:
 396: All handlers use `(params: unknown) =>` with internal casts.
-397: 
+397:
 398: | Handler | Params (cast from unknown) | Returns |
 399: |---------|---------------------------|---------|
 400: | `pluginRequest` | `{ method: string, params: any }` | `{ success, data?, error? }` |
@@ -656,43 +664,43 @@ vite.config.ts
 403: | `getPluginFrontend` | `{ path: string }` | `{ code: string }` or `{ error: string }` |
 404: | `resolveHook` | `{ hook: string }` | `{ success, data: { name, methods } }` or `{ success: false, error }` |
 405: | `callHook` | `{ hook: string, method?: string, params: any }` | `{ success, data? }` or `{ success: false, error }` |
-406: 
+406:
 407: **RPC details:**
 408: - `pluginRequest(method, params)`: calls `routeRequest(method, params)` which splits method by `.` — first part is plugin name, rest is action. Finds plugin by `config.name`, sends `{id, method: action, params}` via stdin. Returns Promise with 10s timeout.
 409: - `getPluginManifests`: returns all manifests with fields: name, version, description, author, methods, hooks, ui, feeds. No `components` field returned (yet — yt-card still identified for frontend loading by App.tsx scanning feeds[].card + ui).
 410: - `getPluginFrontend({ path })`: restricted to `build/plugins/` directory (security). Reads file via `Bun.file().text()`.
 411: - `resolveHook({ hook })`: finds first plugin with `config.hooks.includes(hook)`. Returns `{name, methods}`.
 412: - `callHook({ hook, method?, params })`: finds plugin for hook, calls `routeRequest(name.method, params)`. Defaults to `methods[0]` if no method specified.
-413: 
+413:
 414: ### stdout Reader (readStdout)
 415: - Web Streams API: `plugin.process.stdout.getReader()`
 416: - Buffers partial lines across chunks (split by `\n`, keep incomplete line in buffer via `lines.pop()`)
 417: - Each complete line passed to `handlePluginResponse()`
-418: 
+418:
 419: ### Response Handling (handlePluginResponse)
 420: 1. `JSON.parse(line)` → get `msg`
 421: 2. Match by `msg.id` to pending request
 422: 3. `clearTimeout(timer)` + `pendingRequests.delete(id)`
 423: 4. `msg.error` exists → `reject(new Error(msg.error))`
 424: 5. Else → `resolve(msg.result)`
-425: 
+425:
 426: ### Health Check
 427: - `setInterval()` every 5000ms
 428: - Logs dead plugins (no auto-restart)
-429: 
+429:
 430: ### Cleanup
 431: - `process.on("SIGINT")` — kills all plugin subprocesses, stops static server
-432: 
+432:
 433: ---
-434: 
+434:
 435: ## Frontend Behavior (src/mainview/App.tsx — ~102 lines)
-436: 
+436:
 437: ### Imports & Setup
 438: - `useState, useEffect` from React
 439: - `Electroview` from electrobun/view (Electrobun's browser-side RPC bridge)
 440: - Type imports: `PluginManifest` from shared/types
 441: - NO `useRef` — UI plugin elements created imperatively, not via React refs
-442: 
+442:
 443: ### RPC Configuration
 444: ```typescript
 445: const electroview = new Electroview({
@@ -704,7 +712,7 @@ vite.config.ts
 451: ```
 452: - `maxRequestTime: 20000` is CRITICAL. Host has 15000ms, routeRequest has 10s, plugin has 8s.
 453:   Frontend timeout must be the largest (20s) because it's the outermost caller.
-454: 
+454:
 455: ### Global Bridges (module-level, outside App component)
 456: ```typescript
 457: window.__pluginRpc = async (method: string, params: any) => {
@@ -716,7 +724,7 @@ vite.config.ts
 463: - Any WC can call `window.__pluginRpc(method, params)` without importing Electrobun
 464: - No `host.*` routing — bridge only routes to plugin subprocesses
 465: - Method format: `"name.action"` (e.g., `"yt-feed.feed"`) — host splits on first dot to find plugin by name
-466: 
+466:
 467: ```typescript
 468: window.resolveHook = async (hook: string) => {
 469:   const res = await electroview.rpc.request.resolveHook({ hook })
@@ -733,10 +741,10 @@ vite.config.ts
 480: ```
 481: - `resolveHook(hook)` → finds plugin providing that hook (e.g., `"feed.video"` → yt-feed)
 482: - `callHook(hook, method?, args)` → resolves hook + calls plugin method
-483: 
+483:
 484: ### App Component — State
 485: - `manifests` — array of `PluginManifest` from `getPluginManifests` RPC
-486: 
+486:
 487: ### On Mount — Init Function
 488: ```typescript
 489: useEffect(() => { init().catch(e => { ... }) }, [])
@@ -751,7 +759,7 @@ vite.config.ts
 498: 5. For each UI plugin: waits for WC definition, creates element imperatively, sets `.manifests = all`, appends to `#feed-container`
 499:    - Creates elements for ALL UI plugins (not just last one)
 500:    - Uses `document.getElementById("feed-container")` — not React refs
-501: 
+501:
 502: ### Render
 503: ```typescript
 504: return (
@@ -764,13 +772,13 @@ vite.config.ts
 511: - Only renders a container div — UI plugin elements are created imperatively inside it
 512: - No React refs to web components — elements managed via `document.getElementById`
 513: - No `<feed-widget>` in JSX — created imperatively
-514: 
+514:
 515: ---
-516: 
+516:
 517: ## Build System
-518: 
+518:
 519: `scripts/build-plugins.ts` (~191 lines) — centralized build for all plugin frontends.
-520: 
+520:
 521: ### How It Works
 522: 1. Scans `plugins/` recursively via `findPluginDirs()` — finds all directories containing `plugin.json` (supports nested plugins like `plugins/youtube/plugins/yt-card/`)
 523: 2. For each plugin dir, reads `plugin.json` and collects WC tag names from:
@@ -786,7 +794,7 @@ vite.config.ts
 533:    e. Runs `bunx vite build --config <configFile>` targeting IIFE format
 534:    f. Output: `build/plugins/<tag>.js` (deleted temp files after build)
 535: 5. Framework auto-detection: reads source file, checks for `"react"`/`"react-dom"` imports (React) vs `"preact"`/`"preact/hooks"` (Preact). Falls back to first match if ambiguous.
-536: 
+536:
 537: ### Entry Template (React example)
 538: Generated by the build script's `entry()` function:
 539: ```typescript
@@ -805,31 +813,31 @@ vite.config.ts
 552: ```
 553: - All WCs get `_item` and `_manifests` setters (even non-card WCs — harmless)
 554: - CSS inlined via `vite-plugin-css-injected-by-js` (Tailwind classes included)
-555: 
+555:
 556: ### Tag Sources
 557: | Manifest Field | Type | Purpose |
 558: |---------------|------|---------|
 559: | `ui: "feed-widget"` | string | Main UI WC (built + mounted by App.tsx) |
 560: | `components: ["yt-video-card"]` | string[] | Built-only WCs (not mounted by App.tsx) |
 561: | `feeds[i].card: "yt-video-card"` | string | Feed item card WCs (loaded, mounted by feed-widget) |
-562: 
+562:
 563: ### Cross-Directory Source Discovery
 564: When a plugin references a WC tag (via `feeds[].card`) but the source file isn't in that plugin's directory:
 565: - Build script logs `skip <tag> (source not found in <dir>)`
 566: - The tag WILL be built if ANOTHER plugin declares it in `components[]` or `ui`
 567: - Fix: Declare `components: ["<tag>"]` on the plugin that owns the source file
 568: - Example: `plugins/youtube/plugins/yt-card/plugin.json` has `components: ["yt-video-card"]` — builds the source in its own directory
-569: 
+569:
 570: ### Entry Template Paths (at runtime, in App.tsx)
 571: Frontend JS is loaded from `build/plugins/<tag>.js` via `getPluginFrontend({ path })`.
 572: Previously: `plugins/<name>/frontend/<tag>.js`. Now: `build/plugins/<tag>.js`.
-573: 
+573:
 574: ### Run Commands
 575: ```bash
 576: bun run build:plugins          # Build all plugin frontends (output to build/plugins/)
 577: bun run start                  # build:plugins + vite build + electrobun dev
 578: ```
-579: 
+579:
 580: ### Framework Handling
 581: | Framework | Source Ext | Build Tool | Bundle Size |
 582: |-----------|-----------|------------|-------------|
@@ -837,14 +845,14 @@ vite.config.ts
 584: | Preact | .tsx/.jsx | Vite (IIFE) | ~3KB + code |
 585: | Vue | .vue | Vite (IIFE) | ~35KB + code |
 586: | Svelte | .svelte | Vite (IIFE) | varies |
-587: 
+587:
 588: "Works forever" principle: framework code inlined into the plugin's .js file.
 589: The plugin never depends on what version of React/Vue/Preact the host app uses.
-590: 
+590:
 591: ---
-592: 
+592:
 593: ## Plugin Manifest Schema (Current — Flat Format)
-594: 
+594:
 595: ```json
 596: {
 597:   "name": "yt-feed",
@@ -856,7 +864,7 @@ vite.config.ts
 603:   ]
 604: }
 605: ```
-606: 
+606:
 607: ### Fields
 608: | Field | Required | Description |
 609: |-------|----------|-------------|
@@ -874,21 +882,21 @@ vite.config.ts
 621: | `feeds[].type` | ✅ (if feeds) | Content type: `"video"`, `"image"`, `"post"`, etc. Also used as default hook for resolution. |
 622: | `feeds[].method` | ❌ | RPC method to call. Defaults to `methods[0]`. |
 623: | `feeds[].card` | ❌ | WC tag for rendering one item. Path: `build/plugins/<tag>.js`. If absent, items skipped. |
-624: 
+624:
 625: ### Plugin Types
 626: - **Backend-only**: Has `run` but no `ui`/`feeds` → spawned as subprocess, no UI
 627: - **Frontend-only (main UI)**: Has `ui` but no `run` → WC loaded and mounted by App.tsx
 628: - **Frontend-only (card/component)**: Has `components` or `feeds[].card` but no `run` → WC loaded by App.tsx, mounted by feed-widget
 629: - **Fullstack**: Has `run` + `ui`/`feeds` → subprocess + frontend components
 630: - **Feed source**: Has `run` + `feeds` → subprocess with feed method + card WC
-631: 
+631:
 632: **Frontend path derivation** (build time and runtime):
 633: - Build script collects tags from: `ui`, `components[]`, `feeds[*].card`
 634: - Output: `build/plugins/<tag>.js`
 635: - Search: plugin's own directory first, then cross-directory fallback by tag name
-636: 
+636:
 637: ### Example Manifests
-638: 
+638:
 639: **yt-feed (feed source, backend + card)**:
 640: ```json
 641: {
@@ -899,7 +907,7 @@ vite.config.ts
 646:   "feeds": [{ "type": "video", "card": "yt-video-card" }]
 647: }
 648: ```
-649: 
+649:
 650: **yt-auth (auth provider, backend-only)**:
 651: ```json
 652: {
@@ -909,7 +917,7 @@ vite.config.ts
 656:   "methods": ["login", "logout", "status"]
 657: }
 658: ```
-659: 
+659:
 660: **yt-card (component provider, frontend-only)**:
 661: ```json
 662: {
@@ -917,7 +925,7 @@ vite.config.ts
 664:   "components": ["yt-video-card"]
 665: }
 666: ```
-667: 
+667:
 668: **feed (main UI, frontend-only)**:
 669: ```json
 670: {
@@ -928,7 +936,7 @@ vite.config.ts
 675:   "ui": "feed-widget"
 676: }
 677: ```
-678: 
+678:
 679: **video-player (fullstack with ui)**:
 680: ```json
 681: {
@@ -939,19 +947,19 @@ vite.config.ts
 686:   "ui": "player-modal"
 687: }
 688: ```
-689: 
+689:
 690: ---
-691: 
+691:
 692: ## Plugin Implementations
-693: 
+693:
 694: ### Phase 1/2 Demo Plugins (REMOVED FROM DISK — Historical Reference Only)
 695: - **greet-go** — Go backend (greet.hello, greet.bye). Frontend (greet-widget) removed in Phase 3. REMOVED from disk.
 696: - **logger-py** — Python backend (log.info, log.list). Frontend (log-viewer) removed in Phase 3. REMOVED from disk.
 697: - **joke-fetcher** — Bun/TS backend (joke.random, joke.types). REMOVED from disk.
 698: - **youtube-explorer** — Original monolithic YouTube plugin. Split into yt-feed, yt-auth, yt-search, yt-card. REMOVED from disk.
-699: 
+699:
 700: ### yt-feed — YouTube Feed Backend (Bun/TS)
-701: 
+701:
 702: #### Backend (plugins/youtube/plugins/yt-feed/main.ts)
 703: - Uses Innertube API for YouTube home feed
 704: - Lazily loads cookie from shared file (`.youtube-cookie` written by yt-auth)
@@ -960,9 +968,9 @@ vite.config.ts
 707: - Methods are simple (no prefix): just `"feed"` — prefix added by feed-widget as `name + "." + method`
 708: - 8s Promise.race timeout on API calls
 709: - No `feeds.method` in manifest — defaults to `methods[0]` ("feed")
-710: 
+710:
 711: ### yt-auth — YouTube Cookie Auth (Bun/TS)
-712: 
+712:
 713: #### Backend (plugins/youtube/plugins/yt-auth/main.ts)
 714: - Browser cookie database discovery:
 715:   - Firefox: finds `cookies.sqlite` via `find ~/.mozilla -name "cookies.sqlite" 2>/dev/null`
@@ -973,9 +981,9 @@ vite.config.ts
 720: - Filters ST-* cookies (avoids 413 Request Entity Too Large on YouTube API)
 721: - Writes cookie to shared `.youtube-cookie` file (read by yt-feed)
 722: - Methods: `login` (discover+write), `logout` (delete file), `status` (check file exists)
-723: 
+723:
 724: ### yt-card — YouTube Video Card WC (React, no backend)
-725: 
+725:
 726: #### Frontend (plugins/youtube/plugins/yt-card/yt-video-card.tsx)
 727: - React card WC built via esbuild entry template
 728: - Receives item prop: `{ thumbnail, title, channel, viewCount, published }`
@@ -983,15 +991,15 @@ vite.config.ts
 730: - Handles click on thumbnail → calls `window.__pluginRpc("video-player.load", {url, title})` then dispatches `new CustomEvent("player-load", {detail: {url, title}})` on window
 731: - Player-modal listens for `player-load` to auto-open
 732: - Manifest uses `components: ["yt-video-card"]` — built but NOT mounted as top-level view
-733: 
+733:
 734: ### yt-search — YouTube Search Backend (Bun/TS)
-735: 
+735:
 736: #### Backend (plugins/youtube/plugins/yt-search/main.ts)
 737: - Uses Innertube API for YouTube search
 738: - `search` method: takes query param, calls `tube.search()`, returns results
-739: 
+739:
 740: ### feed-widget — Feed Orchestrator WC (React, no backend)
-741: 
+741:
 742: #### Frontend (plugins/feed/feed-widget.tsx)
 743: - 5-state machine: `loading` (spinner), `error` (system error), `empty` (no sources), `partial` (some errors), `loaded` (all ok)
 744: - Loads feed via `callHook("feed.video")` — uses hook resolution, not direct source.feeds.method calls
@@ -1002,30 +1010,30 @@ vite.config.ts
 749:   - Calls login method, reloads feed on success
 750: - `CardRenderer`: creates card WCs via `document.createElement(tag)`, sets `.item`, appends to container
 751: - Uses `customElements.whenDefined()` to wait for WC registration before creating elements
-752: 
+752:
 753: ### peertube — PeerTube Feed Backend + Card WC (Bun/TS + React)
-754: 
+754:
 755: #### Backend (plugins/peertube/main.ts)
 756: - Fetches videos from a PeerTube instance API
 757: - `list` method: returns array of video items from PeerTube instance
-758: 
+758:
 759: #### Frontend (plugins/peertube/peertube-card.tsx)
 760: - React card WC similar to yt-video-card
 761: - Handles click → dispatches `player-load` custom event with `{url, title}`
 762: - Manifest: `feeds: [{type:"video", card:"peertube-card"}]`
-763: 
+763:
 764: ### video-player — Player Modal (Bun/TS + React WC)
-765: 
+765:
 766: #### Backend (plugins/video-player/main.ts)
 767: - Lightweight backend, `load` method is a placeholder
 768: - Manifest: `ui: "player-modal"`, `hooks: ["player"]`
-769: 
+769:
 770: #### Frontend (plugins/video-player/player-modal.tsx)
 771: - Uses `<iframe>` (not `<video>`) — service embed URLs are HTML pages, not direct media files
 772: - Listens for `"player-load"` custom event on `window` (dispatched by card WCs)
 773: - On event: calls `__pluginRpc("load", {url})` and shows modal with iframe
 774: - Handles close button, click-outside-to-close, Escape key
-775: 
+775:
 776: #### Data flow
 777: 1. App.tsx calls host RPC → gets manifests → loads frontends from `build/plugins/<tag>.js`
 778: 2. App.tsx creates UI WC elements imperatively in `#feed-container`, sets `.manifests = all`
@@ -1033,17 +1041,17 @@ vite.config.ts
 780: 4. `loadFeed()`: for each source with `feeds[]`, calls `__pluginRpc(source.name + "." + method, {})`
 781: 5. Results merged into flat `items[]` array
 782: 6. `CardRenderer` creates WC for each item, sets `.item`, appends
-783: 
+783:
 784: #### __pluginRpc callers
 785: - feed-widget calls `__pluginRpc(source.name + "." + method, {})` (e.g., `"yt-feed.feed"`)
 786: - feed-widget calls `__pluginRpc(authPlugin.name + "." + method, {})` when user clicks "Sign in"
 787: - Auth method found by searching ALL manifests for `methods.includes("login")`
 788: - No host.* prefix — bridge is simple, routes only to plugin subprocesses
-789: 
+789:
 790: ---
-791: 
+791:
 792: ## All Key Decisions Made (Chronological)
-793: 
+793:
 794: ### Architecture Decisions
 795: 1. **Language-agnostic plugin system** — plugins can be written in any language (Go, Python, etc.)
 796: 2. **Subprocess stdin/stdout JSON-RPC** — simplest cross-language IPC. Each plugin is a standalone process
@@ -1056,14 +1064,14 @@ vite.config.ts
 803: 9. **Companion app** (future) — a tiny binary that reads config and launches the right skeleton for the platform
 804: 10. **Manifest scanning from plugins/*/plugin.json** — replaced config.json. Host reads all plugin.json files at startup via readdirSync + JSON.parse. No central config needed.
 805: 11. **Flat manifest format** — no nested backend/frontend objects. All fields at top level. Matches VS Code/Chrome/Obsidian conventions.
-806: 
+806:
 807: ### Framework Decisions
 808: 12. **Electrobun for prototyping** — easiest for a beginner (Bun/TypeScript). Native WebView, ~14MB bundle, fast startup
 809: 13. **Tauri for future mobile** — Rust, mature ecosystem, iOS + Android support, but requires learning Rust
 810: 14. **zero-native** (Vercel Labs) — alternative future option. Zig + system WebView, mobile support, but pre-release (v0.2)
 811: 15. **WebUI (webui-dev)** — interesting but no mobile path. Opens a real browser (Chrome/Firefox), not a WebView. Few KB library
 812: 16. **React + Tailwind + Vite** for the frontend (from the Electrobun template)
-813: 
+813:
 814: ### Phase 3 Decisions
 815: 17. **Feed approach is THE approach** — old per-plugin widget cards are dead. App.tsx mounts only `<feed-widget>`. No WebComponentSlot, no plugin cards, no callMethod, no result box.
 816: 18. **No library sharing needed** — one WC class definition is shared across all DOM instances. Framework bundle lives in prototype. Different plugins have different bundles (their own versions). No duplication within the same WC type. Option B (per-plugin shared library) solves a non-problem.
@@ -1078,7 +1086,7 @@ vite.config.ts
 825: 27. **No schema** — feed doesn't know or care about item structure. Raw data passes through to card WC. Cards written by the same person as the backend.
 826: 28. **Auth in error banners** — feed-widget shows "Sign in" button in per-plugin error banners when plugin has `.auth.login` method. Calls it, reloads feed on success.
 827: 29. **5 feed states** — loading, system error, empty, partial (some errors), loaded (all ok). Error banners per-plugin.
-828: 
+828:
 829: ### Plugin Design Decisions
 830: 17. **Web Components for frontend plugins** — any framework (React, Vue, Svelte, Angular) can compile to them. Browser standard, no framework lock-in
 831: 18. **Iframes as alternative** — stronger isolation, separate JS context, communication via postMessage. Heavier. Cannot display native UI (Qt/GTK)
@@ -1088,11 +1096,11 @@ vite.config.ts
 835: 22. **`findProjectRoot()` walks up from `import.meta.dir`** — works in both dev (flat) and bundled modes
 836: 23. **FileSink.write() for plugin stdin** — Bun's `Subprocess.stdin` is a `FileSink` when piped. Use `.write()` directly.
 837: 24. **RPC params typed as `unknown`** — Electrobun's `defineRPC` expects `(params?: unknown) => unknown`. All handlers cast internally.
-838: 
+838:
 839: ### Go Plugin Specific
 840: 25. **`*json.RawMessage` for params** — user explicitly chose this over simpler `map[string]interface{}`. More type safety, more verbose.
 841: 26. **Nested struct for params** — each method defines its own params struct, unmarshals from RawMessage
-842: 
+842:
 843: ### Teaching/Communication Decisions
 844: 27. **User is a beginner** — assume ZERO prior knowledge. Explain every concept, syntax, and line
 845: 28. **Provide full code in messages** — user copies code themselves. Never modify files without explicit permission
@@ -1106,7 +1114,7 @@ vite.config.ts
 853: 36. **Never commit unless asked** — no git operations without explicit instruction
 854: 37. **Two-file rule** — only modify AGENTS.md (project knowledge) and SKILL.md (general rules). Never touch project code.
 855: 38. **Update both files every prompt** — actively check for changes. Never assume "last agent handled it."
-856: 
+856:
 857: ### Session 2026-07-07 Decisions (Plugin Refactor — youtube-explorer split, hooks, components, feeds array)
 858: 39. **`components` manifest field** — separates build concern from mount concern. `ui` → build AND mount (views). `components` → build only (cards, sub-components). Fixes the Single-Field Conflation Antipattern where `ui` was the only way to trigger a build.
 859: 40. **`hooks` manifest field** — decentralized capability discovery. A plugin declares what hooks it satisfies (e.g., `"feed.video"`, `"auth"`, `"search"`, `"player"`). The host resolves hooks at runtime. Replaces hardcoded method prefix routing for capability discovery.
@@ -1114,11 +1122,12 @@ vite.config.ts
 
 (Output capped at 50 KB. Showing lines 1-860. Use offset=861 to continue.)
 </content>
-```
+````
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/README.md"
@@ -1126,49 +1135,50 @@ vite.config.ts
 ```
 
 **Output:**
-```
+
+````
 <path>/mnt/5TB/Projects/electro-plugins/README.md</path>
 <type>file</type>
 <content>
 1: # React + Tailwind + Vite Electrobun Template
-2: 
+2:
 3: A fast Electrobun desktop app template with React, Tailwind CSS, and Vite for hot module replacement (HMR).
-4: 
+4:
 5: ## Getting Started
-6: 
+6:
 7: ```bash
 8: # Install dependencies
 9: bun install
-10: 
+10:
 11: # Development without HMR (uses bundled assets)
 12: bun run dev
-13: 
+13:
 14: # Development with HMR (recommended)
 15: bun run dev:hmr
-16: 
+16:
 17: # Build for production
 18: bun run build
-19: 
+19:
 20: # Build for production release
 21: bun run build:prod
 22: ```
-23: 
+23:
 24: ## How HMR Works
-25: 
+25:
 26: When you run `bun run dev:hmr`:
-27: 
+27:
 28: 1. **Vite dev server** starts on `http://localhost:5173` with HMR enabled
 29: 2. **Electrobun** starts and detects the running Vite server
 30: 3. The app loads from the Vite dev server instead of bundled assets
 31: 4. Changes to React components update instantly without full page reload
-32: 
+32:
 33: When you run `bun run dev` (without HMR):
-34: 
+34:
 35: 1. Electrobun starts and loads from `views://mainview/index.html`
 36: 2. You need to rebuild (`bun run build`) to see changes
-37: 
+37:
 38: ## Project Structure
-39: 
+39:
 40: ```
 41: ├── src/
 42: │   ├── bun/
@@ -1183,9 +1193,9 @@ vite.config.ts
 51: ├── tailwind.config.js      # Tailwind configuration
 52: └── package.json
 53: ```
-54: 
+54:
 55: ## Customizing
-56: 
+56:
 57: - **React components**: Edit files in `src/mainview/`
 58: - **Tailwind theme**: Edit `tailwind.config.js`
 59: - **Vite settings**: Edit `vite.config.ts`
@@ -1194,11 +1204,12 @@ vite.config.ts
 
 (End of file - total 61 lines)
 </content>
-```
+````
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/electrobun.config.ts"
@@ -1206,12 +1217,13 @@ vite.config.ts
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/electrobun.config.ts</path>
 <type>file</type>
 <content>
 1: import type { ElectrobunConfig } from "electrobun";
-2: 
+2:
 3: export default {
 4: 	app: {
 5: 		name: "react-tailwind-vite",
@@ -1246,6 +1258,7 @@ vite.config.ts
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/tsconfig.json"
@@ -1253,6 +1266,7 @@ vite.config.ts
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/tsconfig.json</path>
 <type>file</type>
@@ -1287,6 +1301,7 @@ vite.config.ts
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/vite.config.ts"
@@ -1294,13 +1309,14 @@ vite.config.ts
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/vite.config.ts</path>
 <type>file</type>
 <content>
 1: import { defineConfig } from "vite";
 2: import react from "@vitejs/plugin-react";
-3: 
+3:
 4: export default defineConfig({
 5: 	plugins: [react()],
 6: 	root: "src/mainview",
@@ -1327,6 +1343,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/AGENTS.md",
@@ -1335,7 +1352,8 @@ Now let me check the rest of AGENTS.md and some key source files to
 ```
 
 **Output:**
-```
+
+````
 <path>/mnt/5TB/Projects/electro-plugins/AGENTS.md</path>
 <type>file</type>
 <content>
@@ -1354,86 +1372,86 @@ Now let me check the rest of AGENTS.md and some key source files to
 873: 54. **Plugin UI elements created imperatively** — App.tsx uses `document.getElementById("feed-container")` and `document.createElement(tag)` instead of React refs or JSX. WCs created outside React's VDOM to avoid framework conflicts.
 874: 55. **No `frontend/` subdirectory** — source files alongside `plugin.json` (e.g., `plugins/feed/feed-widget.tsx`). The build script finds source by `<dir>/<tag>.<ext>`. Previously required `frontend/` subdirectory.
 875: 56. **Recursive manifest scanning** — `getAllPluginManifests()` walks directory tree recursively. Supports nested plugins under `plugins/*/plugins/*/`. Flat scan (`readdirSync(plugins/*)`) doesn't find deeply nested manifests.
-876: 
+876:
 877: ---
-878: 
+878:
 879: ## Bug History
-880: 
+880:
 881: ### Bug #1: `for...in` instead of `for...of` (stdout reader)
 882: - **Location**: `readStdout()` and `readStderr()` in index.ts
 883: - **Problem**: `for (const line in lines)` iterates over array INDICES as strings ("0", "1"), not actual line values
 884: - **Fix**: Change to `for (const line of lines)`
 885: - **Impact**: Plugin responses silently dropped. `JSON.parse("0")` returns `0`, then `0.id != null` is false, so every request times out after 10 seconds
 886: - **Status**: ✅ FIXED
-887: 
+887:
 888: ### Bug #2: `==` instead of `=` (alive flag)
 889: - **Location**: `proc.exited.then()` callback
 890: - **Problem**: `plugin.alive == false` is a comparison, not an assignment. The expression evaluates to `true` or `false` but the value is discarded. `alive` is never set to false
 891: - **Fix**: Change `==` to `=`
 892: - **Impact**: When a plugin crashes, the health check never detects it. Plugin stays marked as alive forever
 893: - **Status**: ✅ FIXED
-894: 
+894:
 895: ### Bug #3: Extra `}` in template literal
 896: - **Location**: Console error message in exit handler
 897: - **Problem**: `` `[${pc.name}] exited (code ${code}})` `` — extra `}` after `${code}`
 898: - **Fix**: Remove the extra `}`
 899: - **Impact**: Output shows `"exited (code 0})"` instead of `"exited (code 0)"`
 900: - **Status**: ✅ FIXED
-901: 
+901:
 902: ### Bug #4: Missing `pendingRequests.delete()`
 903: - **Location**: `handlePluginResponse()` in index.ts
 904: - **Problem**: After resolving/rejecting a pending request, the entry stays in the Map forever
 905: - **Fix**: Add `pendingRequests.delete(msg.id)` after `clearTimeout(pending.timer)`
 906: - **Impact**: Memory leak. Over time, the Map fills with resolved requests
 907: - **Status**: ✅ FIXED
-908: 
+908:
 909: ### Bug #5 (Frontend): `pluginList` instead of `pluginRequest`
 910: - **Location**: App.tsx, `callMethod()` function
 911: - **Problem**: `electroview.rpc?.request.pluginList({ method, params })` calls the wrong RPC method
 912: - **Fix**: Change to `electroview.rpc.request.pluginRequest({ method, params })` and remove unnecessary `?.`
 913: - **Impact**: Clicking a method button shows the plugin list instead of calling the plugin
 914: - **Status**: ✅ FIXED
-915: 
+915:
 916: ### Bug #6 (Python): Inconsistent indentation
 917: - **Location**: `logger-py/main.py`, lines 11 and 13
 918: - **Problem**: 6 spaces of indentation instead of 8 (Python requires consistent indentation level for if/else bodies)
 919: - **Fix**: Change from 6 spaces to 8 spaces (4 for function body + 4 for if/else body)
 920: - **Status**: ✅ FIXED
-921: 
+921:
 922: ### Bug #7 (Python): Missing default for `params.get()`
 923: - **Location**: `logger-py/main.py`, line 20
 924: - **Problem**: `params = request.get("params")` — if the request has no "params" key, `params` becomes `None`. Then `params.get("message", "")` crashes with `AttributeError: 'NoneType' object has no attribute 'get'`
 925: - **Fix**: `params = request.get("params", {})` — default to empty dict
 926: - **Status**: ✅ FIXED
-927: 
+927:
 928: ### Bug #8: Vite outDir doubled path
 929: - **Location**: Generated `.vite.config.mjs` in `build-plugins.js`
 930: - **Problem**: Setting `root` to plugin dir AND `build.outDir` relative to root caused path like `plugins/logger-py/frontend/plugins/logger-py/frontend/`
 931: - **Fix**: Set `build.outDir` to `"."` (current directory = root) and `emptyOutDir: false`
 932: - **Impact**: Vite build failed for Vue plugins — couldn't find output directory
 933: - **Status**: ✅ FIXED
-934: 
+934:
 935: ### Bug #9: Electrobun build.copy "plugins/**" doesn't work in dev mode
 936: - **Location**: `electrobun.config.ts` copy rules
 937: - **Problem**: The glob `"plugins/**"` in `build.copy` only works during production build. In dev mode, the copy step is skipped.
 938: - **Fix**: Harmless — `resolvePath()` resolves files from source tree directly in dev mode
 939: - **Impact**: None (works correctly, just different resolution paths per mode)
 940: - **Status**: ✅ NO FIX NEEDED
-941: 
+941:
 942: ### Bug #10: Subprocess.stdin is a FileSink, not WritableStream
 943: - **Location**: `sendToPlugin()` in index.ts
 944: - **Problem**: Bun's `Subprocess.stdin` when piped returns a `FileSink`, not a `WritableStream`. Calling `.getWriter()` on it fails: "FileSink doesn't have getWriter"
 945: - **Fix**: Check `typeof stdin !== "number"`, then call `stdin.write(msg)` directly. No `getWriter()`/`releaseLock()`.
 946: - **Impact**: Plugin requests silently failed to send. Plugin never received request, so every request timed out.
 947: - **Status**: ✅ FIXED
-948: 
+948:
 949: ### Bug #11: RPC handler params type must be `unknown`
 950: - **Location**: All 4 RPC handler definitions in index.ts
 951: - **Problem**: Electrobun's `defineRPC()` strictly expects `(params?: unknown) => unknown`. Using specific types causes TypeScript errors.
 952: - **Fix**: Declare all handlers as `async (params: unknown) => { ... }` and cast internally with `params as { method: string; params: any }`
 953: - **Impact**: TypeScript compilation errors. App wouldn't build.
 954: - **Status**: ✅ FIXED
-955: 
+955:
 956: ### Bug #12 (CRITICAL): Frontend RPC timeout default too short for slow plugins
 957: - **Location**: `src/mainview/App.tsx`, line 7 — `Electroview.defineRPC({})`
 958: - **Problem**: `Electroview.defineRPC()` with no `maxRequestTime` defaults to a very short timeout (~1s). The youtube-explorer feed request takes ~2.5s (Innertube.create 1.3s + getHomeFeed 1.2s). The frontend's RPC timer fired before the plugin response arrived. The host received the response and resolved it (visible in terminal logs `handleResponse pending=true`), but the frontend had already thrown "RPC request timed out." — the response was discarded because nobody was listening.
@@ -1442,14 +1460,14 @@ Now let me check the rest of AGENTS.md and some key source files to
 961: - **Lesson**: Every RPC layer must have a timeout >= all the layers below it combined. Always set explicit `maxRequestTime` on EVERY `defineRPC()` call.
 962: - **Related fixes applied**: readStdout buffer fix (already done), readStderr buffer fix (was still broken — same `lines.pop()` pattern), event queue with knownIds dedup (defeats Bun canary stdin re-delivery bug), feedLoadedRef guard (React double-mount protection)
 963: - **Status**: ✅ FIXED
-964: 
+964:
 965: ### Bug #13: Single `uiPlugin` variable overwritten by last manifest with `ui`
 966: - **Location**: `App.tsx` — `let uiPlugin: PluginManifest | null = null`
 967: - **Problem**: Loop iterated manifests and set `uiPlugin = m` for each plugin with `ui` field. Last one won (yt-card's `yt-video-card` overrides feed's `feed-widget`). feed-widget element never created.
 968: - **Fix**: Changed to `uiPlugins[]` array, loop over all, create elements for ALL UI plugins, not just the last one.
 969: - **Impact**: White screen — feed-widget never mounted. Only `<yt-video-card>` created (renders nothing without item).
 970: - **Status**: ✅ FIXED
-971: 
+971:
 972: ### Bug #14: `yt-card/plugin.json` uses `ui` field for card component
 973: - **Location**: `plugins/youtube/plugins/yt-card/plugin.json` — `ui: "yt-video-card"`
 974: - **Problem**: `ui` field caused both loading AND mounting. yt-video-card is a card component, not a standalone view. But removing `ui` broke the build (build script couldn't find source).
@@ -1457,46 +1475,46 @@ Now let me check the rest of AGENTS.md and some key source files to
 976: - **Impact**: Stale build — yt-video-card.js never rebuilt after dispatchEvent added, because build script couldn't find a tag referencing yt-video-card.
 977: - **Design decision**: New `components` field separates "build this WC" from "mount this WC"
 978: - **Status**: ✅ FIXED
-979: 
+979:
 980: ### Bug #15: Sign-in button not appearing for yt-feed auth errors
 981: - **Location**: `feed-widget.tsx` — `source?.methods?.includes("login")`
 982: - **Problem**: Error came from `yt-feed` (methods: `["feed"]`), but login method is on `yt-auth` (different plugin). Source methods don't include "login". Sign-in button never showed.
 983: - **Fix**: Search ALL manifests for a plugin with `"login"` in methods: `manifests.find(m => m.methods?.includes("login"))`.
 984: - **Impact**: User sees "Not authenticated" but no way to sign in.
 985: - **Status**: ✅ FIXED
-986: 
+986:
 987: ### Bug #16: yt-feed doesn't re-read cookie after login
 988: - **Location**: `plugins/youtube/plugins/yt-feed/main.ts`
 989: - **Problem**: yt-feed read cookie only at process startup (`const cached = loadCookie()`). After yt-auth wrote cookie to shared file, yt-feed's `cookieStr` was still null.
 990: - **Fix**: Lazy reload in "feed" handler: `if (!cookieStr) { const fresh = loadCookie(); if (fresh) cookieStr = fresh }`.
 991: - **Impact**: Even after successful login, feed says "Not authenticated" because yt-feed never re-reads the cookie file.
 992: - **Status**: ✅ FIXED
-993: 
+993:
 994: ### Bug #17: yt-video-card never dispatches `player-load` event
 995: - **Location**: `plugins/youtube/plugins/yt-card/yt-video-card.tsx` — `handleClick()`
 996: - **Problem**: `handleClick` called RPC but had no `dispatchEvent(new CustomEvent("player-load", ...))`. Player-modal was never notified.
 997: - **Fix**: Added `window.dispatchEvent(new CustomEvent("player-load", { detail: { url, title } }))` after RPC call.
 998: - **Impact**: Clicking yt-video-card did nothing. peertube-card already had dispatchEvent and worked.
 999: - **Status**: ✅ FIXED
-1000: 
+1000:
 1001: ### Bug #18: Player-modal uses `<video>` with embed URLs
 1002: - **Location**: `plugins/video-player/player-modal.tsx`
 1003: - **Problem**: Both services passed embed page URLs (`youtube.com/embed/...`, `peertube.cpy.re/videos/embed/...`). `<video>` expects direct media file URLs.
 1004: - **Fix**: Changed `<video src={...}>` to `<iframe src={...}>`.
 1005: - **Impact**: Player-modal showed but video didn't play (blank/error).
 1006: - **Status**: ✅ FIXED
-1007: 
+1007:
 1008: ### Bug #19: Build script can't find source across directories (stale build)
 1009: - **Location**: `scripts/build-plugins.ts`
 1010: - **Problem**: When `yt-feed`'s manifest referenced `card: "yt-video-card"`, build script searched for source only in yt-feed's directory → not found → skip. Source was in yt-card's directory. yt-card no longer had `ui` → no tags → nothing built. Stale `.js` persisted.
 1011: - **Fix**: yt-card declares `components: ["yt-video-card"]` → build script finds tag from `components[]` → finds source in yt-card's dir. Cross-directory ownership via `components` field.
 1012: - **Impact**: Source changes to yt-video-card.tsx never got compiled. Only old .js served.
 1013: - **Status**: ✅ FIXED
-1014: 
+1014:
 1015: ---
-1016: 
+1016:
 1017: ## All Tools, Frameworks, and Concepts Discussed
-1018: 
+1018:
 1019: ### Skeletons (App Frameworks)
 1020: | Tool | Language | Approach | Bundle | Mobile | Stars | Notes |
 1021: |------|----------|----------|--------|--------|-------|-------|
@@ -1504,7 +1522,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1023: | **Tauri** | Rust | System WebView | ~5-40MB | ✅ iOS+Android | ~107k | Future choice for production |
 1024: | **zero-native** | Zig | System WebView | <1MB | ✅ iOS+Android | ~4.2k | Vercel Labs, pre-release v0.2 |
 1025: | **WebUI (webui-dev)** | C | Opens real browser | Few KB | ❌ | ~4.1k | Interesting but no mobile |
-1026: 
+1026:
 1027: ### Development Tools Suggested
 1028: | Tool | Purpose | Why |
 1029: |------|---------|-----|
@@ -1515,14 +1533,14 @@ Now let me check the rest of AGENTS.md and some key source files to
 1034: | **uv** | Python package manager | Faster than pip, useful for Python plugins |
 1035: | **asdf / mise** | Version manager | Manage Go, Python, Rust versions per project |
 1036: | **printf** | Shell command | Send JSON-RPC messages to plugin stdin for standalone testing |
-1037: 
+1037:
 1038: ### Frontend Plugin Approaches
 1039: | Approach | Isolation | Performance | Framework Lock-in | Communication |
 1040: |----------|-----------|-------------|-------------------|---------------|
 1041: | **Web Components** | Medium | Lightweight | None (standard) | Direct function calls |
 1042: | **iframe** | High (separate JS context) | Heavier | None | postMessage async |
 1043: | **Dynamic React import** | Low (same context) | Lightweight | React only | Direct imports |
-1044: 
+1044:
 1045: ### iframe Details
 1046: - Embeds a completely separate HTML document within the current page
 1047: - Has its OWN JavaScript engine, its own DOM, its own CSS
@@ -1531,18 +1549,18 @@ Now let me check the rest of AGENTS.md and some key source files to
 1050: - Can be sandboxed with `sandbox` attribute (restrict scripts, forms, popups, etc.)
 1051: - Cannot display native UI (Qt, GTK, WinForms). Only HTML/CSS/JS
 1052: - Each iframe consumes memory for a separate JS engine instance
-1053: 
+1053:
 1054: ### Book Recommendations
 1055: - "Head First Design Patterns" — design patterns for beginners
 1056: - "The Pragmatic Programmer" — software craftsmanship
 1057: - "Clean Code" — code readability
 1058: - "You Don't Know JS" series — JavaScript depth
 1059: - "A Philosophy of Software Design" — complexity management
-1060: 
+1060:
 1061: ---
-1062: 
+1062:
 1063: ## Progress
-1064: 
+1064:
 1065: ### ✅ DONE — Phase 1 Complete
 1066: - [x] Researched skeleton options: Electrobun, Tauri, WebUI (webui-dev), zero-native
 1067: - [x] Chose Electrobun for prototyping (Bun/TS, easy for beginner)
@@ -1563,7 +1581,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1082: - [x] App boots and runs end-to-end. `greet.hello` returns "Hello World from Go!"
 1083: - [x] Full architecture documented in AGENTS.md
 1084: - [x] Teaching mode, operational rules, and auto-update protocol documented
-1085: 
+1085:
 1086: ### ✅ COMPLETED — Phase 2: YouTube Explorer (Original monolithic plugin, since replaced)
 1087: - [x] youtube-explorer plugin: Bun TS backend + React WC frontend
 1088: - [x] Cookie auth via browser DB discovery (Firefox SQLite, Chrome via sweet-cookie)
@@ -1574,7 +1592,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1093: - [x] Event-based stdin queue with `knownIds` dedup (defeats Bun canary re-delivery bug)
 1094: - [x] readStdout + readStderr buffer fix (`lines.pop()`) — prevents stale line re-emission
 1095: - [x] Frontend maxRequestTime: 20000 fix (critical — see Bug #12)
-1096: 
+1096:
 1097: ### ✅ COMPLETED — Phase 3: Unified Feed Architecture
 1098: - [x] Manifest simplified: `run` replaces `command`+`args`, `ui`/`feeds` replaces `frontendComponent`/`frontendFile`/`frontendSlot`
 1099: - [x] Old prototype plugin frontends removed (greet-go, logger-py, joke-fetcher) — removed from disk
@@ -1598,9 +1616,9 @@ Now let me check the rest of AGENTS.md and some key source files to
 1117: - [x] Recursive manifest scanning for nested plugins
 1118: - [x] 7 new bugs fixed (#13-#19) — all from this session
 1119: - [x] All new architecture documented in AGENTS.md
-1120: 
+1120:
 1121: ### ❌ PLANNED — Future Work
-1122: 
+1122:
 1123: **Phase 4: Feed Polish**
 1124: - [ ] Add sorting/interleaving across sources in feed
 1125: - [ ] Design generalized feed type system (video, short, image, post, etc.)
@@ -1608,7 +1626,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1127: - [ ] Plugin-provided search UI integration (yt-search exists but no search tab in feed-widget)
 1128: - [ ] Error recovery: auto-retry failed feed sources
 1129: - [ ] Real-time updates / polling for feed sources
-1130: 
+1130:
 1131: **Phase 5: General Improvements**
 1132: - [ ] Add plugin store / registry schema
 1133: - [ ] Plugin dependencies
@@ -1617,52 +1635,52 @@ Now let me check the rest of AGENTS.md and some key source files to
 1136: - [ ] More skeletons: WebUI, Tauri, zero-native
 1137: - [ ] Remove old demo plugins from disk (greet-go, logger-py, joke-fetcher) — already gone
 1138: - [ ] Remove `electro-plugins.log` (obsolete)
-1139: 
+1139:
 1140: ---
-1141: 
+1141:
 1142: ## Relevant Commands
-1143: 
+1143:
 1144: ```bash
 1145: # Full app start (build plugins + build vite + run electrobun dev)
 1146: cd /mnt/5TB/Projects/electro-plugins && bun run start
-1147: 
+1147:
 1148: # Build only plugin frontends (.jsx→esbuild, .vue→Vite)
 1149: bun run build:plugins
-1150: 
+1150:
 1151: # Development with HMR (Vite dev server + Electrobun dev)
 1152: bun run dev:hmr
-1153: 
+1153:
 1154: # Vite dev server only (for HMR when electrobun dev is running separately)
 1155: bun run hmr
-1156: 
+1156:
 1157: # Electrobun dev only (no HMR, uses bundled assets)
 1158: bun run dev
-1159: 
+1159:
 1160: # Compile Go plugin
 1161: cd plugins/greet-go && go build -o greet main.go
-1162: 
+1162:
 1163: # Test Go plugin standalone
 1164: echo '{"id":1,"method":"greet.hello","params":{"name":"Niri"}}' | ./plugins/greet-go/greet
 1165: echo '{"id":1,"method":"greet.bye","params":{"name":"Niri"}}' | ./plugins/greet-go/greet
-1166: 
+1166:
 1167: # Test Python plugin standalone
 1168: echo '{"id":1,"method":"log.info","params":{"message":"test"}}' | python3 plugins/logger-py/main.py
 1169: echo '{"id":2,"method":"log.list"}' | python3 plugins/logger-py/main.py
-1170: 
+1170:
 1171: # Run the standalone test script (if test.sh exists)
 1172: ./test.sh
 1173: ```
-1174: 
+1174:
 1175: ---
-1176: 
+1176:
 1177: ## Teaching/Communication Rules (for agents working here)
-1178: 
+1178:
 1179: ### The Two-File Rule (ABSOLUTE)
 1180: 1. **MODIFY ONLY** `AGENTS.md` (project-specific knowledge) and `~/.config/opencode/skills/coding/SKILL.md` (general coding rules)
 1181: 2. **NEVER TOUCH** any other project file — the user handles ALL code
 1182: 3. **UPDATE BOTH FILES EVERY PROMPT** — actively check if anything changed. See the "Auto-Update Protocol" in SKILL.md.
 1183: 4. **Always verify** — never assume "the last agent already updated this"
-1184: 
+1184:
 1185: ### Teaching Style
 1186: 1. **User is a beginner** — assume ZERO prior knowledge. Explain every concept, every syntax construct, every line
 1187: 2. **Provide full code in messages** — user copies code themselves. Never modify files without explicit build mode permission
@@ -1678,11 +1696,11 @@ Now let me check the rest of AGENTS.md and some key source files to
 1197: 12. **Never commit unless asked** — no git operations without explicit instruction
 1198: 13. **Never force push to main/master** — warn user if they request this
 1199: 14. **Never amend unless the commit was just created by you and not pushed** — make a new commit for hook rejections
-1200: 
+1200:
 1201: ---
-1202: 
+1202:
 1203: ## Registry Schema (future)
-1204: 
+1204:
 1205: ```json
 1206: {
 1207:   "plugins": [
@@ -1698,35 +1716,35 @@ Now let me check the rest of AGENTS.md and some key source files to
 1217:   ]
 1218: }
 1219: ```
-1220: 
+1220:
 1221: ### Plugin Types
 1222: - `backend` — only a subprocess, no UI contribution
 1223: - `frontend` — only a Web Component, no subprocess
 1224: - `fullstack` — both backend subprocess AND frontend Web Component
-1225: 
+1225:
 1226: ### Slots (for frontend components)
 1227: - `main` — primary content area (where plugin widgets display)
 1228: - Future: `sidebar`, `header`, `statusbar`, `settings`
-1229: 
+1229:
 1230: ---
-1231: 
+1231:
 1232: ## Phase 3 Architecture: Unified Feed
-1233: 
+1233:
 1234: ### Core Shift
 1235: Phase 1-2 built per-plugin standalone widgets (each plugin in its own card, rendered by App.tsx).
 1236: Phase 3 replaces this with a SINGLE feed that aggregates items from all content plugins.
-1237: 
+1237:
 1238: The feed itself is a plugin (`plugins/feed/`), swappable by the user. It has no backend — just a
 1239: frontend Web Component (`feed-widget`). App.tsx loads manifests from the host, loads all frontend
 1240: JS from `build/plugins/`, creates UI WC elements imperatively in a container div (passing manifests
 1241: via `.manifests` setter). Feed-widget discovers feed-contributing plugins, calls their feed methods
 1242: via `callHook()` or `__pluginRpc("name.method")`, and renders their card WCs.
-1243: 
+1243:
 1244: Each content plugin provides:
 1245: - **Backend**: RPC method that returns feed items (any shape)
 1246: - **Frontend**: A Web Component "card" that renders ONE feed item
 1247: - **Manifest**: Declares `feeds` array, `hooks` for capability discovery, `components` for WC tags
-1248: 
+1248:
 1249: ### Architecture Diagram
 1250: ```
 1251: ┌──────────────────────────────────────────────────────────────────┐
@@ -1782,7 +1800,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1301: │  └─────────────────────────────────────────────────────┘        │
 1302: └──────────────────────────────────────────────────────────────────┘
 1303: ```
-1304: 
+1304:
 1305: ### Data Flow (Detailed)
 1306: 1. **App.tsx mounts** → `electroview.rpc.request.getPluginManifests({})` → gets array of all manifests
 1307: 2. **App.tsx collects WC tags**: for each manifest, collects `feeds[*].card` and `ui` tags (dedup)
@@ -1802,7 +1820,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1321:    - `card.item = rawItem` (passes EVERYTHING — no schema)
 1322:    - `feedContainer.appendChild(card)`
 1323: 9. **Error handling**: per-source. If a feed method call fails, that source's items are skipped, an error banner is shown with optional "Sign in" button (searches ALL manifests for a plugin with `"login"` in methods, not just the errored source)
-1324: 
+1324:
 1325: ### Key Design Decisions
 1326: - **No schema**: Feed doesn't know or care about item structure. Raw data passed through to card WC.
 1327: - **Feed is a plugin**: Swappable. Lives at `plugins/feed/` with no backend.
@@ -1813,9 +1831,9 @@ Now let me check the rest of AGENTS.md and some key source files to
 1332:   Build script finds source by `<pluginDir>/<tag>.<ext>`. No `frontend/` subdirectory.
 1333: - **Custom DOM events for card ↔ modal communication**: Cards dispatch `CustomEvent("player-load", {detail: {url, title}})` on `window`. Player-modal listens via `addEventListener`.
 1334: - **`name + "." + method` RPC prefix**: Host routes by finding plugin with `config.name === firstPart`. Enables simple method names ("feed", "list") without namespace pollution.
-1335: 
+1335:
 1336: ### Simplified Plugin Manifest (Phase 3 — Current)
-1337: 
+1337:
 1338: ```json
 1339: {
 1340:   "name": "yt-feed",
@@ -1825,7 +1843,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 1344:   "feeds": [{ "type": "video", "card": "yt-video-card" }]
 1345: }
 1346: ```
-1347: 
+1347:
 1348: | Field | Required | Description |
 1349: |-------|----------|-------------|
 1350: | `name` | ✅ | Unique plugin ID |
@@ -1841,26 +1859,26 @@ Now let me check the rest of AGENTS.md and some key source files to
 1360: | `feeds[].type` | ✅ (if feeds) | Content type: `"video"`, `"image"`, `"post"`, `"short"`, etc. |
 1361: | `feeds[].method` | ❌ | RPC method to call. Defaults to `methods[0]`. |
 1362: | `feeds[].card` | ❌ | WC tag for rendering one item. Loaded from `build/plugins/<tag>.js`.
-1363: 
+1363:
 1364: ### `ui` field meaning (Phase 3)
 1365: In Phase 1-2, `ui` meant a standalone widget card rendered by App.tsx. In Phase 3, `ui` simply means
 1366: "this plugin has a frontend WC that App.tsx should load AND mount." The frontend file is loaded from
 1367: `build/plugins/<tag>.js`. The `feed` plugin uses `ui: "feed-widget"`. The `video-player` plugin uses
 1368: `ui: "player-modal"`. App.tsx creates WC elements for ALL ui plugins, not just the last one.
-1369: 
+1369:
 1370: ### Backward Compatibility
 1371: - Old format (`command`+`args`, `frontendComponent`, `frontendSlot`) is phased out completely.
 1372: - Host reads ONLY new format. Old prototype plugins removed from disk.
 1373: - Phase 1/2 demo plugins (greet-go, logger-py, joke-fetcher, youtube-explorer) removed entirely.
-1374: 
+1374:
 1375: ### The `feed` Plugin
-1376: 
+1376:
 1377: ```
 1378: plugins/feed/
 1379: ├── plugin.json         → { name: "feed", ui: "feed-widget" }
 1380: └── feed-widget.tsx      ← orchestrator WC (React via build system, no frontend/ subdir)
 1381: ```
-1382: 
+1382:
 1383: `plugin.json`:
 1384: ```json
 1385: {
@@ -1871,15 +1889,15 @@ Now let me check the rest of AGENTS.md and some key source files to
 1390:   "ui": "feed-widget"
 1391: }
 1392: ```
-1393: 
+1393:
 1394: - No `run` — no backend process needed
 1395: - No `feeds` — it IS the feed, not a contributor
 1396: - `ui: "feed-widget"` — App.tsx loads `build/plugins/feed-widget.js` and creates `<feed-widget>` in `#feed-container`
-1397: 
+1397:
 1398: ### __pluginRpc Bridge (Phase 3 — Simple, No host.*)
-1399: 
+1399:
 1400: The `__pluginRpc` bridge stays simple: it only routes to plugin subprocesses. No `host.*` prefix.
-1401: 
+1401:
 1402: ```javascript
 1403: window.__pluginRpc = async (method, params) => {
 1404:   const res = await electroview.rpc?.request.pluginRequest({ method, params })
@@ -1887,42 +1905,42 @@ Now let me check the rest of AGENTS.md and some key source files to
 1406:   return res.data
 1407: }
 1408: ```
-1409: 
+1409:
 1410: App.tsx calls host RPCs directly via `electroview.rpc.request.getPluginManifests({})` and
 1411: `electroview.rpc.request.getPluginFrontend({ path })` — NOT through `__pluginRpc`.
-1412: 
+1412:
 1413: **Why no `host.*`?** The feed-widget doesn't need to call host RPCs. App.tsx (which has
 1414: `electroview` in scope) calls the host directly and passes data to feed-widget via
 1415: the `.manifests` property setter. This keeps `__pluginRpc` simple (one routing path)
 1416: and avoids adding host routing logic to the bridge.
-1417: 
+1417:
 1418: ### Per-Instance Framework Sharing (No Action Needed)
 1419: When the feed has 20 `<yt-video-card>` elements, they all share ONE WC class definition.
 1420: The framework (React, etc.) is in the class prototype, not in each DOM element.
 1421: `customElements.define("yt-video-card", YTVideoCard)` registers one class.
 1422: Each `<yt-video-card>` is just an instance — they share the prototype.
 1423: **No build-time sharing optimization needed. Ever.**
-1424: 
+1424:
 1425: ### Frontend Path Derivation
-1426: 
+1426:
 1427: | Manifest field | Purpose | Build source | Runtime load path |
 1428: |----------------|---------|-------------|-------------------|
 1429: | `ui: "feed-widget"` | Main UI WC to mount | `plugins/feed/feed-widget.tsx` | `build/plugins/feed-widget.js` |
 1430: | `components: ["yt-video-card"]` | WC to build only | `plugins/youtube/plugins/yt-card/yt-video-card.tsx` | `build/plugins/yt-video-card.js` |
 1431: | `feeds[i].card: "yt-video-card"` | Card WC for register | (same as components — see above) | `build/plugins/yt-video-card.js` |
-1432: 
+1432:
 1433: Build script searches for source: `<pluginDir>/<tag>.<ext>` where ext is tsx, jsx, vue, svelte.
 1434: Cross-directory: if not found in declaring plugin's dir, it must be declared in another plugin's `components` or `ui`.
-1435: 
+1435:
 1436: ### Card WC Contract
-1437: 
+1437:
 1438: The feed passes data to card WCs via a `.item` property setter. All WCs also get `.manifests`.
 1439: Each card WC is a Web Component wrapping a React/Preact component.
-1440: 
+1440:
 1441: #### The Pattern (React entry template — current)
-1442: 
+1442:
 1443: Build script generates this `entry.tsx` for every React frontend:
-1444: 
+1444:
 1445: ```javascript
 1446: import Component from "./yt-video-card.tsx"
 1447: import { createRoot } from "react-dom/client"
@@ -1943,9 +1961,9 @@ Now let me check the rest of AGENTS.md and some key source files to
 1462:   }
 1463: })
 1464: ```
-1465: 
+1465:
 1466: #### Data Flow (One Item)
-1467: 
+1467:
 1468: 1. Feed calls `__pluginRpc("yt-feed.feed", {})` → gets array of items
 1469: 2. Feed loops: `for (const item of items)`
 1470: 3. `document.createElement("yt-video-card")` → browser creates WC → `connectedCallback()` runs
@@ -1955,41 +1973,41 @@ Now let me check the rest of AGENTS.md and some key source files to
 1474:    - `this._render()` — `root.render(<Component item={{ title: "Cats", ... }} />)`
 1475:    - React re-renders component with real data → shows title, thumbnail, etc.
 1476: 5. `feedContainer.appendChild(card)` — adds to page display
-1477: 
+1477:
 1478: API calls = number of PLUGINS (not items). One `"yt-feed.feed"` call returns N items → N cards.
-1479: 
+1479:
 1480: #### Why `_item` (underscore)?
-1481: 
+1481:
 1482: A setter cannot store data in a variable with the same name (`item`), because `this.item = data`
 1483: inside a `set item()` would call itself forever (infinite loop). So we separate:
-1484: 
+1484:
 1485: | Name | Role | Type |
 1486: |------|------|------|
 1487: | `item` (setter) | PUBLIC — called by feed | Function (runs on `=`) |
 1488: | `_item` | PRIVATE storage | Regular variable (no setter) |
 1489: | `item` (getter) | PUBLIC — read by feed | Function (runs on read) |
-1490: 
+1490:
 1491: The underscore `_` is a naming convention meaning "internal, don't touch directly."
-1492: 
+1492:
 1493: #### Entry Templates
-1494: 
+1494:
 1495: All frameworks (React, Preact, Vue, Svelte) get entry templates with both `_item` and `_manifests`
 1496: setters. The template is auto-generated by the build script based on detected framework.
-1497: 
+1497:
 1498: #### Build Script Tag Resolution (FIXED)
-1499: 
+1499:
 1500: The build script now correctly checks `manifest.ui`, `manifest.components[]`, and
 1501: `manifest.feeds[*].card` to discover WC tags. Old `frontendComponent` field is not checked.
 1502: If a tag is referenced (e.g., `feeds[0].card: "yt-video-card"`) but source not found in that
 1503: plugin's directory, the build script skips it. The tag WILL be built if another plugin declares
 1504: it in `components[]` (yt-card does: `components: ["yt-video-card"]`).
-1505: 
+1505:
 1506: Design: **Declarative ownership via `components`** — each plugin declares what WCs it owns.
 1507: The build script doesn't cross-search. If a plugin references a card from another plugin,
 1508: the source is found only in the owning plugin's directory.
-1509: 
+1509:
 1510: ### Phase 3 Implementation — DONE (Extended)
-1511: 
+1511:
 1512: Phase 3 core was completed earlier. This session extended it with:
 1513: - **`components` field** — separates "build this WC" from "mount this WC"
 1514: - **`hooks` field** — decentralized capability discovery instead of hardcoded routing
@@ -2006,11 +2024,12 @@ Now let me check the rest of AGENTS.md and some key source files to
 
 (End of file - total 1524 lines)
 </content>
-```
+````
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins"
@@ -2018,6 +2037,7 @@ Now let me check the rest of AGENTS.md and some key source files to
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins</path>
 <type>directory</type>
@@ -2038,6 +2058,7 @@ youtube/
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src"
@@ -2045,6 +2066,7 @@ youtube/
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src</path>
 <type>directory</type>
@@ -2061,6 +2083,7 @@ shared/
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/.gitignore"
@@ -2068,6 +2091,7 @@ shared/
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/.gitignore</path>
 <type>file</type>
@@ -2079,7 +2103,7 @@ shared/
 5: *.tsbuildinfo
 6: # Plugin binaries
 7: plugins/greet-go/greet
-8: 
+8:
 9: # Plugin runtime artifacts
 10: electro-plugins.log
 11: plugins/**/*.log
@@ -2097,6 +2121,7 @@ The repo has changed significantly since AGENTS.md was written. I see new plugin
 **Tool: task**
 
 **Input:**
+
 ```json
 {
   "description": "Explore current plugin structure",
@@ -2106,6 +2131,7 @@ The repo has changed significantly since AGENTS.md was written. I see new plugin
 ```
 
 **Output:**
+
 ```
 <task id="ses_0b7dcb4fdffeI7yhIpTd61liTV" state="completed">
 <task_result>
@@ -2116,46 +2142,48 @@ I have read every file. Here is the complete and thorough report.
 ## Complete Plugin Directory Structure
 
 ```
+
 plugins/
-├── _shared/
-│   └── stdin.ts                          # Shared utility library
+├── \_shared/
+│ └── stdin.ts # Shared utility library
 ├── core-manifest/
-│   ├── plugin.json                       # NEW (not in AGENTS.md)
-│   └── main.ts                           # NEW (not in AGENTS.md)
+│ ├── plugin.json # NEW (not in AGENTS.md)
+│ └── main.ts # NEW (not in AGENTS.md)
 ├── core-serve/
-│   ├── plugin.json                       # NEW (not in AGENTS.md)
-│   └── main.ts                           # NEW (not in AGENTS.md)
+│ ├── plugin.json # NEW (not in AGENTS.md)
+│ └── main.ts # NEW (not in AGENTS.md)
 ├── core-static/
-│   ├── plugin.json                       # NEW (not in AGENTS.md)
-│   └── main.ts                           # NEW (not in AGENTS.md)
+│ ├── plugin.json # NEW (not in AGENTS.md)
+│ └── main.ts # NEW (not in AGENTS.md)
 ├── feed/
-│   ├── plugin.json                       # Known (UI orchestrator)
-│   └── feed-widget.tsx                   # Known (React WC, 290 lines)
+│ ├── plugin.json # Known (UI orchestrator)
+│ └── feed-widget.tsx # Known (React WC, 290 lines)
 ├── peertube/
-│   ├── plugin.json                       # Known (feed source)
-│   ├── main.ts                           # Known (Bun/TS, 72 lines)
-│   └── peertube-card.tsx                 # Known (React WC, 66 lines)
+│ ├── plugin.json # Known (feed source)
+│ ├── main.ts # Known (Bun/TS, 72 lines)
+│ └── peertube-card.tsx # Known (React WC, 66 lines)
 ├── video-player/
-│   ├── plugin.json                       # Known (player modal)
-│   ├── main.ts                           # Known (Bun/TS, 8 lines)
-│   └── player-modal.tsx                  # Known (React WC, 30 lines)
+│ ├── plugin.json # Known (player modal)
+│ ├── main.ts # Known (Bun/TS, 8 lines)
+│ └── player-modal.tsx # Known (React WC, 30 lines)
 ├── youtube/
-│   ├── plugin.json                       # Known (container only)
-│   ├── .youtube-cookie                   # Shared cookie file (data, not code)
-│   └── plugins/
-│       ├── yt-feed/
-│       │   ├── plugin.json               # Known (feed source)
-│       │   └── main.ts                   # Known (Bun/TS, 100 lines)
-│       ├── yt-auth/
-│       │   ├── plugin.json               # Known (auth provider)
-│       │   └── main.ts                   # Known (Bun/TS, 247 lines)
-│       ├── yt-card/
-│       │   ├── plugin.json               # Known (card component)
-│       │   └── yt-video-card.tsx         # Known (React WC, 36 lines)
-│       └── yt-search/
-│           ├── plugin.json               # Known (search backend)
-│           └── main.ts                   # Known (Bun/TS, 56 lines)
-```
+│ ├── plugin.json # Known (container only)
+│ ├── .youtube-cookie # Shared cookie file (data, not code)
+│ └── plugins/
+│ ├── yt-feed/
+│ │ ├── plugin.json # Known (feed source)
+│ │ └── main.ts # Known (Bun/TS, 100 lines)
+│ ├── yt-auth/
+│ │ ├── plugin.json # Known (auth provider)
+│ │ └── main.ts # Known (Bun/TS, 247 lines)
+│ ├── yt-card/
+│ │ ├── plugin.json # Known (card component)
+│ │ └── yt-video-card.tsx # Known (React WC, 36 lines)
+│ └── yt-search/
+│ ├── plugin.json # Known (search backend)
+│ └── main.ts # Known (Bun/TS, 56 lines)
+
+````
 
 **Total: 8 plugin directories, 11 plugin.json files, 13 source code files, 25 files total across plugins/**
 
@@ -2174,13 +2202,14 @@ plugins/
   "author": "Me",
   "methods": ["scan"]
 }
-```
+````
 
 **Source: `/mnt/5TB/Projects/electro-plugins/plugins/core-manifest/main.ts`** (34 lines)
 
 **What it does:** Replaces the host's built-in `getAllPluginManifests()`. This is a standalone subprocess that recursively scans `plugins/` for `plugin.json` files, parses them, and returns them via the `"scan"` RPC method. It accepts an optional `params.full` flag -- if true, returns the raw manifests verbatim; if false, it strips sensitive/run-time fields (like `run`) and returns only `name`, `version`, `description`, `author`, `methods`, `hooks`, `ui`, `feeds`.
 
 Key details:
+
 - Uses `_shared/stdin.ts` for its stdin/stdout protocol (imports `startStdin`)
 - Takes an optional `baseDir` from `process.argv[2]`, defaulting to the project root via `import.meta.dir`
 - Does recursive directory traversal -- supports nested plugins (e.g., `youtube/plugins/yt-feed/`)
@@ -2191,6 +2220,7 @@ Key details:
 ### 2. `plugins/core-serve/` -- HTTP Server Plugin
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/core-serve/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "core-serve",
@@ -2209,6 +2239,7 @@ Key details:
 - **`stop`**: Stops the Bun server and sets it to null.
 
 Key details:
+
 - Uses `_shared/stdin.ts` for protocol
 - Does NOT have a `run` field in plugin.json (not auto-spawned)
 
@@ -2217,6 +2248,7 @@ Key details:
 ### 3. `plugins/core-static/` -- Static File Reader Plugin
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/core-static/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "core-static",
@@ -2238,6 +2270,7 @@ Key details:
 - Returns error if path is not allowed, file not found, or path param missing
 
 Key details:
+
 - Uses `_shared/stdin.ts` for protocol
 - Does NOT have a `run` field in plugin.json (not auto-spawned)
 
@@ -2264,6 +2297,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 4. `plugins/feed/` -- Feed Orchestrator (UI-only, no backend)
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/feed/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "feed",
@@ -2277,6 +2311,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 **Source: `/mnt/5TB/Projects/electro-plugins/plugins/feed/feed-widget.tsx`** (290 lines)
 
 **Summary:** The main UI orchestrator. A React Web Component (`<feed-widget>`) that:
+
 - Receives all manifests via the `.manifests` setter from App.tsx
 - Filters to plugins with `feeds[]` to find feed sources
 - Calls each source's feed method via `window.__pluginRpc("sourceName.method")` with a 15-second per-source timeout and a 20-second safety timeout
@@ -2291,6 +2326,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 5. `plugins/peertube/` -- PeerTube Feed Source (fullstack)
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/peertube/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "peertube",
@@ -2322,6 +2358,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 6. `plugins/video-player/` -- Video Player Modal (fullstack)
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/video-player/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "video-player",
@@ -2346,6 +2383,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 7. `plugins/youtube/` -- YouTube Container (parent only)
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "youtube",
@@ -2364,6 +2402,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 8. `plugins/youtube/plugins/yt-feed/` -- YouTube Feed Backend
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-feed/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "yt-feed",
@@ -2383,12 +2422,13 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 **Source: `/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-feed/main.ts`** (100 lines)
 
 **Summary:** Uses `youtubei.js` Innertube API to fetch the YouTube home feed. On startup, attempts to load the shared cookie file and validate it via `Innertube.create()` + `getInfo()`. Invalid cookies are deleted. The `"feed"` method:
+
 - Lazy-reloads cookie if `cookieStr` is null (catches yt-auth writing the file after startup)
 - Creates a fresh `Innertube` instance per request
 - Calls `tube.getHomeFeed()` with an 8-second Promise.race timeout
 - Walks the `contents` grid looking for `RichItem` and `RichSection` nodes containing `LockupView` VIDEO content
 - Extracts: `title`, `videoId`, `channel`, `views`, `published`, `thumbnail`
-- Returns up to 30 items (or `params.limit`) 
+- Returns up to 30 items (or `params.limit`)
 - Uses its own inline stdin reader (not `_shared/stdin.ts`)
 
 ---
@@ -2396,6 +2436,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 9. `plugins/youtube/plugins/yt-auth/` -- YouTube Cookie Auth
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-auth/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "yt-auth",
@@ -2425,6 +2466,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 10. `plugins/youtube/plugins/yt-card/` -- YouTube Video Card (frontend-only)
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-card/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "yt-card",
@@ -2442,6 +2484,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ### 11. `plugins/youtube/plugins/yt-search/` -- YouTube Search Backend
 
 **`/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-search/plugin.json`** (verbatim):
+
 ```json
 {
   "name": "yt-search",
@@ -2455,6 +2498,7 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 **Source: `/mnt/5TB/Projects/electro-plugins/plugins/youtube/plugins/yt-search/main.ts`** (56 lines)
 
 **Summary:** Uses `youtubei.js` Innertube API to search YouTube. Reads the shared `.youtube-cookie` at startup (no lazy reload -- reads it once). The `"search"` method:
+
 - Requires `params.query` string
 - Creates an Innertube instance, calls `tube.search(query)` with an 8-second timeout
 - Maps results (videos only) to: `title`, `videoId`, `channel`, `views`, `duration`, `thumbnail`
@@ -2466,11 +2510,13 @@ This is NOT a plugin -- it has no `plugin.json`. It is a shared `import` used by
 ## Key Observations -- The 3 New Core Plugins
 
 The three `core-*` plugins represent a **refactoring of the host** (`src/bun/index.ts`). In the AGENTS.md documentation, the host has these functions built-in:
+
 - `getAllPluginManifests()` -- now extracted to `core-manifest`
 - `getMainViewUrl()` / `startStaticServer()` -- now extracted to `core-serve`
 - `getPluginFrontend()` -- now extracted to `core-static`
 
 These core plugins:
+
 1. All use the shared `_shared/stdin.ts` utility
 2. All take an optional `baseDir` from `process.argv[2]`
 3. None have a `run` field in their plugin.json (they are NOT auto-spawned by the host during its normal startup cycle)
@@ -2482,22 +2528,24 @@ This suggests the host has been or is being refactored to delegate these respons
 
 ## Summary Table
 
-| Plugin | Path | Type | Backend Lang | Frontend | Has `run` | Has `ui` | Has `feeds` | Has `hooks` | Methods |
-|--------|------|------|-------------|----------|-----------|----------|-------------|-------------|---------|
-| **core-manifest** | NEW | Backend-only (utility) | Bun/TS | None | No | No | No | No | `scan` |
-| **core-serve** | NEW | Backend-only (utility) | Bun/TS | None | No | No | No | No | `start`, `stop` |
-| **core-static** | NEW | Backend-only (utility) | Bun/TS | None | No | No | No | No | `read` |
-| **feed** | Known | Frontend-only (UI) | N/A | React WC | No | `feed-widget` | No | No | None |
-| **peertube** | Known | Fullstack | Bun/TS | React WC | Yes | No | `video`→`peertube-card` | `feed.video` | `list` |
-| **video-player** | Known | Fullstack | Bun/TS | React WC | Yes | `player-modal` | No | `player` | `load` |
-| **youtube** | Known | Container (parent) | Metadata only | None | No | No | No | No | None |
-| **yt-feed** | Known | Backend-only (feed source) | Bun/TS | None | Yes | No | `video`→`yt-video-card` | `feed.video` | `feed` |
-| **yt-auth** | Known | Backend-only (auth) | Bun/TS | None | Yes | No | No | `auth` | `login`, `logout`, `status` |
-| **yt-card** | Known | Frontend-only (component) | N/A | React WC | No | No | No (has `components`) | No | None |
-| **yt-search** | Known | Backend-only (search) | Bun/TS | None | Yes | No | No | `search` | `search` |
+| Plugin            | Path  | Type                       | Backend Lang  | Frontend | Has `run` | Has `ui`       | Has `feeds`             | Has `hooks`  | Methods                     |
+| ----------------- | ----- | -------------------------- | ------------- | -------- | --------- | -------------- | ----------------------- | ------------ | --------------------------- |
+| **core-manifest** | NEW   | Backend-only (utility)     | Bun/TS        | None     | No        | No             | No                      | No           | `scan`                      |
+| **core-serve**    | NEW   | Backend-only (utility)     | Bun/TS        | None     | No        | No             | No                      | No           | `start`, `stop`             |
+| **core-static**   | NEW   | Backend-only (utility)     | Bun/TS        | None     | No        | No             | No                      | No           | `read`                      |
+| **feed**          | Known | Frontend-only (UI)         | N/A           | React WC | No        | `feed-widget`  | No                      | No           | None                        |
+| **peertube**      | Known | Fullstack                  | Bun/TS        | React WC | Yes       | No             | `video`→`peertube-card` | `feed.video` | `list`                      |
+| **video-player**  | Known | Fullstack                  | Bun/TS        | React WC | Yes       | `player-modal` | No                      | `player`     | `load`                      |
+| **youtube**       | Known | Container (parent)         | Metadata only | None     | No        | No             | No                      | No           | None                        |
+| **yt-feed**       | Known | Backend-only (feed source) | Bun/TS        | None     | Yes       | No             | `video`→`yt-video-card` | `feed.video` | `feed`                      |
+| **yt-auth**       | Known | Backend-only (auth)        | Bun/TS        | None     | Yes       | No             | No                      | `auth`       | `login`, `logout`, `status` |
+| **yt-card**       | Known | Frontend-only (component)  | N/A           | React WC | No        | No             | No (has `components`)   | No           | None                        |
+| **yt-search**     | Known | Backend-only (search)      | Bun/TS        | None     | Yes       | No             | No                      | `search`     | `search`                    |
+
 </task_result>
 </task>
-```
+
+````
 
 **Tool: task**
 
@@ -2508,9 +2556,10 @@ This suggests the host has been or is being refactored to delegate these respons
   "subagent_type": "explore",
   "prompt": "Explore the src/ directory and .opencode/ directory thoroughly.\n1. Read src/bun/index.ts - check its current line count and key features\n2. Read src/mainview/App.tsx - check its current line count\n3. Read src/shared/types.ts - check its current line count and type definitions\n4. Read the src/.opencode/ directory contents\n5. Read the .opencode/ directory at the project root\n6. Check for any llms.txt file contents\n7. Read test.sh and config.json if they exist\n8. Check scripts/build-plugins.ts - its current line count\n\nReturn ALL file contents verbatim where possible, or at least the key structural details."
 }
-```
+````
 
 **Output:**
+
 ```
 <task id="ses_0b7dca9d6ffehsHXKOxEyVnzbu" state="completed">
 <task_result>
@@ -2593,12 +2642,14 @@ The `PluginInfo`/`PluginRequestParams`/`PluginRequestResults` types appear to be
 This is a **mem0 plugin installation** — identical to what's at `/mnt/5TB/Projects/electro-plugins/.opencode/`:
 
 ```
-.gitignore          — ignores node_modules, package.json, package-lock.json, bun.lock, .gitignore
-commands/           — 16 mem0 command definitions (context-loader, dream, export, forget, health, import, list-projects, mem0, memory-reviewer, onboard, peek, pin, remember, stats, switch-project, tour)
-node_modules/       — (gitignored)
-package-lock.json   — (gitignored)
-package.json        — dependency on @opencode-ai/plugin@1.17.14
-skills/             — Same 16 skills in subdirectory format
+
+.gitignore — ignores node_modules, package.json, package-lock.json, bun.lock, .gitignore
+commands/ — 16 mem0 command definitions (context-loader, dream, export, forget, health, import, list-projects, mem0, memory-reviewer, onboard, peek, pin, remember, stats, switch-project, tour)
+node_modules/ — (gitignored)
+package-lock.json — (gitignored)
+package.json — dependency on @opencode-ai/plugin@1.17.14
+skills/ — Same 16 skills in subdirectory format
+
 ```
 
 This is a **red herring / accidental duplication** — the same mem0 installation exists in both `src/.opencode/` and `.opencode/`. The `src/.opencode/` one is likely a mistake since the project root already has `.opencode/`.
@@ -2610,12 +2661,14 @@ This is a **red herring / accidental duplication** — the same mem0 installatio
 Identical structure to `src/.opencode/` — the legitimate mem0 plugin installation:
 
 ```
+
 .gitignore
-commands/           — 16 mem0 command markdown files
+commands/ — 16 mem0 command markdown files
 node_modules/
 package-lock.json
-package.json        — @opencode-ai/plugin@1.17.14
-skills/             — 16 mem0 skill directories (each with SKILL.md)
+package.json — @opencode-ai/plugin@1.17.14
+skills/ — 16 mem0 skill directories (each with SKILL.md)
+
 ```
 
 ---
@@ -2623,17 +2676,21 @@ skills/             — 16 mem0 skill directories (each with SKILL.md)
 ## 6. `llms.txt` — Electrobun Documentation Reference
 
 ```
+
 # Electrobun Project
 
 This is an Electrobun desktop application.
 IMPORTANT: Electrobun is NOT Electron. Do not use Electron APIs or patterns.
 
 ## Documentation
+
 Full API reference: https://blackboard.sh/electrobun/llms.txt
 Getting started: https://blackboard.sh/electrobun/docs/
 
 ## Quick Reference
+
 Import patterns:
+
 - Main process (Bun): import { BrowserWindow } from "electrobun/bun"
 - Browser context: import { Electroview } from "electrobun/view"
 
@@ -2641,8 +2698,10 @@ Use views:// URLs to load bundled assets.
 Views must be configured in electrobun.config.ts to be built and copied into the bundle.
 
 ## About
+
 Electrobun is built by Blackboard (https://blackboard.sh)
-```
+
+````
 
 ---
 
@@ -2655,7 +2714,7 @@ printf '{"id":1,"method":"greet.hello","params":{"name":"Niri"}}\n' | ./plugins/
 echo ""
 echo "=== Testing logger plugin ==="
 printf '{"id":1,"method":"log.info","params":{"message":"test from shell"}}\n' | python3 plugins/logger-py/main.py
-```
+````
 
 **OBSOLETE** — references removed plugins (`greet-go`, `logger-py`). The script would fail since those plugin directories no longer exist on disk.
 
@@ -2666,8 +2725,18 @@ printf '{"id":1,"method":"log.info","params":{"message":"test from shell"}}\n' |
 ```json
 {
   "plugins": [
-    { "name": "greet", "command": "./plugins/greet-go/greet", "args": [], "methods": ["greet."] },
-    { "name": "logger", "command": "python3", "args": ["plugins/logger-py/main.py"], "methods": ["log."] }
+    {
+      "name": "greet",
+      "command": "./plugins/greet-go/greet",
+      "args": [],
+      "methods": ["greet."]
+    },
+    {
+      "name": "logger",
+      "command": "python3",
+      "args": ["plugins/logger-py/main.py"],
+      "methods": ["log."]
+    }
   ]
 }
 ```
@@ -2709,9 +2778,10 @@ printf '{"id":1,"method":"log.info","params":{"message":"test from shell"}}\n' |
 4. **`test.sh` and `config.json`** still exist on disk but reference removed plugins.
 
 5. **`src/.opencode/`** is a duplicate of the root `.opencode/` — likely accidental.
-</task_result>
-</task>
-```
+   </task_result>
+   </task>
+
+````
 
 ---
 
@@ -2732,53 +2802,54 @@ Let me read the actual source files to verify the refactoring details before wri
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/bun/index.ts"
 }
-```
+````
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/bun/index.ts</path>
 <type>file</type>
 <content>
 1: import { BrowserWindow, BrowserView } from "electrobun/bun";
-2: import { existsSync } from "fs" 
-3: import { join } from "path" 
-4: import type { PluginManifest } from "../shared/types" 
+2: import { existsSync } from "fs"
+3: import { join } from "path"
+4: import type { PluginManifest } from "../shared/types"
 5: import { Subprocess } from "bun";
-6: 
+6:
 7: interface PendingRequest {
 8: 	resolve: (value: any) => void
 9: 	reject: (reason: any) => void
 10: 	timer: Timer
 11: }
-12: 
+12:
 13: interface PluginInstance {
 14: 	config: PluginManifest
 15: 	process: Subprocess
 16: 	alive: boolean
 17: }
-18: 
+18:
 19: const plugins: PluginInstance[] = []
 20: const pendingRequests = new Map<number, PendingRequest>()
 21: let nextId = 1
-22: 
+22:
 23: function findProjectRoot(from: string): string {
-24: 	let dir = from 
+24: 	let dir = from
 25: 	while (true) {
-26: 		if (existsSync(join(dir, "package.json"))) return dir 
-27: 		const parent = join(dir, "..") 
+26: 		if (existsSync(join(dir, "package.json"))) return dir
+27: 		const parent = join(dir, "..")
 28: 		if (parent === dir) throw new Error("Could not find project root")
-29: 		dir = parent 
+29: 		dir = parent
 30: 	}
 31: }
-32: 
+32:
 33: const baseDir = findProjectRoot(import.meta.dir)
-34: 
+34:
 35: function resolvePath(p: string): string {
 36:   if (p.startsWith("/")) return p;
 37:   if (p.includes("/") || p.startsWith(".")) return join(baseDir, p);
 38:   return p;
 39: }
-40: 
+40:
 41: function spawnPlugin(config: Partial<PluginManifest> & { name: string }, run: string, extraArgs: string[] = []) {
 42: 	const parts = run.split(/\s+/)
 43: 	const cmd = resolvePath(parts[0])
@@ -2798,26 +2869,26 @@ Let me read the actual source files to verify the refactoring details before wri
 57: 		console.error(`[${config.name}] exited (code ${code})`)
 58: 	})
 59: }
-60: 
+60:
 61: spawnPlugin({ name: "core-manifest", methods: ["scan"] }, "bun plugins/core-manifest/main.ts", [baseDir])
 62: spawnPlugin({ name: "core-static", methods: ["read"] }, "bun plugins/core-static/main.ts", [baseDir])
 63: spawnPlugin({ name: "core-serve", methods: ["start", "stop"] }, "bun plugins/core-serve/main.ts", [baseDir])
-64: 
+64:
 65: const userManifests = (await routeRequest("core-manifest.scan", { full: true })) as any[]
-66: 
+66:
 67: for (const manifest of userManifests) {
 68: 	if (!manifest.run) continue
 69: 	spawnPlugin(manifest, manifest.run)
 70: }
-71: 
+71:
 72: console.log(`[host] Spawned plugins: ${plugins.map(p => p.config.name).join(", ") || "none"}`)
-73: 
+73:
 74: async function sendToPlugin(plugin: PluginInstance, id: number, method: string, params: any) {
 75: 	const msg = JSON.stringify({ id, method, params }) + "\n"
 76: 	const stdin = plugin.process.stdin
 77: 	if (stdin && typeof stdin !== "number") stdin.write(msg)
 78: }
-79: 
+79:
 80: function handlePluginResponse(plugin: PluginInstance, line: string) {
 81: 	try {
 82: 		const msg = JSON.parse(line)
@@ -2832,7 +2903,7 @@ Let me read the actual source files to verify the refactoring details before wri
 91: 		console.error(`[${plugin.config.name}] parse error:`, line)
 92: 	}
 93: }
-94: 
+94:
 95: async function readStream(stream: ReadableStream<any>, _name: string, onLine: (line: string) => void) {
 96: 	const reader = stream.getReader()
 97: 	const decoder = new TextDecoder()
@@ -2850,7 +2921,7 @@ Let me read the actual source files to verify the refactoring details before wri
 109: 		}
 110: 	} catch {}
 111: }
-112: 
+112:
 113: async function routeRequest(fullMethod: string, params: any): Promise<any> {
 114: 	const parts = fullMethod.split('.')
 115: 	const pluginName = parts[0]
@@ -2869,7 +2940,7 @@ Let me read the actual source files to verify the refactoring details before wri
 128: 		sendToPlugin(plugin, id, action, params)
 129: 	})
 130: }
-131: 
+131:
 132: const rpc = BrowserView.defineRPC({
 133:   maxRequestTime: 15000,
 134:   handlers: {
@@ -2925,18 +2996,18 @@ Let me read the actual source files to verify the refactoring details before wri
 184:     messages: {},
 185:   },
 186: });
-187: 
+187:
 188: const serveResult = (await routeRequest("core-serve.start", {})) as any
 189: const url = serveResult.url
 190: console.log(`[host] using server: ${url}`)
-191: 
+191:
 192: const mainWindow = new BrowserWindow({
 193: 	title: "Electro Plugins",
 194: 	url,
 195: 	frame: { width: 1024, height: 768, x: 200, y: 200 },
 196: 	rpc,
 197: })
-198: 
+198:
 199: setInterval(() => {
 200: 	for (const plugin of plugins) {
 201: 		if (!plugin.alive) {
@@ -2944,7 +3015,7 @@ Let me read the actual source files to verify the refactoring details before wri
 203: 		}
 204: 	}
 205: }, 5000)
-206: 
+206:
 207: process.on("SIGINT", async () => {
 208: 	try { await routeRequest("core-serve.stop", {}) } catch {}
 209: 	for (const p of plugins) p.process.kill()
@@ -2958,6 +3029,7 @@ Let me read the actual source files to verify the refactoring details before wri
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx"
@@ -2965,6 +3037,7 @@ Let me read the actual source files to verify the refactoring details before wri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx</path>
 <type>file</type>
@@ -2972,38 +3045,38 @@ Let me read the actual source files to verify the refactoring details before wri
 1: import { useState, useEffect } from "react"
 2: import { Electroview } from "electrobun/view"
 3: import type { PluginManifest } from "../shared/types"
-4: 
+4:
 5: const electroview = new Electroview({
 6:   rpc: Electroview.defineRPC({
 7:     maxRequestTime: 20000,
 8:     handlers: { requests: {}, messages: {} },
 9:   }),
 10: })
-11: 
+11:
 12: // -- Globals --
 13: window.__pluginRpc = async (method: string, params: any) => {
 14:   const res = await electroview.rpc?.request.pluginRequest({ method, params })
 15:   if (!res.success) throw new Error(res.error || "RPC error")
-16:     return res.data 
+16:     return res.data
 17: }
-18: 
+18:
 19: window.resolveHook = async (hook: string) => {
 20:   const res = await electroview.rpc.request.resolveHook({ hook })
 21:   if (!res.success) throw new Error(res.error || "Hook resolution failed")
 22:   return res.data
 23: }
-24: 
+24:
 25: window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
 26:   const method = args !== undefined ? methodOrArgs : undefined
 27:   const params = args !== undefined ? args : methodOrArgs
 28:   const res = await electroview.rpc.request.callHook({ hook, method, params })
 29:   if (!res.success) throw new Error(res.error || "callHook failed")
-30:   return res.data 
+30:   return res.data
 31: }
-32: 
+32:
 33: export default function App() {
 34:   const [manifests, setManifests] = useState<PluginManifest[]>([])
-35: 
+35:
 36:   useEffect(() => {
 37:     init().catch(e => {
 38:       console.error("[app] init() failed:", e)
@@ -3016,7 +3089,7 @@ Let me read the actual source files to verify the refactoring details before wri
 45:     const all: PluginManifest[] = await window.__pluginRpc('core-manifest.scan', {})
 46:     console.log("[app] manifests received:", all.map(m => `${m.name}${m.feeds?.length ? " (feeds)" : ""}${m.ui ? " (ui:"+m.ui+")" : ""}${m.hooks?.length ? " (hooks:"+m.hooks+")" : ""}`))
 47:     setManifests(all)
-48: 
+48:
 49:     const loaded = new Set<string>()
 50:     const uiPlugins: PluginManifest[] = []
 51:     for (const m of all) {
@@ -3036,7 +3109,7 @@ Let me read the actual source files to verify the refactoring details before wri
 65:         }
 66:       }
 67:     }
-68: 
+68:
 69:     // Create WC elements directly, outside React's VDOM
 70:     const container = document.getElementById("feed-container")
 71:     if (container) {
@@ -3051,20 +3124,20 @@ Let me read the actual source files to verify the refactoring details before wri
 80:     }
 81:     console.log("[app] init complete, ui plugins:", uiPlugins.map(p => p.ui).join(", ") || "none")
 82:   }
-83: 
+83:
 84:   async function loadFrontend(path: string) {
 85:     const result = await window.__pluginRpc("core-static.read", { path })
 86:     const script = document.createElement("script")
 87:     script.textContent = result.code
 88:     document.body.appendChild(script)
 89:   }
-90: 
+90:
 91:   return (
 92:     <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600">
 93:       <div className="container mx-auto px-4 py-10 max-w-5xl">
 94:         <h1 className="text-5xl font-bold text-center text-white mb-10 drop-shadow-lg">
 95:           Electro Plugins
-96:         </h1> 
+96:         </h1>
 97:         <div id="feed-container" />
 98:       </div>
 99:     </div>
@@ -3078,6 +3151,7 @@ Let me read the actual source files to verify the refactoring details before wri
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/shared/types.ts"
@@ -3085,6 +3159,7 @@ Let me read the actual source files to verify the refactoring details before wri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/shared/types.ts</path>
 <type>file</type>
@@ -3094,31 +3169,31 @@ Let me read the actual source files to verify the refactoring details before wri
 3:   alive: boolean
 4:   methods: string[]
 5: }
-6: 
+6:
 7: export interface PluginRequestParams {
 8:   method: string
 9:   params: any
 10: }
-11: 
+11:
 12: export interface PluginRequestResults {
 13:   success: boolean
 14:   data?: any
 15:   error?: string
 16: }
-17: 
+17:
 18: export interface FeedContrib {
 19:   type: string    // e.g. "video", "post", "image"
 20:   method?: string // RPC method to call (defaults to methods[0])
 21:   card?: string   // WC tag, e.g. "yt-video-card" - path derived
 22: }
-23: 
+23:
 24: export interface PluginManifest {
 25:   name: string
-26:   version?: string 
-27:   description?: string 
-28:   author?: string 
-29:   run?: string 
-30:   methods?: string[] 
+26:   version?: string
+27:   description?: string
+28:   author?: string
+29:   run?: string
+30:   methods?: string[]
 31:   ui?: string           // tag name for main-UI WC (only feed plugin)
 32:   components?: string[] // WC tags to build (cards, sub-components, not mounted automatically)
 33:   feeds?: FeedContrib[]
@@ -3132,6 +3207,7 @@ Let me read the actual source files to verify the refactoring details before wri
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/scripts/build-plugins.ts"
@@ -3139,6 +3215,7 @@ Let me read the actual source files to verify the refactoring details before wri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/scripts/build-plugins.ts</path>
 <type>file</type>
@@ -3153,7 +3230,7 @@ Let me read the actual source files to verify the refactoring details before wri
 8:   mkdirSync,
 9: } from "fs";
 10: import { join } from "path";
-11: 
+11:
 12: const FRAMEWORKS = {
 13:   vue: {
 14:     extensions: ["vue"],
@@ -3220,7 +3297,7 @@ Let me read the actual source files to verify the refactoring details before wri
 75:       ].join("\n"),
 76:   },
 77: };
-78: 
+78:
 79: const extMap = {};
 80: for (const [name, fw] of Object.entries(FRAMEWORKS)) {
 81:   for (const ext of fw.extensions) {
@@ -3228,12 +3305,12 @@ Let me read the actual source files to verify the refactoring details before wri
 83:     extMap[ext].push(name);
 84:   }
 85: }
-86: 
+86:
 87: function needsRebuild(input, output) {
 88:   if (!existsSync(output)) return true;
 89:   return statSync(output).mtime < statSync(input).mtime;
 90: }
-91: 
+91:
 92: function findPluginDirs(dir) {
 93:   const dirs = [];
 94:   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -3245,10 +3322,10 @@ Let me read the actual source files to verify the refactoring details before wri
 100:   }
 101:   return dirs;
 102: }
-103: 
+103:
 104: const buildDir = join(process.cwd(), "build", "plugins");
 105: if (!existsSync(buildDir)) mkdirSync(buildDir, { recursive: true });
-106: 
+106:
 107: const pluginDirs = findPluginDirs("plugins");
 108: for (const dir of pluginDirs) {
 109:   const manifest = JSON.parse(await Bun.file(join(dir, "plugin.json")).text());
@@ -3259,7 +3336,7 @@ Let me read the actual source files to verify the refactoring details before wri
 114:     for (const f of manifest.feeds) if (f.card) tags.add(f.card)
 115:   if (manifest.feeds)
 116:     for (const f of manifest.feeds) if (f.card) tags.add(f.card);
-117: 
+117:
 118:   for (const tag of tags) {
 119:     let file = null;
 120:     let ext = "";
@@ -3275,15 +3352,15 @@ Let me read the actual source files to verify the refactoring details before wri
 130:       console.log(`  skip ${tag} (source not found in ${dir})`);
 131:       continue;
 132:     }
-133: 
+133:
 134:     const output = join(buildDir, tag + ".js");
 135:     if (!needsRebuild(file, output)) {
 136:       console.log(`  skip ${tag}`);
 137:       continue;
 138:     }
-139: 
+139:
 140:     console.log(`vite: ${file} => ${output}`);
-141: 
+141:
 142:     const content =
 143:       ext === "vue" || ext === "svelte" ? "" : await Bun.file(file).text();
 144:     const candidates = extMap[ext] || [];
@@ -3294,17 +3371,17 @@ Let me read the actual source files to verify the refactoring details before wri
 149:             FRAMEWORKS[n].detect?.some((s) => content.includes(s)),
 150:           ) ?? candidates[0]);
 151:     const fw = FRAMEWORKS[fwName];
-152: 
+152:
 153:     const configFile = join(dir, ".vite.config.mjs");
 154:     const cssFile = join(dir, "style.css");
 155:     const entryFile = join(dir, "entry.tsx");
-156: 
+156:
 157:     writeFileSync(
 158:       cssFile,
 159:       "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n",
 160:     );
 161:     if (fw.entry) writeFileSync(entryFile, fw.entry(tag, tag + "." + ext));
-162: 
+162:
 163:     const libEntry = fw.entry ? '"entry.tsx"' : '"index.js"';
 164:     writeFileSync(
 165:       configFile,
@@ -3324,15 +3401,15 @@ Let me read the actual source files to verify the refactoring details before wri
 179:         `})`,
 180:       ].join("\n"),
 181:     );
-182: 
+182:
 183:     await $`bunx vite build --config ${configFile}`;
-184: 
+184:
 185:     unlinkSync(configFile);
 186:     if (fw.entry) unlinkSync(entryFile);
 187:     unlinkSync(cssFile);
 188:   }
 189: }
-190: 
+190:
 191: console.log("done");
 
 (End of file - total 191 lines)
@@ -3348,6 +3425,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-manifest/main.ts"
@@ -3355,6 +3433,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-manifest/main.ts</path>
 <type>file</type>
@@ -3362,9 +3441,9 @@ Now let me read the core plugin files and shared plugin library to verify the de
 1: import { readdirSync, existsSync, lstatSync, readFileSync } from "fs"
 2: import { join } from "path"
 3: import { startStdin } from "../_shared/stdin.ts"
-4: 
+4:
 5: const baseDir = process.argv[2] || join(import.meta.dir, "..", "..")
-6: 
+6:
 7: function getAllPluginManifests(dir: string): any[] {
 8:   let manifests: any[] = []
 9:   for (const file of readdirSync(dir)) {
@@ -3377,8 +3456,8 @@ Now let me read the core plugin files and shared plugin library to verify the de
 16:   }
 17:   return manifests
 18: }
-19: 
-20: startStdin(async (req, send) => {
+19:
+20: startStdin(async ({ method, params, id }, send) => {
 21:   if (req.method === "scan") {
 22:     const pluginDir = join(baseDir, "plugins")
 23:     if (!existsSync(pluginDir)) { send(req.id, []); return }
@@ -3401,6 +3480,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-serve/main.ts"
@@ -3408,6 +3488,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-serve/main.ts</path>
 <type>file</type>
@@ -3415,11 +3496,11 @@ Now let me read the core plugin files and shared plugin library to verify the de
 1: import { join } from "path"
 2: import { existsSync } from "fs"
 3: import { startStdin } from "../_shared/stdin.ts"
-4: 
+4:
 5: const baseDir = process.argv[2] || join(import.meta.dir, "..", "..")
 6: let server: any = null
-7: 
-8: startStdin(async (req, send) => {
+7:
+8: startStdin(async ({ method, params, id }, send) => {
 9:   if (req.method === "start") {
 10:     try {
 11:       await fetch("http://localhost:5173", { method: "HEAD" })
@@ -3459,6 +3540,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-static/main.ts"
@@ -3466,17 +3548,18 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-static/main.ts</path>
 <type>file</type>
 <content>
 1: import { join } from "path"
 2: import { startStdin } from "../_shared/stdin.ts"
-3: 
+3:
 4: const baseDir = process.argv[2] || join(import.meta.dir, "..", "..")
 5: const ALLOWED_PREFIX = join(baseDir, "build", "plugins")
-6: 
-7: startStdin(async (req, send) => {
+6:
+7: startStdin(async ({ method, params, id }, send) => {
 8:   if (req.method === "read") {
 9:     if (!req.params.path) { send(req.id, null, "path required"); return }
 10:     const fullPath = join(baseDir, req.params.path)
@@ -3496,6 +3579,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/_shared/stdin.ts"
@@ -3503,15 +3587,16 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/_shared/stdin.ts</path>
 <type>file</type>
 <content>
 1: import { createInterface } from "readline"
-2: 
+2:
 3: export type SendFn = (id: number | null, result?: any, error?: string) => void
 4: export type Handler = (req: { id: number | null; method: string; params: any }, send: SendFn) => Promise<void> | void
-5: 
+5:
 6: export const createSend: () => SendFn = () => {
 7:   return (id, result?, error?) => {
 8:     const msg: any = { id }
@@ -3520,7 +3605,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 11:     process.stdout.write(JSON.stringify(msg) + "\n")
 12:   }
 13: }
-14: 
+14:
 15: export function startStdin(handler: Handler) {
 16:   const send = createSend()
 17:   const rl = createInterface({ input: process.stdin })
@@ -3553,6 +3638,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-manifest/plugin.json"
@@ -3560,6 +3646,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-manifest/plugin.json</path>
 <type>file</type>
@@ -3579,6 +3666,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-serve/plugin.json"
@@ -3586,6 +3674,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-serve/plugin.json</path>
 <type>file</type>
@@ -3605,6 +3694,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/core-static/plugin.json"
@@ -3612,6 +3702,7 @@ Now let me read the core plugin files and shared plugin library to verify the de
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/core-static/plugin.json</path>
 <type>file</type>
@@ -3639,6 +3730,7 @@ Let me now condense and rewrite. The strategy: preserve all high-signal, repo-sp
 Here's my analysis of what to keep vs cut:
 
 **KEEP (high-signal):**
+
 - Exact dev commands (start, dev:hmr, build:plugins)
 - Architecture: subprocess stdin/stdout JSON-RPC, plugin system
 - The core-plugin refactoring (core-manifest, core-static, core-serve) — currently MISSING from AGENTS.md
@@ -3653,6 +3745,7 @@ Here's my analysis of what to keep vs cut:
 - Commands for standalone plugin testing
 
 **CUT (low-signal / generic / outdated):**
+
 - Long future vision essay (unified API client, media types, generalized features) — keep as 2-line summary
 - Phase 1/2 demo plugins section (REMOVED FROM DISK anyway)
 - Teaching/communication rules (belongs in SKILL.md, not project file)
@@ -3671,14 +3764,16 @@ I have a clear plan. The existing AGENTS.md is 1524 lines but severely outdated 
 **Tool: write**
 
 **Input:**
-```json
+
+````json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/AGENTS.md",
   "content": "# Electro Plugins\n\nLanguage-agnostic modular desktop app (Electrobun/Bun/TypeScript + React + Tailwind + Vite HMR). Every feature is a plugin communicating via subprocess stdin/stdout JSON-RPC.\n\nLong-term vision: unified API client organized by media type (video, image, post, etc), not by service. Built gradually.\n\n## Commands\n\n| Command | What it does |\n|---------|-------------|\n| `bun run start` | `build:plugins` + `vite build` + `electrobun dev` |\n| `bun run dev:hmr` | Concurrently runs `bun run hmr` + `bun run start` |\n| `bun run hmr` | Vite dev server on port 5173 |\n| `bun run dev` | `electrobun dev --watch` (no HMR) |\n| `bun run build:plugins` | Build WC frontends to `build/plugins/<tag>.js` |\n| `bun run build:canary` | `vite build` + `electrobun build --env=canary` |\n\nNo test/lint/typecheck commands exist. Single developer project.\n\n## Architecture\n\n```\nsrc/bun/index.ts  (host)  --spawns-->  plugins/*/main.ts  (subprocesses via stdin/stdout)\n                                         \\-- JSON-RPC messages, one line = one request/response\nsrc/mainview/App.tsx      --Electroview RPC-->  host routes to plugin by name.method prefix\n                        <--creates WCs in #feed-container-->\n```\n\n**Plugin protocol:** `{\"id\":1,\"method\":\"name.action\",\"params\":{}}` → `{\"id\":1,\"result\":{}}` or `{\"id\":1,\"error\":\"...\"}`. Newline-delimited. No `jsonrpc` field. Host routes by splitting method on first dot → finds plugin by `config.name` → sends remaining action to plugin stdin. 10s timeout. Plugins MUST flush stdout.\n\n### Core-Plugin Architecture (CRITICAL — host is now a thin orchestrator)\n\nThe host (`src/bun/index.ts`, 211 lines) spawns 3 core plugins FIRST, before any user plugins:\n\n1. **`core-manifest`** (`plugins/core-manifest/`) — `scan` method: recursively scans `plugins/` for `plugin.json` files, returns all manifests. `params.full=true` includes `run` field (used by host), `full=false` strips runtime fields (used by frontend).\n2. **`core-static`** (`plugins/core-static/`) — `read` method: reads files from `build/plugins/` only (path security check). Used by App.tsx to load WC frontends.\n3. **`core-serve`** (`plugins/core-serve/`) — `start` method: checks for Vite HMR on :5173 first, falls back to `Bun.serve()` on random port serving `dist/`. `stop` method: stops server.\n\nCore plugins all use `plugins/_shared/stdin.ts` (event-queue-based stdin handler, serial processing).\n\nThen host calls `core-manifest.scan({ full: true })` to get user plugin manifests, spawns each with a `run` field.\n\n### Startup sequence (in order)\n\n1. `findProjectRoot()` walks up from `import.meta.dir` to find `package.json`\n2. Spawn core plugins (core-manifest, core-static, core-serve) with `baseDir` as argv[2]\n3. Call `core-manifest.scan({ full: true })` → get user manifests\n4. Spawn each user plugin with a `run` field\n5. `core-serve.start({})` → get URL for BrowserWindow\n6. Create BrowserWindow with URL and 3 RPC handlers: `resolveHook`, `callHook`, `pluginRequest`\n7. Health check every 5s (logs dead plugins, no auto-restart)\n8. SIGINT cleanup: stop server, kill all subprocesses\n\n### RPC handlers on host (3 total)\n\n| Handler | Params | Returns |\n|---------|--------|---------|\n| `pluginRequest` | `{ method: string, params }` | `{ success, data?, error? }` — routes to user plugin via `routeRequest` |\n| `resolveHook` | `{ hook: string }` | `{ success, data: { name, methods } }` or error |\n| `callHook` | `{ hook, method?, params }` | `{ success, data? }` or error — resolves hook + calls method |\n\n### Frontend (src/mainview/App.tsx, 101 lines)\n\n- `Electroview.defineRPC({ maxRequestTime: 20000 })` — CRITICAL: must exceed host's 15000ms + plugin timeout\n- `window.__pluginRpc(method, params)` — global bridge, routes to `pluginRequest` only\n- `window.resolveHook(hook)`, `window.callHook(hook, method?, args?)` — hook helpers\n- On mount: calls `__pluginRpc(\"core-manifest.scan\", {})` (NOT `getPluginManifests`) → loads WC frontends via `__pluginRpc(\"core-static.read\", { path: \"build_plugins/<tag>.js\" })` → creates WC elements imperatively in `#feed-container` with `.manifests = all`\n- Collects tags from `feeds[].card` and `m.ui` only — does NOT scan `components[]`\n- No React refs to WCs — elements created via `document.createElement`\n\n### Build system (`scripts/build-plugins.ts`, 191 lines)\n\n- Scans `plugins/**/plugin.json` recursively, collects tags from: `ui`, `components[]`, `feeds[*].card`\n- For each unique tag: find `<pluginDir>/<tag>.tsx` (or .jsx/.vue/.svelte), auto-detect framework by scanning imports, generate temp Vite config, build IIFE to `build/plugins/<tag>.js`\n- Frameworks: React, Preact, Vue, Svelte. React entry template has `_item` and `_manifests` setters + `createRoot`. CSS inlined via `vite-plugin-css-injected-by-js`.\n- Cross-directory ownership: if source not found in declaring plugin's dir, another plugin must declare it in `components[]`\n\n## Plugin manifest schema\n\n```json\n{\n  \"name\": \"yt-feed\",\n  \"run\": \"bun plugins/youtube/plugins/yt-feed/main.ts\",\n  \"hooks\": [\"feed.video\"],\n  \"methods\": [\"feed\"],\n  \"feeds\": [{ \"type\": \"video\", \"card\": \"yt-video-card\" }]\n}\n```\n\n| Field | Required | Description |\n|-------|----------|-------------|\n| `name` | ✅ | Unique plugin ID. Used in RPC routing (`name.action`) |\n| `run` | ❌ | Command to spawn subprocess (e.g., `\"bun plugins/x/main.ts\"`) |\n| `methods` | ❌ | Array of method names. Called as `name + \".\" + method` |\n| `hooks` | ❌ | Array of hook strings for discovery (e.g., `\"feed.video\"`, `\"auth\"`, `\"search\"`, `\"player\"`) |\n| `ui` | ❌ | WC tag for main-UI (App.tsx loads AND mounts). Path: `build/plugins/<tag>.js` |\n| `components` | ❌ | WC tags to build but NOT mount (owned components/cards) |\n| `feeds` | ❌ | Array of feed contributions: `{ type, method?, card? }` |\n\nRPC routing: host splits `name.action` on first dot → finds plugin by `config.name` → sends `action` to plugin stdin.\n\n### Current plugins\n\n| Plugin | Type | Provides |\n|--------|------|----------|\n| `feed/` | Frontend-only (UI) | `feed-widget` — 5-state feed orchestrator, loads cards via `__pluginRpc(name.method)` |\n| `peertube/` | Fullstack | Backend: PeerTube API feed. Card: `peertube-card` |\n| `video-player/` | Fullstack | Backend: minimal. UI: `player-modal` — iframe overlay, listens for `player-load` CustomEvent |\n| `youtube/plugins/yt-feed/` | Backend | Innertube home feed, lazy cookie reload from `.youtube-cookie` |\n| `youtube/plugins/yt-auth/` | Backend | Browser cookie discovery (FF SQLite, Chrome via sweet-cookie), writes `.youtube-cookie` |\n| `youtube/plugins/yt-card/` | Frontend (component) | `yt-video-card` — card WC, dispatches `player-load` event on click |\n| `youtube/plugins/yt-search/` | Backend | Innertube search |\n\nNested plugins: `plugins/youtube/plugins/*/`. Parent `youtube/plugin.json` is metadata-only container.\n\n### Card→Player communication\n\nCards call `__pluginRpc(\"video-player.load\", {url, title})` then dispatch `new CustomEvent(\"player-load\", {detail: {url, title}})` on `window`. Player-modal listens in `useEffect(() => window.addEventListener(\"player-load\", handler))`. Uses `<iframe>` (not `<video>`) — embed URLs are HTML pages.\n\n### Auth sign-in\n\nFeed-widget searches ALL manifests for `m.methods?.includes(\"login\")` (not just errored source). Shows \"Sign in\" button in error banner. Auth method is on separate plugin (yt-auth) from feed source (yt-feed).\n\n## Bug history (must avoid repeating)\n\n| # | Symptom | Root cause | Lesson |\n|---|---------|------------|--------|\n| 1 | Plugin responses silently dropped | `for (const line in lines)` iterates indices, not values | Use `for...of` not `for...in` |\n| 2 | Dead plugins never detected | `plugin.alive == false` is comparison, not assignment | `=` vs `==` |\n| 4 | Memory leak | Missing `pendingRequests.delete()` after resolve/reject | Always clean up maps |\n| 10 | Plugin requests never sent | `stdin.getWriter()` fails — Bun's `Subprocess.stdin` is `FileSink` | Use `stdin.write(msg)` directly |\n| 11 | TS compilation errors | `defineRPC` expects `(params?: unknown) => unknown`, cast internally | Don't use specific param types |\n| 12 | Frontend RPC timeout | `maxRequestTime` default ~1s, plugin takes ~2.5s. Frontend timed out before plugin responded | Set `maxRequestTime: 20000` on ALL `defineRPC` calls |\n| 13 | White screen | `let uiPlugin` overwritten by last manifest with `ui` | Use array, create ALL UI plugins |\n| 14 | Stale build | `ui` field conflated build+mount for card components | Use `components` field, not `ui` |\n| 16 | Cookie never re-read after login | yt-feed read cookie once at startup | Lazy reload: check+reload at request time |\n| 17 | Card click does nothing | `dispatchEvent` missing from yt-video-card | Always dispatch `player-load` event |\n| 18 | Player shows blank | Used `<video>` with embed URLs (HTML pages, not media) | Use `<iframe>` for embed URLs |"
 }
-```
+````
 
 **Output:**
+
 ```
 Wrote file successfully.
 ```
@@ -3690,6 +3785,7 @@ Wrote file successfully.
 Done. The new AGENTS.md went from **1524 lines → 197 lines** (87% reduction). Here's what changed:
 
 **Removed (~1327 lines):**
+
 - Full future vision essay about unified API client / media types
 - Phase 1/2 demo plugin documentation (greet-go, logger-py, joke-fetcher — all removed from disk)
 - Teaching/communication rules (generic — belongs in SKILL.md, not project file)
@@ -3704,6 +3800,7 @@ Done. The new AGENTS.md went from **1524 lines → 197 lines** (87% reduction). 
 - Obsolete test.sh and config.json references
 
 **Updated (~70 lines):**
+
 - Host architecture: now describes 3 core plugins (core-manifest, core-static, core-serve) instead of monolithic host
 - Frontend: App.tsx now calls `core-manifest.scan` and `core-static.read` (not old RPC handlers)
 - Host line count updated (211 lines, not ~450)
@@ -3712,6 +3809,7 @@ Done. The new AGENTS.md went from **1524 lines → 197 lines** (87% reduction). 
 - Build system: now Vite-based with auto-detect framework
 
 **Preserved (~200 lines):**
+
 - All exact commands
 - Plugin protocol format and routing rules
 - Startup sequence order (critical: core plugins before user plugins)
@@ -3730,15 +3828,12 @@ I want you to not change that file, but I want you to keep that summerized file 
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 8.6s)
 
-
-
 I'll revert the AGENTS.md back to the original.
-
-
 
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git checkout AGENTS.md",
@@ -3747,6 +3842,7 @@ I'll revert the AGENTS.md back to the original.
 ```
 
 **Output:**
+
 ```
 Updated 1 path from the index
 
@@ -3768,13 +3864,12 @@ now, what will it take to make this in tauri?
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 11.4s)
 
-
-
 Let me research what moving from Electrobun to Tauri
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/AGENTS.md"
@@ -3782,41 +3877,42 @@ Let me research what moving from Electrobun to Tauri
 ```
 
 **Output:**
-```
+
+````
 <path>/mnt/5TB/Projects/electro-plugins/AGENTS.md</path>
 <type>file</type>
 <content>
 1: # Electro Plugins — Complete Project Knowledge Base
-2: 
+2:
 3: ## ALWAYS ON FIRST TURN: Load coding skill
 4: Use `skill` tool with name `"coding", "caveman"` on every session's first turn before doing anything else.
-5: 
+5:
 6: ## CRITICAL: The Two-File Rule (ABSOLUTE)
 7: You (the AI agent) may ONLY modify two files:
 8: 1. **This file** (`AGENTS.md`) — all project-specific knowledge
 9: 2. **`~/.config/opencode/skills/coding/SKILL.md`** — all general coding/teaching rules
-10: 
+10:
 11: NEVER create, edit, or delete any other file in this project. The user does ALL code work.
-12: 
+12:
 13: You MUST update BOTH files with every single prompt — actively check if anything changed
 14: and record it. Never assume "the last agent already handled this." Always verify.
 15: See the "Auto-Update Protocol" section in SKILL.md for the full rule.
-16: 
+16:
 17: ---
-18: 
+18:
 19: ## Quick Summary
 20: Language-agnostic modular desktop app where every feature is a plugin communicating
 21: via subprocess stdin/stdout JSON-RPC. Built with Electrobun (Bun/TypeScript desktop
 22: framework). Frontend: React + Tailwind + Vite (HMR). Plugins can be any language.
 23: Plugin UIs use Web Components (any framework bundled to self-contained .js).
-24: 
+24:
 25: Phase 1 (Plugin System) IS COMPLETE — flat manifests, host manifest scanning at startup,
 26: plugin spawning with stdin/stdout pipes, JSON-RPC routing by method prefix, Web Component
 27: frontends (Preact + Vue), centralized build script (scripts/build-plugins.ts).
-28: 
+28:
 29: Phase 2 (YouTube Explorer) IS COMPLETE — Bun/TS backend with Innertube API, cookie auth
 30: via browser DB discovery, search + home feed + auth flow, WC frontend with embedded player.
-31: 
+31:
 32: Phase 3 (Unified Feed) IS COMPLETE — old per-plugin widget cards removed. App.tsx loads
 33: manifests, injects card frontend scripts, and mounts UI plugin elements from a `uiPlugins[]`
 34: array (not a single `uiPlugin`). A `<feed-widget>` discovers feed-contributing plugins at
@@ -3824,7 +3920,7 @@ Let me research what moving from Electrobun to Tauri
 36: card WCs via `CardRenderer`. Plugin manifest simplified: `run` replaces `command`+`args`,
 37: `feeds` block replaces `frontendComponent`/`frontendFile`/`frontendSlot`, new `components`
 38: field for WC tags that need building but should NOT be mounted as main UI.
-39: 
+39:
 40: Phase 4 (Core Plugin Extraction) IS COMPLETE — host core simplified from ~340 to ~211 lines.
 41: FS manifest scanning extracted to `core-manifest` plugin, static file serving extracted to
 42: `core-static` plugin. Host reduced to pure spawn+route+lifecycle: one `spawnPlugin()` function,
@@ -3834,7 +3930,7 @@ Let me research what moving from Electrobun to Tauri
 46: All user-facing calls go through `__pluginRpc` (App.tsx calls `core-manifest.scan` and
 47: `core-static.read` directly). Ready for Rust rewrite: plugins unchanged, only host rewrites.
 48: Host is ~245 lines, 3 RPC handlers, 1 `spawnPlugin()` function, 1 `readStream()` function.
-49: 
+49:
 50: Host is ~211 lines, 3 RPC handlers, 1 `spawnPlugin()` function, 1 `readStream()` function.
 51: 6 backend plugins share a common boilerplate lib via `plugins/_shared/stdin.ts` (38 lines):
 52: `startStdin()` + `createSend()` eliminates duplicate stdin reader, send(), and handleRequest()
@@ -3842,7 +3938,7 @@ Let me research what moving from Electrobun to Tauri
 54: `core-serve` plugin extracted: detects Vite HMR (port 5173), falls back to Bun.serve(dist/).
 55: Includes `stop` method for clean SIGINT shutdown. Host no longer imports `Updater`.
 56: Cleanup ordering: stop core-serve first, then kill remaining plugins.
-57: 
+57:
 58: Current working state: Feed-widget displays all 5 render states (loading, auth-required,
 59: error per source, empty, cards). yt-feed (YouTube feed via Innertube API) works with
 60: lazy cookie reload. yt-auth plugin provides login/logout/status using browser DB discovery
@@ -3852,35 +3948,35 @@ Let me research what moving from Electrobun to Tauri
 64: for PeerTube. Sign-in buttons per auth plugin are shown/hidden based on searching ALL
 65: manifests for a plugin with `methods.includes("login")`. Host is ~245 lines, 3 RPC handlers,
 66: 1 `spawnPlugin()` function, 1 `readStream()` function.
-67: 
+67:
 68: ---
-69: 
+69:
 70: ## Goal
 71: Build a language-agnostic, fully modular desktop app where every feature is a plugin.
 72: The plugin system is independent of the "skeleton" (the app framework). The same plugins
 73: work on any skeleton — Electrobun (desktop now), Tauri or zero-native (desktop + mobile later).
-74: 
+74:
 75: Long-term vision: a unified API client that aggregates every internet service into one
 76: interface. Content is categorized by MEDIA TYPE (posts, shorts, videos, images, DMs, etc.),
 77: not by service. Users get one feed per media type populated from all the services they
 78: choose. Features are generalized per media type — if someone builds auto-scroll for shorts,
 79: ALL shorts (TikTok, Reels, YT Shorts) get it automatically. This will be built GRADUALLY,
 80: starting with one simple API at a time.
-81: 
+81:
 82: ---
-83: 
+83:
 84: ## Long-Term Vision — Unified API Client
-85: 
+85:
 86: ### The Problem
 87: Currently every internet service has its own dedicated client app:
 88: - NewPipe for YouTube, Alicord for Discord
 89: - Separate apps for Twitter, Instagram, Telegram, Reddit, TikTok
 90: - Different UI, different features, different codebases — no sharing between them
-91: 
+91:
 92: ### The Solution: One App for Every API
 93: A single desktop app where every internet service is a plugin.
 94: Content is organized by MEDIA TYPE, not by service.
-95: 
+95:
 96: **Media Type Examples**
 97: - **Posts/Threads**: Reddit posts, Twitter threads, Bluesky, Hacker News stories
 98: - **Shorts**: TikTok, Instagram Reels, YouTube Shorts, Reddit Watch
@@ -3894,11 +3990,11 @@ Let me research what moving from Electrobun to Tauri
 106: - **Anime/Manga**: MyAnimeList, AniList, Crunchyroll, MangaDex
 107: - **Recipes**: AllRecipes, SeriousEats, NYT Cooking
 108: - ...and anything else — theoretically infinite (one per API endpoint type)
-109: 
+109:
 110: Each media type has one feed in the app. The user adds/removes services from each
 111: feed freely. Adding a new service to a feed gives you ALL that service's content
 112: mixed in with everything else.
-113: 
+113:
 114: ### Generalized Features per Media Type
 115: Features attach to the MEDIA TYPE, not the service:
 116: - Auto-scroll for shorts feed → ALL shorts get it (TikTok + Reels + YT Shorts)
@@ -3906,27 +4002,27 @@ Let me research what moving from Electrobun to Tauri
 118: - Download for images → ALL images from any service get it
 119: - Translation for posts → ALL posts get it
 120: - Any QoL feature built by the community → works everywhere instantly
-121: 
+121:
 122: No more waiting for YouTube to add a feature you want. No more missing auto-scroll
 123: on Reels while TikTok has it. The community builds features once, and they work for
 124: every service with that media type.
-125: 
+125:
 126: ### How We Get There (Gradual)
 127: 1. Start with simple individual API plugins (fetch data, show on screen)
 128: 2. When multiple plugins produce the same media type → build a unified feed
 129: 3. Build generalized features for that media type
 130: 4. Repeat for more APIs and media types as interest grows
 131: 5. Architecture evolves organically as patterns emerge (no premature abstraction)
-132: 
+132:
 133: **This is a long-term vision, not a right-now requirement. We're prototyping:
 134: building the first real API plugin to fetch internet data and show it on screen.**
-135: 
+135:
 136: ---
-137: 
+137:
 138: ## Core Architecture
-139: 
+139:
 140: ### Current Architecture (Phase 1 Complete)
-141: 
+141:
 142: ```
 143: ┌──────────────────────────────────────────────────────────────────┐
 144: │  WebView (React + Tailwind + Vite HMR)                           │
@@ -3971,7 +4067,7 @@ Let me research what moving from Electrobun to Tauri
 183: │  └──────────────────┘  └──────────────────┘                     │
 184: └──────────────────────────────────────────────────────────────────┘
 185: ```
-186: 
+186:
 187: ### Data Flow (End-to-End — Phase 3)
 188: 1. App starts → Host spawns system plugins (core-manifest, core-static), then calls `core-manifest.scan` to discover user plugins, then spawns user plugins
 189: 2. WebView loads → App.tsx mounts (Electroview RPC bridge initialized)
@@ -3989,11 +4085,11 @@ Let me research what moving from Electrobun to Tauri
 201: 11. Host reads stdout line, parses JSON, matches by `id`, resolves promise
 202: 12. Result flows back through RPC → `window.__pluginRpc` returns → feed-widget receives items
 203: 13. Feed-widget creates card WCs (`document.createElement(tag)`), sets `.item = rawItem`, appends to container
-204: 
+204:
 205: ---
-206: 
+206:
 207: ## File Structure (ACCURATE — matches code on disk as of July 2026)
-208: 
+208:
 209: ```
 210: /mnt/5TB/Projects/electro-plugins/
 211: ├── AGENTS.md                        ← THIS FILE (update every session!)
@@ -4138,11 +4234,11 @@ Let me research what moving from Electrobun to Tauri
 350: ├── node_modules/                    # (in .gitignore)
 351: └── electro-plugins.log              # (obsolete — from old logger-py, in .gitignore)
 352: ```
-353: 
+353:
 354: ---
-355: 
+355:
 356: ## Plugin Protocol (Detailed)
-357: 
+357:
 358: ### Message Format
 359: ```json
 360: {"id": 1, "method": "greet.hello", "params": {"name": "Niri"}}
@@ -4151,7 +4247,7 @@ Let me research what moving from Electrobun to Tauri
 363: - `method`: string — format is `namespace.action` (e.g., `greet.hello`, `log.info`)
 364: - `params`: optional object — any JSON structure the plugin expects
 365: - NO `jsonrpc` field (simplified from JSON-RPC spec)
-366: 
+366:
 367: ### Response Format
 368: ```json
 369: {"id": 1, "result": {"message": "Hello Niri from Go!"}}
@@ -4159,7 +4255,7 @@ Let me research what moving from Electrobun to Tauri
 371: - On success: `{"id": <same id>, "result": <any>}`
 372: - On error:   `{"id": <same id>, "error": "<message>"}`
 373: - Messages are newline-delimited: one JSON object per line (`\n`)
-374: 
+374:
 375: ### Protocol Rules
 376: 1. Plugin reads exactly one line from stdin
 377: 2. Plugin processes the request
@@ -4168,7 +4264,7 @@ Let me research what moving from Electrobun to Tauri
 380: 5. Host matches response to pending request by `id`
 381: 6. If no response within 10 seconds, the Promise rejects with timeout error
 382: 7. No connection keepalive, no persistent state between requests (each request is stateless)
-383: 
+383:
 384: ### Host Routing Logic
 385: ```typescript
 386: for (const plugin of plugins) {
@@ -4184,11 +4280,11 @@ Let me research what moving from Electrobun to Tauri
 396: - The specific action (hello vs bye) is handled by the plugin, NOT the host
 397: - Adding 100+ plugins requires zero changes to routing code
 398: - Order matters: first matching plugin in the manifests array wins
-399: 
+399:
 400: ---
-401: 
+401:
 402: ## Host Behavior (src/bun/index.ts — ~245 lines)
-403: 
+403:
 404: ### Startup Sequence
 405: 1. `findProjectRoot(import.meta.dir)` — walks up directory tree until `package.json` found. Works in both dev and bundled modes.
 406: 2. `baseDir = findProjectRoot(...)` — store the project root absolute path
@@ -4206,53 +4302,53 @@ Let me research what moving from Electrobun to Tauri
 418: 9. `new BrowserWindow({ title, url, frame, rpc })` — create the app window
 419: 10. `setInterval()` — health check every 5 seconds (logs dead plugins, no auto-restart)
 420: 11. `process.on("SIGINT")` — stop server, kill all plugin processes, exit
-421: 
+421:
 422: ### RPC Handlers
-423: 
+423:
 424: All handlers use `(params: unknown) =>` with internal casts.
-425: 
+425:
 426: | Handler | Params (cast from unknown) | Returns |
 427: |---------|---------------------------|---------|
 428: | `pluginRequest` | `{ method: string, params: any }` | `{ success, data?, error? }` |
 429: | `resolveHook` | `{ hook: string }` | `{ success, data: { name, methods } }` or `{ success: false, error }` |
 430: | `callHook` | `{ hook: string, method?: string, params: any }` | `{ success, data? }` or `{ success: false, error }` |
-431: 
+431:
 432: **RPC details:**
 433: - `pluginRequest(method, params)`: calls `routeRequest(method, params)` which splits method by `.` — first part is plugin name, rest is action. Finds plugin by `config.name`, sends `{id, method: action, params}` via stdin. Returns Promise with 10s timeout.
 434: - `resolveHook({ hook })`: finds first plugin with `config.hooks.includes(hook)`. Returns `{name, methods}`.
 435: - `callHook({ hook, method?, params })`: finds plugin for hook, calls `routeRequest(name.method, params)`. Defaults to `methods[0]` if no method specified.
-436: 
+436:
 437: ### stdout/stderr Reader (readStream)
 438: - Single generic async reader: `readStream(stream, name, onLine)`
 439: - Web Streams API: `stream.getReader()`
 440: - Buffers partial lines across chunks (split by `\n`, keep incomplete line in buffer via `lines.pop()`)
 441: - Each complete line passed to `onLine` callback
 442: - Used for both stdout (response parsing) and stderr (console logging)
-443: 
+443:
 444: ### Response Handling (handlePluginResponse)
 445: 1. `JSON.parse(line)` → get `msg`
 446: 2. Match by `msg.id` to pending request
 447: 3. `clearTimeout(timer)` + `pendingRequests.delete(id)`
 448: 4. `msg.error` exists → `reject(new Error(msg.error))`
 449: 5. Else → `resolve(msg.result)`
-450: 
+450:
 451: ### Health Check
 452: - `setInterval()` every 5000ms
 453: - Logs dead plugins (no auto-restart)
-454: 
+454:
 455: ### Cleanup
 456: - `process.on("SIGINT")` — kills all plugin subprocesses, stops static server
-457: 
+457:
 458: ---
-459: 
+459:
 460: ## Frontend Behavior (src/mainview/App.tsx — ~102 lines)
-461: 
+461:
 462: ### Imports & Setup
 463: - `useState, useEffect` from React
 464: - `Electroview` from electrobun/view (Electrobun's browser-side RPC bridge)
 465: - Type imports: `PluginManifest` from shared/types
 466: - NO `useRef` — UI plugin elements created imperatively, not via React refs
-467: 
+467:
 468: ### RPC Configuration
 469: ```typescript
 470: const electroview = new Electroview({
@@ -4264,7 +4360,7 @@ Let me research what moving from Electrobun to Tauri
 476: ```
 477: - `maxRequestTime: 20000` is CRITICAL. Host has 15000ms, routeRequest has 10s, plugin has 8s.
 478:   Frontend timeout must be the largest (20s) because it's the outermost caller.
-479: 
+479:
 480: ### Global Bridges (module-level, outside App component)
 481: ```typescript
 482: window.__pluginRpc = async (method: string, params: any) => {
@@ -4276,7 +4372,7 @@ Let me research what moving from Electrobun to Tauri
 488: - Any WC can call `window.__pluginRpc(method, params)` without importing Electrobun
 489: - No `host.*` routing — bridge only routes to plugin subprocesses
 490: - Method format: `"name.action"` (e.g., `"yt-feed.feed"`) — host splits on first dot to find plugin by name
-491: 
+491:
 492: ```typescript
 493: window.resolveHook = async (hook: string) => {
 494:   const res = await electroview.rpc.request.resolveHook({ hook })
@@ -4293,10 +4389,10 @@ Let me research what moving from Electrobun to Tauri
 505: ```
 506: - `resolveHook(hook)` → finds plugin providing that hook (e.g., `"feed.video"` → yt-feed)
 507: - `callHook(hook, method?, args)` → resolves hook + calls plugin method
-508: 
+508:
 509: ### App Component — State
 510: - `manifests` — array of `PluginManifest` from `getPluginManifests` RPC
-511: 
+511:
 512: ### On Mount — Init Function
 513: ```typescript
 514: useEffect(() => { init().catch(e => { ... }) }, [])
@@ -4311,7 +4407,7 @@ Let me research what moving from Electrobun to Tauri
 523: 5. For each UI plugin: waits for WC definition, creates element imperatively, sets `.manifests = all`, appends to `#feed-container`
 524:    - Creates elements for ALL UI plugins (not just last one)
 525:    - Uses `document.getElementById("feed-container")` — not React refs
-526: 
+526:
 527: ### Render
 528: ```typescript
 529: return (
@@ -4324,13 +4420,13 @@ Let me research what moving from Electrobun to Tauri
 536: - Only renders a container div — UI plugin elements are created imperatively inside it
 537: - No React refs to web components — elements managed via `document.getElementById`
 538: - No `<feed-widget>` in JSX — created imperatively
-539: 
+539:
 540: ---
-541: 
+541:
 542: ## Build System
-543: 
+543:
 544: `scripts/build-plugins.ts` (~191 lines) — centralized build for all plugin frontends.
-545: 
+545:
 546: ### How It Works
 547: 1. Scans `plugins/` recursively via `findPluginDirs()` — finds all directories containing `plugin.json` (supports nested plugins like `plugins/youtube/plugins/yt-card/`)
 548: 2. For each plugin dir, reads `plugin.json` and collects WC tag names from:
@@ -4346,7 +4442,7 @@ Let me research what moving from Electrobun to Tauri
 558:    e. Runs `bunx vite build --config <configFile>` targeting IIFE format
 559:    f. Output: `build/plugins/<tag>.js` (deleted temp files after build)
 560: 5. Framework auto-detection: reads source file, checks for `"react"`/`"react-dom"` imports (React) vs `"preact"`/`"preact/hooks"` (Preact). Falls back to first match if ambiguous.
-561: 
+561:
 562: ### Entry Template (React example)
 563: Generated by the build script's `entry()` function:
 564: ```typescript
@@ -4365,31 +4461,31 @@ Let me research what moving from Electrobun to Tauri
 577: ```
 578: - All WCs get `_item` and `_manifests` setters (even non-card WCs — harmless)
 579: - CSS inlined via `vite-plugin-css-injected-by-js` (Tailwind classes included)
-580: 
+580:
 581: ### Tag Sources
 582: | Manifest Field | Type | Purpose |
 583: |---------------|------|---------|
 584: | `ui: "feed-widget"` | string | Main UI WC (built + mounted by App.tsx) |
 585: | `components: ["yt-video-card"]` | string[] | Built-only WCs (not mounted by App.tsx) |
 586: | `feeds[i].card: "yt-video-card"` | string | Feed item card WCs (loaded, mounted by feed-widget) |
-587: 
+587:
 588: ### Cross-Directory Source Discovery
 589: When a plugin references a WC tag (via `feeds[].card`) but the source file isn't in that plugin's directory:
 590: - Build script logs `skip <tag> (source not found in <dir>)`
 591: - The tag WILL be built if ANOTHER plugin declares it in `components[]` or `ui`
 592: - Fix: Declare `components: ["<tag>"]` on the plugin that owns the source file
 593: - Example: `plugins/youtube/plugins/yt-card/plugin.json` has `components: ["yt-video-card"]` — builds the source in its own directory
-594: 
+594:
 595: ### Entry Template Paths (at runtime, in App.tsx)
 596: Frontend JS is loaded from `build/plugins/<tag>.js` via `getPluginFrontend({ path })`.
 597: Previously: `plugins/<name>/frontend/<tag>.js`. Now: `build/plugins/<tag>.js`.
-598: 
+598:
 599: ### Run Commands
 600: ```bash
 601: bun run build:plugins          # Build all plugin frontends (output to build/plugins/)
 602: bun run start                  # build:plugins + vite build + electrobun dev
 603: ```
-604: 
+604:
 605: ### Framework Handling
 606: | Framework | Source Ext | Build Tool | Bundle Size |
 607: |-----------|-----------|------------|-------------|
@@ -4397,14 +4493,14 @@ Let me research what moving from Electrobun to Tauri
 609: | Preact | .tsx/.jsx | Vite (IIFE) | ~3KB + code |
 610: | Vue | .vue | Vite (IIFE) | ~35KB + code |
 611: | Svelte | .svelte | Vite (IIFE) | varies |
-612: 
+612:
 613: "Works forever" principle: framework code inlined into the plugin's .js file.
 614: The plugin never depends on what version of React/Vue/Preact the host app uses.
-615: 
+615:
 616: ---
-617: 
+617:
 618: ## Plugin Manifest Schema (Current — Flat Format)
-619: 
+619:
 620: ```json
 621: {
 622:   "name": "yt-feed",
@@ -4416,7 +4512,7 @@ Let me research what moving from Electrobun to Tauri
 628:   ]
 629: }
 630: ```
-631: 
+631:
 632: ### Fields
 633: | Field | Required | Description |
 634: |-------|----------|-------------|
@@ -4434,21 +4530,21 @@ Let me research what moving from Electrobun to Tauri
 646: | `feeds[].type` | ✅ (if feeds) | Content type: `"video"`, `"image"`, `"post"`, etc. Also used as default hook for resolution. |
 647: | `feeds[].method` | ❌ | RPC method to call. Defaults to `methods[0]`. |
 648: | `feeds[].card` | ❌ | WC tag for rendering one item. Path: `build/plugins/<tag>.js`. If absent, items skipped. |
-649: 
+649:
 650: ### Plugin Types
 651: - **Backend-only**: Has `run` but no `ui`/`feeds` → spawned as subprocess, no UI
 652: - **Frontend-only (main UI)**: Has `ui` but no `run` → WC loaded and mounted by App.tsx
 653: - **Frontend-only (card/component)**: Has `components` or `feeds[].card` but no `run` → WC loaded by App.tsx, mounted by feed-widget
 654: - **Fullstack**: Has `run` + `ui`/`feeds` → subprocess + frontend components
 655: - **Feed source**: Has `run` + `feeds` → subprocess with feed method + card WC
-656: 
+656:
 657: **Frontend path derivation** (build time and runtime):
 658: - Build script collects tags from: `ui`, `components[]`, `feeds[*].card`
 659: - Output: `build/plugins/<tag>.js`
 660: - Search: plugin's own directory first, then cross-directory fallback by tag name
-661: 
+661:
 662: ### Example Manifests
-663: 
+663:
 664: **yt-feed (feed source, backend + card)**:
 665: ```json
 666: {
@@ -4459,7 +4555,7 @@ Let me research what moving from Electrobun to Tauri
 671:   "feeds": [{ "type": "video", "card": "yt-video-card" }]
 672: }
 673: ```
-674: 
+674:
 675: **yt-auth (auth provider, backend-only)**:
 676: ```json
 677: {
@@ -4469,7 +4565,7 @@ Let me research what moving from Electrobun to Tauri
 681:   "methods": ["login", "logout", "status"]
 682: }
 683: ```
-684: 
+684:
 685: **yt-card (component provider, frontend-only)**:
 686: ```json
 687: {
@@ -4477,7 +4573,7 @@ Let me research what moving from Electrobun to Tauri
 689:   "components": ["yt-video-card"]
 690: }
 691: ```
-692: 
+692:
 693: **feed (main UI, frontend-only)**:
 694: ```json
 695: {
@@ -4488,7 +4584,7 @@ Let me research what moving from Electrobun to Tauri
 700:   "ui": "feed-widget"
 701: }
 702: ```
-703: 
+703:
 704: **video-player (fullstack with ui)**:
 705: ```json
 706: {
@@ -4499,19 +4595,19 @@ Let me research what moving from Electrobun to Tauri
 711:   "ui": "player-modal"
 712: }
 713: ```
-714: 
+714:
 715: ---
-716: 
+716:
 717: ## Plugin Implementations
-718: 
+718:
 719: ### Phase 1/2 Demo Plugins (REMOVED FROM DISK — Historical Reference Only)
 720: - **greet-go** — Go backend (greet.hello, greet.bye). Frontend (greet-widget) removed in Phase 3. REMOVED from disk.
 721: - **logger-py** — Python backend (log.info, log.list). Frontend (log-viewer) removed in Phase 3. REMOVED from disk.
 722: - **joke-fetcher** — Bun/TS backend (joke.random, joke.types). REMOVED from disk.
 723: - **youtube-explorer** — Original monolithic YouTube plugin. Split into yt-feed, yt-auth, yt-search, yt-card. REMOVED from disk.
-724: 
+724:
 725: ### yt-feed — YouTube Feed Backend (Bun/TS)
-726: 
+726:
 727: #### Backend (plugins/youtube/plugins/yt-feed/main.ts)
 728: - Uses Innertube API for YouTube home feed
 729: - Lazily loads cookie from shared file (`.youtube-cookie` written by yt-auth)
@@ -4520,9 +4616,9 @@ Let me research what moving from Electrobun to Tauri
 732: - Methods are simple (no prefix): just `"feed"` — prefix added by feed-widget as `name + "." + method`
 733: - 8s Promise.race timeout on API calls
 734: - No `feeds.method` in manifest — defaults to `methods[0]` ("feed")
-735: 
+735:
 736: ### yt-auth — YouTube Cookie Auth (Bun/TS)
-737: 
+737:
 738: #### Backend (plugins/youtube/plugins/yt-auth/main.ts)
 739: - Browser cookie database discovery:
 740:   - Firefox: finds `cookies.sqlite` via `find ~/.mozilla -name "cookies.sqlite" 2>/dev/null`
@@ -4533,9 +4629,9 @@ Let me research what moving from Electrobun to Tauri
 745: - Filters ST-* cookies (avoids 413 Request Entity Too Large on YouTube API)
 746: - Writes cookie to shared `.youtube-cookie` file (read by yt-feed)
 747: - Methods: `login` (discover+write), `logout` (delete file), `status` (check file exists)
-748: 
+748:
 749: ### yt-card — YouTube Video Card WC (React, no backend)
-750: 
+750:
 751: #### Frontend (plugins/youtube/plugins/yt-card/yt-video-card.tsx)
 752: - React card WC built via esbuild entry template
 753: - Receives item prop: `{ thumbnail, title, channel, viewCount, published }`
@@ -4543,15 +4639,15 @@ Let me research what moving from Electrobun to Tauri
 755: - Handles click on thumbnail → calls `window.__pluginRpc("video-player.load", {url, title})` then dispatches `new CustomEvent("player-load", {detail: {url, title}})` on window
 756: - Player-modal listens for `player-load` to auto-open
 757: - Manifest uses `components: ["yt-video-card"]` — built but NOT mounted as top-level view
-758: 
+758:
 759: ### yt-search — YouTube Search Backend (Bun/TS)
-760: 
+760:
 761: #### Backend (plugins/youtube/plugins/yt-search/main.ts)
 762: - Uses Innertube API for YouTube search
 763: - `search` method: takes query param, calls `tube.search()`, returns results
-764: 
+764:
 765: ### feed-widget — Feed Orchestrator WC (React, no backend)
-766: 
+766:
 767: #### Frontend (plugins/feed/feed-widget.tsx)
 768: - 5-state machine: `loading` (spinner), `error` (system error), `empty` (no sources), `partial` (some errors), `loaded` (all ok)
 769: - Loads feed via `callHook("feed.video")` — uses hook resolution, not direct source.feeds.method calls
@@ -4562,30 +4658,30 @@ Let me research what moving from Electrobun to Tauri
 774:   - Calls login method, reloads feed on success
 775: - `CardRenderer`: creates card WCs via `document.createElement(tag)`, sets `.item`, appends to container
 776: - Uses `customElements.whenDefined()` to wait for WC registration before creating elements
-777: 
+777:
 778: ### peertube — PeerTube Feed Backend + Card WC (Bun/TS + React)
-779: 
+779:
 780: #### Backend (plugins/peertube/main.ts)
 781: - Fetches videos from a PeerTube instance API
 782: - `list` method: returns array of video items from PeerTube instance
-783: 
+783:
 784: #### Frontend (plugins/peertube/peertube-card.tsx)
 785: - React card WC similar to yt-video-card
 786: - Handles click → dispatches `player-load` custom event with `{url, title}`
 787: - Manifest: `feeds: [{type:"video", card:"peertube-card"}]`
-788: 
+788:
 789: ### video-player — Player Modal (Bun/TS + React WC)
-790: 
+790:
 791: #### Backend (plugins/video-player/main.ts)
 792: - Lightweight backend, `load` method is a placeholder
 793: - Manifest: `ui: "player-modal"`, `hooks: ["player"]`
-794: 
+794:
 795: #### Frontend (plugins/video-player/player-modal.tsx)
 796: - Uses `<iframe>` (not `<video>`) — service embed URLs are HTML pages, not direct media files
 797: - Listens for `"player-load"` custom event on `window` (dispatched by card WCs)
 798: - On event: calls `__pluginRpc("load", {url})` and shows modal with iframe
 799: - Handles close button, click-outside-to-close, Escape key
-800: 
+800:
 801: #### Data flow
 802: 1. App.tsx calls host RPC → gets manifests → loads frontends from `build/plugins/<tag>.js`
 803: 2. App.tsx creates UI WC elements imperatively in `#feed-container`, sets `.manifests = all`
@@ -4593,17 +4689,17 @@ Let me research what moving from Electrobun to Tauri
 805: 4. `loadFeed()`: for each source with `feeds[]`, calls `__pluginRpc(source.name + "." + method, {})`
 806: 5. Results merged into flat `items[]` array
 807: 6. `CardRenderer` creates WC for each item, sets `.item`, appends
-808: 
+808:
 809: #### __pluginRpc callers
 810: - feed-widget calls `__pluginRpc(source.name + "." + method, {})` (e.g., `"yt-feed.feed"`)
 811: - feed-widget calls `__pluginRpc(authPlugin.name + "." + method, {})` when user clicks "Sign in"
 812: - Auth method found by searching ALL manifests for `methods.includes("login")`
 813: - No host.* prefix — bridge is simple, routes only to plugin subprocesses
-814: 
+814:
 815: ---
-816: 
+816:
 817: ## All Key Decisions Made (Chronological)
-818: 
+818:
 819: ### Architecture Decisions
 820: 1. **Language-agnostic plugin system** — plugins can be written in any language (Go, Python, etc.)
 821: 2. **Subprocess stdin/stdout JSON-RPC** — simplest cross-language IPC. Each plugin is a standalone process
@@ -4616,14 +4712,14 @@ Let me research what moving from Electrobun to Tauri
 828: 9. **Companion app** (future) — a tiny binary that reads config and launches the right skeleton for the platform
 829: 10. **Manifest scanning from plugins/*/plugin.json** — replaced config.json. Host reads all plugin.json files at startup via readdirSync + JSON.parse. No central config needed.
 830: 11. **Flat manifest format** — no nested backend/frontend objects. All fields at top level. Matches VS Code/Chrome/Obsidian conventions.
-831: 
+831:
 832: ### Framework Decisions
 833: 12. **Electrobun for prototyping** — easiest for a beginner (Bun/TypeScript). Native WebView, ~14MB bundle, fast startup
 834: 13. **Tauri for future mobile** — Rust, mature ecosystem, iOS + Android support, but requires learning Rust
 835: 14. **zero-native** (Vercel Labs) — alternative future option. Zig + system WebView, mobile support, but pre-release (v0.2)
 836: 15. **WebUI (webui-dev)** — interesting but no mobile path. Opens a real browser (Chrome/Firefox), not a WebView. Few KB library
 837: 16. **React + Tailwind + Vite** for the frontend (from the Electrobun template)
-838: 
+838:
 839: ### Phase 3 Decisions
 840: 17. **Feed approach is THE approach** — old per-plugin widget cards are dead. App.tsx mounts only `<feed-widget>`. No WebComponentSlot, no plugin cards, no callMethod, no result box.
 841: 18. **No library sharing needed** — one WC class definition is shared across all DOM instances. Framework bundle lives in prototype. Different plugins have different bundles (their own versions). No duplication within the same WC type. Option B (per-plugin shared library) solves a non-problem.
@@ -4638,7 +4734,7 @@ Let me research what moving from Electrobun to Tauri
 850: 27. **No schema** — feed doesn't know or care about item structure. Raw data passes through to card WC. Cards written by the same person as the backend.
 851: 28. **Auth in error banners** — feed-widget shows "Sign in" button in per-plugin error banners when plugin has `.auth.login` method. Calls it, reloads feed on success.
 852: 29. **5 feed states** — loading, system error, empty, partial (some errors), loaded (all ok). Error banners per-plugin.
-853: 
+853:
 854: ### Plugin Design Decisions
 855: 17. **Web Components for frontend plugins** — any framework (React, Vue, Svelte, Angular) can compile to them. Browser standard, no framework lock-in
 856: 18. **Iframes as alternative** — stronger isolation, separate JS context, communication via postMessage. Heavier. Cannot display native UI (Qt/GTK)
@@ -4648,11 +4744,11 @@ Let me research what moving from Electrobun to Tauri
 860: 22. **`findProjectRoot()` walks up from `import.meta.dir`** — works in both dev (flat) and bundled modes
 861: 23. **FileSink.write() for plugin stdin** — Bun's `Subprocess.stdin` is a `FileSink` when piped. Use `.write()` directly.
 862: 24. **RPC params typed as `unknown`** — Electrobun's `defineRPC` expects `(params?: unknown) => unknown`. All handlers cast internally.
-863: 
+863:
 864: ### Go Plugin Specific
 865: 25. **`*json.RawMessage` for params** — user explicitly chose this over simpler `map[string]interface{}`. More type safety, more verbose.
 866: 26. **Nested struct for params** — each method defines its own params struct, unmarshals from RawMessage
-867: 
+867:
 868: ### Teaching/Communication Decisions
 869: 27. **User is a beginner** — assume ZERO prior knowledge. Explain every concept, syntax, and line
 870: 28. **Provide full code in messages** — user copies code themselves. Never modify files without explicit permission
@@ -4661,11 +4757,12 @@ Let me research what moving from Electrobun to Tauri
 
 (Output capped at 50 KB. Showing lines 1-872. Use offset=873 to continue.)
 </content>
-```
+````
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/package.json"
@@ -4673,6 +4770,7 @@ Let me research what moving from Electrobun to Tauri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/package.json</path>
 <type>file</type>
@@ -4725,6 +4823,7 @@ Let me research what moving from Electrobun to Tauri
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/electrobun.config.ts"
@@ -4732,12 +4831,13 @@ Let me research what moving from Electrobun to Tauri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/electrobun.config.ts</path>
 <type>file</type>
 <content>
 1: import type { ElectrobunConfig } from "electrobun";
-2: 
+2:
 3: export default {
 4: 	app: {
 5: 		name: "react-tailwind-vite",
@@ -4772,6 +4872,7 @@ Let me research what moving from Electrobun to Tauri
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/tsconfig.json"
@@ -4779,6 +4880,7 @@ Let me research what moving from Electrobun to Tauri
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/tsconfig.json</path>
 <type>file</type>
@@ -4816,11 +4918,10 @@ Let me research what moving from Electrobun to Tauri
 
 Now let me look at how Tauri works to understand the migration surface:
 
-
-
 **Tool: websearch**
 
 **Input:**
+
 ```json
 {
   "query": "Tauri v2 app setup Rust backend frontend WebView 2025 2026",
@@ -4829,7 +4930,8 @@ Now let me look at how Tauri works to understand the migration surface:
 ```
 
 **Output:**
-```
+
+````
 {
   "search_id": "search_704ad5cffcad42678591d51540e17352",
   "results": [
@@ -4923,11 +5025,12 @@ Now let me look at how Tauri works to understand the migration surface:
   ],
   "session_id": "ses_0b7dd3b35ffeecaxK8nY5HYFxL"
 }
-```
+````
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/bun/index.ts"
@@ -4935,50 +5038,51 @@ Now let me look at how Tauri works to understand the migration surface:
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/bun/index.ts</path>
 <type>file</type>
 <content>
 1: import { BrowserWindow, BrowserView } from "electrobun/bun";
-2: import { existsSync } from "fs" 
-3: import { join } from "path" 
-4: import type { PluginManifest } from "../shared/types" 
+2: import { existsSync } from "fs"
+3: import { join } from "path"
+4: import type { PluginManifest } from "../shared/types"
 5: import { Subprocess } from "bun";
-6: 
+6:
 7: interface PendingRequest {
 8: 	resolve: (value: any) => void
 9: 	reject: (reason: any) => void
 10: 	timer: Timer
 11: }
-12: 
+12:
 13: interface PluginInstance {
 14: 	config: PluginManifest
 15: 	process: Subprocess
 16: 	alive: boolean
 17: }
-18: 
+18:
 19: const plugins: PluginInstance[] = []
 20: const pendingRequests = new Map<number, PendingRequest>()
 21: let nextId = 1
-22: 
+22:
 23: function findProjectRoot(from: string): string {
-24: 	let dir = from 
+24: 	let dir = from
 25: 	while (true) {
-26: 		if (existsSync(join(dir, "package.json"))) return dir 
-27: 		const parent = join(dir, "..") 
+26: 		if (existsSync(join(dir, "package.json"))) return dir
+27: 		const parent = join(dir, "..")
 28: 		if (parent === dir) throw new Error("Could not find project root")
-29: 		dir = parent 
+29: 		dir = parent
 30: 	}
 31: }
-32: 
+32:
 33: const baseDir = findProjectRoot(import.meta.dir)
-34: 
+34:
 35: function resolvePath(p: string): string {
 36:   if (p.startsWith("/")) return p;
 37:   if (p.includes("/") || p.startsWith(".")) return join(baseDir, p);
 38:   return p;
 39: }
-40: 
+40:
 41: function spawnPlugin(config: Partial<PluginManifest> & { name: string }, run: string, extraArgs: string[] = []) {
 42: 	const parts = run.split(/\s+/)
 43: 	const cmd = resolvePath(parts[0])
@@ -4998,26 +5102,26 @@ Now let me look at how Tauri works to understand the migration surface:
 57: 		console.error(`[${config.name}] exited (code ${code})`)
 58: 	})
 59: }
-60: 
+60:
 61: spawnPlugin({ name: "core-manifest", methods: ["scan"] }, "bun plugins/core-manifest/main.ts", [baseDir])
 62: spawnPlugin({ name: "core-static", methods: ["read"] }, "bun plugins/core-static/main.ts", [baseDir])
 63: spawnPlugin({ name: "core-serve", methods: ["start", "stop"] }, "bun plugins/core-serve/main.ts", [baseDir])
-64: 
+64:
 65: const userManifests = (await routeRequest("core-manifest.scan", { full: true })) as any[]
-66: 
+66:
 67: for (const manifest of userManifests) {
 68: 	if (!manifest.run) continue
 69: 	spawnPlugin(manifest, manifest.run)
 70: }
-71: 
+71:
 72: console.log(`[host] Spawned plugins: ${plugins.map(p => p.config.name).join(", ") || "none"}`)
-73: 
+73:
 74: async function sendToPlugin(plugin: PluginInstance, id: number, method: string, params: any) {
 75: 	const msg = JSON.stringify({ id, method, params }) + "\n"
 76: 	const stdin = plugin.process.stdin
 77: 	if (stdin && typeof stdin !== "number") stdin.write(msg)
 78: }
-79: 
+79:
 80: function handlePluginResponse(plugin: PluginInstance, line: string) {
 81: 	try {
 82: 		const msg = JSON.parse(line)
@@ -5032,7 +5136,7 @@ Now let me look at how Tauri works to understand the migration surface:
 91: 		console.error(`[${plugin.config.name}] parse error:`, line)
 92: 	}
 93: }
-94: 
+94:
 95: async function readStream(stream: ReadableStream<any>, _name: string, onLine: (line: string) => void) {
 96: 	const reader = stream.getReader()
 97: 	const decoder = new TextDecoder()
@@ -5050,7 +5154,7 @@ Now let me look at how Tauri works to understand the migration surface:
 109: 		}
 110: 	} catch {}
 111: }
-112: 
+112:
 113: async function routeRequest(fullMethod: string, params: any): Promise<any> {
 114: 	const parts = fullMethod.split('.')
 115: 	const pluginName = parts[0]
@@ -5069,7 +5173,7 @@ Now let me look at how Tauri works to understand the migration surface:
 128: 		sendToPlugin(plugin, id, action, params)
 129: 	})
 130: }
-131: 
+131:
 132: const rpc = BrowserView.defineRPC({
 133:   maxRequestTime: 15000,
 134:   handlers: {
@@ -5125,18 +5229,18 @@ Now let me look at how Tauri works to understand the migration surface:
 184:     messages: {},
 185:   },
 186: });
-187: 
+187:
 188: const serveResult = (await routeRequest("core-serve.start", {})) as any
 189: const url = serveResult.url
 190: console.log(`[host] using server: ${url}`)
-191: 
+191:
 192: const mainWindow = new BrowserWindow({
 193: 	title: "Electro Plugins",
 194: 	url,
 195: 	frame: { width: 1024, height: 768, x: 200, y: 200 },
 196: 	rpc,
 197: })
-198: 
+198:
 199: setInterval(() => {
 200: 	for (const plugin of plugins) {
 201: 		if (!plugin.alive) {
@@ -5144,7 +5248,7 @@ Now let me look at how Tauri works to understand the migration surface:
 203: 		}
 204: 	}
 205: }, 5000)
-206: 
+206:
 207: process.on("SIGINT", async () => {
 208: 	try { await routeRequest("core-serve.stop", {}) } catch {}
 209: 	for (const p of plugins) p.process.kill()
@@ -5164,6 +5268,7 @@ Good. I now have a complete picture. Let me also fetch the Tauri v2 docs for the
 **Tool: webfetch**
 
 **Input:**
+
 ```json
 {
   "url": "https://v2.tauri.app/develop/calling-rust/",
@@ -5172,6 +5277,7 @@ Good. I now have a complete picture. Let me also fetch the Tauri v2 docs for the
 ```
 
 **Error:**
+
 ```
 Request timed out
 ```
@@ -5190,8 +5296,6 @@ continue
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 24.8s)
 
-
-
 Here's the migration assessment. The key insight is: **the plugin system is already skeleton-agnostic.** Plugins are independent subprocesses communicating via stdin/stdout JSON — they don't care if the host is Bun or Rust.
 
 ### What stays the same (no changes needed)
@@ -5204,15 +5308,15 @@ Here's the migration assessment. The key insight is: **the plugin system is alre
 
 Only **`src/bun/index.ts`** — the 211-line host. Tauri replaces this with a Rust crate (`src-tauri/`). The Rust host must implement the exact same logic:
 
-| Electrobun host does | Tauri equivalent |
-|---|---|
-| `Bun.spawn()` plugin subprocesses | `std::process::Command` in Rust |
-| `readStream()` (Web Streams API) | `BufRead::read_line()` or async tokio lines |
+| Electrobun host does                        | Tauri equivalent                                                          |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `Bun.spawn()` plugin subprocesses           | `std::process::Command` in Rust                                           |
+| `readStream()` (Web Streams API)            | `BufRead::read_line()` or async tokio lines                               |
 | `routeRequest()` (Promise with 10s timeout) | Rust `HashMap<u64, oneshot::Sender>` + timeout via `tokio::time::timeout` |
-| `BrowserView.defineRPC()` (Electrobun API) | `#[tauri::command]` functions invoked from frontend via `invoke()` |
-| Vite HMR detection on :5173 | Same logic — `reqwest::get("http://localhost:5173")` |
-| `Bun.serve()` fallback | `axum` or `tiny_http` server on random port |
-| `findProjectRoot()` | Walk `parent()` until `package.json` found |
+| `BrowserView.defineRPC()` (Electrobun API)  | `#[tauri::command]` functions invoked from frontend via `invoke()`        |
+| Vite HMR detection on :5173                 | Same logic — `reqwest::get("http://localhost:5173")`                      |
+| `Bun.serve()` fallback                      | `axum` or `tiny_http` server on random port                               |
+| `findProjectRoot()`                         | Walk `parent()` until `package.json` found                                |
 
 ### What changes in the frontend
 
@@ -5228,12 +5332,12 @@ The 3 global bridges (`__pluginRpc`, `resolveHook`, `callHook`) keep the same si
 
 ### New files / structural changes
 
-| File | Purpose |
-|---|---|
-| `src-tauri/Cargo.toml` | Rust dependencies (tokio, serde_json, reqwest, axum/tiny_http) |
-| `src-tauri/src/main.rs` | Rust host — spawn plugins, manage stdin/stdout pipes, expose 3 `#[tauri::command]` functions |
-| `src-tauri/tauri.conf.json` | Window config, identifier, build settings |
-| `src-tauri/build.rs` | Tauri build script (standard) |
+| File                        | Purpose                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| `src-tauri/Cargo.toml`      | Rust dependencies (tokio, serde_json, reqwest, axum/tiny_http)                               |
+| `src-tauri/src/main.rs`     | Rust host — spawn plugins, manage stdin/stdout pipes, expose 3 `#[tauri::command]` functions |
+| `src-tauri/tauri.conf.json` | Window config, identifier, build settings                                                    |
+| `src-tauri/build.rs`        | Tauri build script (standard)                                                                |
 
 ### Deletions
 
@@ -5250,14 +5354,14 @@ The 3 global bridges (`__pluginRpc`, `resolveHook`, `callHook`) keep the same si
 
 ### Rough effort estimate
 
-| Task | Lines | Complexity |
-|---|---|---|
-| Write Rust host (`src-tauri/src/main.rs`) | ~250 lines | Medium — translates Bun patterns to Rust/tokio |
-| Write `Cargo.toml` + `tauri.conf.json` | ~40 lines | Low — standard config |
-| Update `App.tsx` RPC bridge | ~30 lines changed | Low — swap import + call patterns |
-| Update `package.json` scripts | ~10 lines | Low |
-| Remove Electrobun config/files | 3 files deleted | Trivial |
-| Install system deps (WebKitGTK etc) | one-time | Low |
+| Task                                      | Lines             | Complexity                                     |
+| ----------------------------------------- | ----------------- | ---------------------------------------------- |
+| Write Rust host (`src-tauri/src/main.rs`) | ~250 lines        | Medium — translates Bun patterns to Rust/tokio |
+| Write `Cargo.toml` + `tauri.conf.json`    | ~40 lines         | Low — standard config                          |
+| Update `App.tsx` RPC bridge               | ~30 lines changed | Low — swap import + call patterns              |
+| Update `package.json` scripts             | ~10 lines         | Low                                            |
+| Remove Electrobun config/files            | 3 files deleted   | Trivial                                        |
+| Install system deps (WebKitGTK etc)       | one-time          | Low                                            |
 
 The big question: **how much Rust do you know?** The host logic is straightforward async Rust (spawn processes, read lines, match IDs, timeouts, 3 command handlers), but this would be your first Rust code in the project.
 
@@ -5266,20 +5370,18 @@ The big question: **how much Rust do you know?** The host logic is straightforwa
 ## User
 
 1. I don't know rust at all, I only read to half the third chapter in the rust book (ownership)
-2. before we do this, there is a lot of things I want to do in this project first, I want to make it a lot easier to migrate, but also I want to make this system migration agnostic so in the future when migrating to another core, it would be just a quick drop without configuring a lot of things, i want the core to be as adaptable as possible to core changes, so first, can we make the core smaller somehow? splitting into more plugins? 
+2. before we do this, there is a lot of things I want to do in this project first, I want to make it a lot easier to migrate, but also I want to make this system migration agnostic so in the future when migrating to another core, it would be just a quick drop without configuring a lot of things, i want the core to be as adaptable as possible to core changes, so first, can we make the core smaller somehow? splitting into more plugins?
 
 ---
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 12.8s)
 
-
-
 You want to shrink the host further by extracting more logic into plugins, making the skeleton a thin shell that's trivial to rewrite in any language. Let me think through what's left in the host that could move
-
 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/bun/index.ts"
@@ -5287,50 +5389,51 @@ You want to shrink the host further by extracting more logic into plugins, makin
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/bun/index.ts</path>
 <type>file</type>
 <content>
 1: import { BrowserWindow, BrowserView } from "electrobun/bun";
-2: import { existsSync } from "fs" 
-3: import { join } from "path" 
-4: import type { PluginManifest } from "../shared/types" 
+2: import { existsSync } from "fs"
+3: import { join } from "path"
+4: import type { PluginManifest } from "../shared/types"
 5: import { Subprocess } from "bun";
-6: 
+6:
 7: interface PendingRequest {
 8: 	resolve: (value: any) => void
 9: 	reject: (reason: any) => void
 10: 	timer: Timer
 11: }
-12: 
+12:
 13: interface PluginInstance {
 14: 	config: PluginManifest
 15: 	process: Subprocess
 16: 	alive: boolean
 17: }
-18: 
+18:
 19: const plugins: PluginInstance[] = []
 20: const pendingRequests = new Map<number, PendingRequest>()
 21: let nextId = 1
-22: 
+22:
 23: function findProjectRoot(from: string): string {
-24: 	let dir = from 
+24: 	let dir = from
 25: 	while (true) {
-26: 		if (existsSync(join(dir, "package.json"))) return dir 
-27: 		const parent = join(dir, "..") 
+26: 		if (existsSync(join(dir, "package.json"))) return dir
+27: 		const parent = join(dir, "..")
 28: 		if (parent === dir) throw new Error("Could not find project root")
-29: 		dir = parent 
+29: 		dir = parent
 30: 	}
 31: }
-32: 
+32:
 33: const baseDir = findProjectRoot(import.meta.dir)
-34: 
+34:
 35: function resolvePath(p: string): string {
 36:   if (p.startsWith("/")) return p;
 37:   if (p.includes("/") || p.startsWith(".")) return join(baseDir, p);
 38:   return p;
 39: }
-40: 
+40:
 41: function spawnPlugin(config: Partial<PluginManifest> & { name: string }, run: string, extraArgs: string[] = []) {
 42: 	const parts = run.split(/\s+/)
 43: 	const cmd = resolvePath(parts[0])
@@ -5350,26 +5453,26 @@ You want to shrink the host further by extracting more logic into plugins, makin
 57: 		console.error(`[${config.name}] exited (code ${code})`)
 58: 	})
 59: }
-60: 
+60:
 61: spawnPlugin({ name: "core-manifest", methods: ["scan"] }, "bun plugins/core-manifest/main.ts", [baseDir])
 62: spawnPlugin({ name: "core-static", methods: ["read"] }, "bun plugins/core-static/main.ts", [baseDir])
 63: spawnPlugin({ name: "core-serve", methods: ["start", "stop"] }, "bun plugins/core-serve/main.ts", [baseDir])
-64: 
+64:
 65: const userManifests = (await routeRequest("core-manifest.scan", { full: true })) as any[]
-66: 
+66:
 67: for (const manifest of userManifests) {
 68: 	if (!manifest.run) continue
 69: 	spawnPlugin(manifest, manifest.run)
 70: }
-71: 
+71:
 72: console.log(`[host] Spawned plugins: ${plugins.map(p => p.config.name).join(", ") || "none"}`)
-73: 
+73:
 74: async function sendToPlugin(plugin: PluginInstance, id: number, method: string, params: any) {
 75: 	const msg = JSON.stringify({ id, method, params }) + "\n"
 76: 	const stdin = plugin.process.stdin
 77: 	if (stdin && typeof stdin !== "number") stdin.write(msg)
 78: }
-79: 
+79:
 80: function handlePluginResponse(plugin: PluginInstance, line: string) {
 81: 	try {
 82: 		const msg = JSON.parse(line)
@@ -5384,7 +5487,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 91: 		console.error(`[${plugin.config.name}] parse error:`, line)
 92: 	}
 93: }
-94: 
+94:
 95: async function readStream(stream: ReadableStream<any>, _name: string, onLine: (line: string) => void) {
 96: 	const reader = stream.getReader()
 97: 	const decoder = new TextDecoder()
@@ -5402,7 +5505,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 109: 		}
 110: 	} catch {}
 111: }
-112: 
+112:
 113: async function routeRequest(fullMethod: string, params: any): Promise<any> {
 114: 	const parts = fullMethod.split('.')
 115: 	const pluginName = parts[0]
@@ -5421,7 +5524,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 128: 		sendToPlugin(plugin, id, action, params)
 129: 	})
 130: }
-131: 
+131:
 132: const rpc = BrowserView.defineRPC({
 133:   maxRequestTime: 15000,
 134:   handlers: {
@@ -5477,18 +5580,18 @@ You want to shrink the host further by extracting more logic into plugins, makin
 184:     messages: {},
 185:   },
 186: });
-187: 
+187:
 188: const serveResult = (await routeRequest("core-serve.start", {})) as any
 189: const url = serveResult.url
 190: console.log(`[host] using server: ${url}`)
-191: 
+191:
 192: const mainWindow = new BrowserWindow({
 193: 	title: "Electro Plugins",
 194: 	url,
 195: 	frame: { width: 1024, height: 768, x: 200, y: 200 },
 196: 	rpc,
 197: })
-198: 
+198:
 199: setInterval(() => {
 200: 	for (const plugin of plugins) {
 201: 		if (!plugin.alive) {
@@ -5496,7 +5599,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 203: 		}
 204: 	}
 205: }, 5000)
-206: 
+206:
 207: process.on("SIGINT", async () => {
 208: 	try { await routeRequest("core-serve.stop", {}) } catch {}
 209: 	for (const p of plugins) p.process.kill()
@@ -5510,6 +5613,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx"
@@ -5517,6 +5621,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx</path>
 <type>file</type>
@@ -5524,38 +5629,38 @@ You want to shrink the host further by extracting more logic into plugins, makin
 1: import { useState, useEffect } from "react"
 2: import { Electroview } from "electrobun/view"
 3: import type { PluginManifest } from "../shared/types"
-4: 
+4:
 5: const electroview = new Electroview({
 6:   rpc: Electroview.defineRPC({
 7:     maxRequestTime: 20000,
 8:     handlers: { requests: {}, messages: {} },
 9:   }),
 10: })
-11: 
+11:
 12: // -- Globals --
 13: window.__pluginRpc = async (method: string, params: any) => {
 14:   const res = await electroview.rpc?.request.pluginRequest({ method, params })
 15:   if (!res.success) throw new Error(res.error || "RPC error")
-16:     return res.data 
+16:     return res.data
 17: }
-18: 
+18:
 19: window.resolveHook = async (hook: string) => {
 20:   const res = await electroview.rpc.request.resolveHook({ hook })
 21:   if (!res.success) throw new Error(res.error || "Hook resolution failed")
 22:   return res.data
 23: }
-24: 
+24:
 25: window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
 26:   const method = args !== undefined ? methodOrArgs : undefined
 27:   const params = args !== undefined ? args : methodOrArgs
 28:   const res = await electroview.rpc.request.callHook({ hook, method, params })
 29:   if (!res.success) throw new Error(res.error || "callHook failed")
-30:   return res.data 
+30:   return res.data
 31: }
-32: 
+32:
 33: export default function App() {
 34:   const [manifests, setManifests] = useState<PluginManifest[]>([])
-35: 
+35:
 36:   useEffect(() => {
 37:     init().catch(e => {
 38:       console.error("[app] init() failed:", e)
@@ -5568,7 +5673,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 45:     const all: PluginManifest[] = await window.__pluginRpc('core-manifest.scan', {})
 46:     console.log("[app] manifests received:", all.map(m => `${m.name}${m.feeds?.length ? " (feeds)" : ""}${m.ui ? " (ui:"+m.ui+")" : ""}${m.hooks?.length ? " (hooks:"+m.hooks+")" : ""}`))
 47:     setManifests(all)
-48: 
+48:
 49:     const loaded = new Set<string>()
 50:     const uiPlugins: PluginManifest[] = []
 51:     for (const m of all) {
@@ -5588,7 +5693,7 @@ You want to shrink the host further by extracting more logic into plugins, makin
 65:         }
 66:       }
 67:     }
-68: 
+68:
 69:     // Create WC elements directly, outside React's VDOM
 70:     const container = document.getElementById("feed-container")
 71:     if (container) {
@@ -5603,20 +5708,20 @@ You want to shrink the host further by extracting more logic into plugins, makin
 80:     }
 81:     console.log("[app] init complete, ui plugins:", uiPlugins.map(p => p.ui).join(", ") || "none")
 82:   }
-83: 
+83:
 84:   async function loadFrontend(path: string) {
 85:     const result = await window.__pluginRpc("core-static.read", { path })
 86:     const script = document.createElement("script")
 87:     script.textContent = result.code
 88:     document.body.appendChild(script)
 89:   }
-90: 
+90:
 91:   return (
 92:     <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600">
 93:       <div className="container mx-auto px-4 py-10 max-w-5xl">
 94:         <h1 className="text-5xl font-bold text-center text-white mb-10 drop-shadow-lg">
 95:           Electro Plugins
-96:         </h1> 
+96:         </h1>
 97:         <div id="feed-container" />
 98:       </div>
 99:     </div>
@@ -5635,25 +5740,26 @@ Here's my analysis of what's left in the host and what could move out:
 
 ### What the host still does (211 lines)
 
-| Responsibility | Lines | Can extract? |
-|---|---|---|
-| 1. `findProjectRoot()` + `resolvePath()` | 17 | Yes — trivial but needed for everything |
-| 2. `spawnPlugin()` — `Bun.spawn()` with pipes, attach readers | 19 | **Hard** — this is the core act. Different in every language |
-| 3. `sendToPlugin()` — write JSON to stdin | 5 | **Host-only** — needs plugin process ref |
-| 4. `handlePluginResponse()` — parse stdout JSON, match by id | 14 | **Host-only** — needs pendingRequests map |
-| 5. `readStream()` — async line reader | 17 | **Host-only** — stream adapter |
-| 6. `routeRequest()` — split method, find plugin, promise with 10s timer | 18 | **Host-only** — orchestrates #3, #4, plugins[] |
-| 7. RPC bridge (`BrowserView.defineRPC`) | 55 | **Yes — move into a plugin!** |
-| 8. Startup orchestration (spawn cores, scan, spawn users, serve) | 10 | **Host-only** — sequencing |
-| 9. `new BrowserWindow()` | 6 | Skeleton — different per platform |
-| 10. Health check interval | 7 | **Yes** — could be a plugin service |
-| 11. SIGINT cleanup | 5 | **Host-only** — process lifecycle |
+| Responsibility                                                          | Lines | Can extract?                                                 |
+| ----------------------------------------------------------------------- | ----- | ------------------------------------------------------------ |
+| 1. `findProjectRoot()` + `resolvePath()`                                | 17    | Yes — trivial but needed for everything                      |
+| 2. `spawnPlugin()` — `Bun.spawn()` with pipes, attach readers           | 19    | **Hard** — this is the core act. Different in every language |
+| 3. `sendToPlugin()` — write JSON to stdin                               | 5     | **Host-only** — needs plugin process ref                     |
+| 4. `handlePluginResponse()` — parse stdout JSON, match by id            | 14    | **Host-only** — needs pendingRequests map                    |
+| 5. `readStream()` — async line reader                                   | 17    | **Host-only** — stream adapter                               |
+| 6. `routeRequest()` — split method, find plugin, promise with 10s timer | 18    | **Host-only** — orchestrates #3, #4, plugins[]               |
+| 7. RPC bridge (`BrowserView.defineRPC`)                                 | 55    | **Yes — move into a plugin!**                                |
+| 8. Startup orchestration (spawn cores, scan, spawn users, serve)        | 10    | **Host-only** — sequencing                                   |
+| 9. `new BrowserWindow()`                                                | 6     | Skeleton — different per platform                            |
+| 10. Health check interval                                               | 7     | **Yes** — could be a plugin service                          |
+| 11. SIGINT cleanup                                                      | 5     | **Host-only** — process lifecycle                            |
 
 ### The big extraction opportunity: RPC bridge → plugin
 
 Items #7 (`resolveHook`, `callHook`, `pluginRequest`) are **not** inherently skeleton-specific. They're pure logic: iterate plugins array, match by name/hook, forward to `routeRequest()`. You could extract these into a **`core-router`** plugin that the host spawns. The host then only needs ONE RPC call (`core-router.request`), and `core-router` internally routes to the right plugin.
 
 This means:
+
 - Host only needs 1 RPC handler (`core-router.request`)
 - Frontend calls `core-router.request` with `{ method, params }` — the router plugin finds the right target plugin and forwards
 - `resolveHook` and `callHook` become methods on `core-router`
@@ -5675,6 +5781,7 @@ That's ~100 lines in any language. The entire "app logic" (routing, hook resolut
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -5708,6 +5815,7 @@ That's ~100 lines in any language. The entire "app logic" (routing, hook resolut
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -5747,6 +5855,7 @@ Here's the plan for shrinking the host:
 ### The goal
 
 After extraction, the host should only do:
+
 1. Spawn subprocesses (pipes + readers)
 2. Forward messages between frontend and plugins
 3. Create the window
@@ -5757,11 +5866,13 @@ Everything else — routing, health checks, file serving — lives in plugins.
 ### Step 1: Extract `core-router` plugin (the big one)
 
 Current host has 55 lines of RPC handlers that:
+
 - `pluginRequest`: find plugin by `name` prefix → `routeRequest()` → return result
 - `resolveHook`: find plugin by `hooks[]` match → return `{name, methods}`
 - `callHook`: find plugin by hook → `routeRequest(name.method)` → return result
 
 Move this into a new `plugins/core-router/main.ts` that:
+
 - Receives `request({ method, params })` — splits method on first dot like `routeRequest`, finds the target plugin, sends to its stdin, waits for response
 - Receives `resolve_hook({ hook })` — scans all plugin manifests for matching hooks
 - Receives `call_hook({ hook, method?, params })` — resolves hook then forwards
@@ -5769,6 +5880,7 @@ Move this into a new `plugins/core-router/main.ts` that:
 **Problem:** The router plugin can't route to other plugins on its own — it doesn't have access to their stdin pipes. The host holds those.
 
 **Solution**: The router plugin doesn't route directly. Instead:
+
 - Router receives `request({ method, params })` from the frontend
 - Router sends the request back to the host via a special protocol
 - Host has ONE tiny handler that takes a target plugin name + method + params, forwards to that plugin's stdin, and returns the result
@@ -5793,23 +5905,24 @@ export function createRouter(plugins, routeRequest) {
 ```
 
 Then in the host:
+
 ```typescript
-const router = createRouter(plugins, routeRequest)
+const router = createRouter(plugins, routeRequest);
 const rpc = BrowserView.defineRPC({
   maxRequestTime: 15000,
   handlers: { requests: { ...router }, messages: {} },
-})
+});
 ```
 
 For Tauri migration, you just replace `BrowserView.defineRPC` with `#[tauri::command]` functions that call the same `createRouter()` logic (rewritten in Rust).
 
 ### The actual shrink plan
 
-| Extraction | From host (lines) | To plugin | Host savings |
-|---|---|---|---|
-| `core-router` — routing + hook logic | 55 | `plugins/core-router/` | -55 lines |
-| Health check + lifecycle | 7 | `plugins/core-lifecycle/` | -7 lines |
-| `findProjectRoot` + `resolvePath` | 3 | keep in host (too tiny) | — |
+| Extraction                           | From host (lines) | To plugin                 | Host savings |
+| ------------------------------------ | ----------------- | ------------------------- | ------------ |
+| `core-router` — routing + hook logic | 55                | `plugins/core-router/`    | -55 lines    |
+| Health check + lifecycle             | 7                 | `plugins/core-lifecycle/` | -7 lines     |
+| `findProjectRoot` + `resolvePath`    | 3                 | keep in host (too tiny)   | —            |
 
 After: host goes from 211 → ~150 lines. All app-semantic logic (routing, hooks, health, manifest scanning, static serving) lives in plugins.
 
@@ -5819,10 +5932,11 @@ Currently App.tsx imports `Electroview` from `"electrobun/view"` — this is the
 
 ```typescript
 // Replace with a thin adapter:
-import type { RpcBridge } from "./rpc-bridge"
+import type { RpcBridge } from "./rpc-bridge";
 ```
 
 Create `src/mainview/rpc-bridge.ts` that exports a consistent interface:
+
 - `rpc.request(method, params)` — returns data
 - Internally: today it's `Electroview.defineRPC`, for Tauri it'd be `invoke()`
 
@@ -5857,6 +5971,7 @@ new BrowserWindow(url, rpc)
 ### What this means for migration
 
 Future rewrites (Tauri, zero-native, whatever) only need to port:
+
 - `spawnPlugin()` + `routeRequest()` — ~50 lines of process management
 - The `rpc-bridge.ts` adapter — ~10 lines
 - The 3 handler functions as `#[tauri::command]` — ~55 lines, or import a Rust `create_router` lib
@@ -5893,11 +6008,13 @@ The danger is **death by a thousand subprocesses**. Currently you have 7 user pl
 The 3 extractions I proposed (router, lifecycle, project) add **3 processes**. That's manageable — 13 total. But `core-lifecycle` spawning a process just to run a `setInterval` that checks `alive` flags is silly. That logic should stay inline or be extremely lightweight.
 
 **My recommendation**: extract only when the extracted plugin represents a real capability that:
+
 1. Has its own methods that other plugins could call
 2. Has meaningful logic beyond "loop and check"
 3. Would need to be rewritten per skeleton if left in the host
 
 By that standard:
+
 - **`core-router`** — YES. The routing + hook logic is ~55 lines of app-semantic code. It has clear methods (`request`, `resolve_hook`, `call_hook`). Any skeleton rewrite needs it.
 - **`core-lifecycle`** — NO. Health check is 7 lines of "iterate plugins, log dead ones." Not worth a process. Keep inline.
 - **`core-project`** — NO. `findProjectRoot` + `resolvePath` is 3 lines. Everything needs it. Keep inline.
@@ -5926,21 +6043,21 @@ Let me reconsider the extraction plan with that lens:
 
 ### What should definitely extract
 
-| Plugin | Why | Expected size (compiled) |
-|---|---|---|
-| `core-router` | Routing logic is app-semantic, not skeleton-specific. In Rust it's just a HashMap lookup + tokio::oneshot forwarding. | ~2MB static binary |
-| `core-lifecycle` | Health checks, auto-restart, dead plugin alerts. This IS worth a process if it's a compiled Rust watcher with backoff/retry logic. | ~2MB |
-| `core-manifest` | Already extracted. Recursive FS scanning in Rust would be faster. | ~2MB |
-| `core-static` | Already extracted. Path validation + file read. | ~2MB |
-| `core-serve` | Already extracted. Vite HMR detection + static server. In Rust this could use axum — faster startup than Bun.serve. | ~5MB |
+| Plugin           | Why                                                                                                                                | Expected size (compiled) |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `core-router`    | Routing logic is app-semantic, not skeleton-specific. In Rust it's just a HashMap lookup + tokio::oneshot forwarding.              | ~2MB static binary       |
+| `core-lifecycle` | Health checks, auto-restart, dead plugin alerts. This IS worth a process if it's a compiled Rust watcher with backoff/retry logic. | ~2MB                     |
+| `core-manifest`  | Already extracted. Recursive FS scanning in Rust would be faster.                                                                  | ~2MB                     |
+| `core-static`    | Already extracted. Path validation + file read.                                                                                    | ~2MB                     |
+| `core-serve`     | Already extracted. Vite HMR detection + static server. In Rust this could use axum — faster startup than Bun.serve.                | ~5MB                     |
 
 ### What stays in host forever
 
-| Piece | Why |
-|---|---|
-| `spawnPlugin()` + pipes | The host MUST own subprocess lifecycle. No plugin can spawn siblings. |
-| `routeRequest()` — the Promise/oneshot mapping | The host MUST own the message routing. |
-| `new BrowserWindow()` | Skeleton-specific, but only ~5 lines. |
+| Piece                                          | Why                                                                   |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| `spawnPlugin()` + pipes                        | The host MUST own subprocess lifecycle. No plugin can spawn siblings. |
+| `routeRequest()` — the Promise/oneshot mapping | The host MUST own the message routing.                                |
+| `new BrowserWindow()`                          | Skeleton-specific, but only ~5 lines.                                 |
 
 ### The host would then be just:
 
@@ -5999,7 +6116,7 @@ Frontend → [Electroview / Tauri invoke] → Host's ONE handler: "core-router.r
   → Host reads core-router's stdout, sees "forward" directive
   → Host writes to yt-feed's stdin
   → yt-feed responds on stdout
-  → Host reads response, matches by id, sends back to core-router... 
+  → Host reads response, matches by id, sends back to core-router...
 ```
 
 Actually wait — that's Option A but with an extra round-trip. Let me think simpler.
@@ -6027,10 +6144,10 @@ This keeps pipe ownership with the host, adds one tiny RPC per request (to `core
 
 **New plugins to create:**
 
-| Plugin | Methods | What it does |
-|---|---|---|
-| `plugins/core-router/main.ts` | `resolve({ method })` | Splits method on first dot, finds plugin by `config.name`, returns `{pluginName, action}`. Also handles `resolveHook` and `callHook` logic: finds plugin by `hooks[]`, returns target info. |
-| `plugins/core-lifecycle/main.ts` | `start()`, `plugins({ names })` | Wraps the health check loop + auto-restart logic. Receives plugin list on startup, pings periodically. No stdin/stdout trickiness — just `setInterval` + status reporting back to host. |
+| Plugin                           | Methods                         | What it does                                                                                                                                                                                |
+| -------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plugins/core-router/main.ts`    | `resolve({ method })`           | Splits method on first dot, finds plugin by `config.name`, returns `{pluginName, action}`. Also handles `resolveHook` and `callHook` logic: finds plugin by `hooks[]`, returns target info. |
+| `plugins/core-lifecycle/main.ts` | `start()`, `plugins({ names })` | Wraps the health check loop + auto-restart logic. Receives plugin list on startup, pings periodically. No stdin/stdout trickiness — just `setInterval` + status reporting back to host.     |
 
 **Host changes:**
 
@@ -6049,6 +6166,7 @@ This keeps pipe ownership with the host, adds one tiny RPC per request (to `core
 ### Final host size estimate
 
 After extraction:
+
 - Imports + types: ~15 lines
 - `findProjectRoot` + `resolvePath`: ~17 lines
 - `spawnPlugin`: ~19 lines
@@ -6081,15 +6199,18 @@ You're right. The core-router-as-intermediary adds a detour for no real benefit 
 ### Simplified plan: extract only what's worth it
 
 **What stays in host (forever):**
+
 - The 3 RPC handlers as-is (pluginRequest, resolveHook, callHook) — they're small, fast, and the routing IS the host's job
 - `spawnPlugin`, `routeRequest`, `sendToPlugin`, `handlePluginResponse`, `readStream` — process management that every skeleton needs
 - `findProjectRoot`, `resolvePath` — tiny utilities
 - Health check + cleanup — trivial
 
 **What's already extracted (keep):**
+
 - `core-manifest`, `core-static`, `core-serve` — already plugins, no change needed
 
 **The only migration preparation:**
+
 - **Extract the frontend bridge** — isolate `Electroview` into `src/mainview/rpc-bridge.ts` so migration day means changing one file, not `App.tsx`
 
 That's it. The host stays at ~211 lines. On Tauri migration day, you rewrite those 211 lines in Rust and change one frontend adapter file. The entire plugin system — all 7 plugins, their manifests, the build script, the WC frontends — moves unchanged.
@@ -6119,77 +6240,77 @@ Create `src/mainview/rpc-bridge.ts` that:
 ### Current code (in App.tsx)
 
 ```typescript
-import { Electroview } from "electrobun/view"
+import { Electroview } from "electrobun/view";
 
 const electroview = new Electroview({
   rpc: Electroview.defineRPC({
     maxRequestTime: 20000,
     handlers: { requests: {}, messages: {} },
   }),
-})
+});
 
 window.__pluginRpc = async (method: string, params: any) => {
-  const res = await electroview.rpc?.request.pluginRequest({ method, params })
-  if (!res.success) throw new Error(res.error || "RPC error")
-  return res.data
-}
+  const res = await electroview.rpc?.request.pluginRequest({ method, params });
+  if (!res.success) throw new Error(res.error || "RPC error");
+  return res.data;
+};
 
 window.resolveHook = async (hook: string) => {
-  const res = await electroview.rpc.request.resolveHook({ hook })
+  const res = await electroview.rpc.request.resolveHook({ hook });
   // ...
-}
+};
 
 window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
   // ...
-}
+};
 ```
 
 ### After extraction (rpc-bridge.ts)
 
 ```typescript
-import { Electroview } from "electrobun/view"
+import { Electroview } from "electrobun/view";
 
 const electroview = new Electroview({
   rpc: Electroview.defineRPC({
     maxRequestTime: 20000,
     handlers: { requests: {}, messages: {} },
   }),
-})
+});
 
 async function request(method: string, params: any) {
-  const res = await electroview.rpc?.request.pluginRequest({ method, params })
-  if (!res.success) throw new Error(res.error || "RPC error")
-  return res.data
+  const res = await electroview.rpc?.request.pluginRequest({ method, params });
+  if (!res.success) throw new Error(res.error || "RPC error");
+  return res.data;
 }
 
 async function resolveHook(hook: string) {
-  const res = await electroview.rpc.request.resolveHook({ hook })
-  if (!res.success) throw new Error(res.error || "Hook resolution failed")
-  return res.data
+  const res = await electroview.rpc.request.resolveHook({ hook });
+  if (!res.success) throw new Error(res.error || "Hook resolution failed");
+  return res.data;
 }
 
 async function callHook(hook: string, methodOrArgs: any, args?: any) {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  const res = await electroview.rpc.request.callHook({ hook, method, params })
-  if (!res.success) throw new Error(res.error || "callHook failed")
-  return res.data
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  const res = await electroview.rpc.request.callHook({ hook, method, params });
+  if (!res.success) throw new Error(res.error || "callHook failed");
+  return res.data;
 }
 
-export default { request, resolveHook, callHook }
+export default { request, resolveHook, callHook };
 
 // Still set globals here so WCs don't need to import
-window.__pluginRpc = request
-window.resolveHook = resolveHook
-window.callHook = callHook
+window.__pluginRpc = request;
+window.resolveHook = resolveHook;
+window.callHook = callHook;
 ```
 
 ### App.tsx becomes thin
 
 ```typescript
-import { useState, useEffect } from "react"
-import type { PluginManifest } from "../shared/types"
-import rpc from "./rpc-bridge"
+import { useState, useEffect } from "react";
+import type { PluginManifest } from "../shared/types";
+import rpc from "./rpc-bridge";
 
 // Same init(), same loadFrontend(), same render — just uses rpc.request instead of window.__pluginRpc
 ```
@@ -6199,14 +6320,14 @@ import rpc from "./rpc-bridge"
 Change ONE file — `rpc-bridge.ts`:
 
 ```typescript
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@tauri-apps/api/core";
 
 async function request(method: string, params: any) {
-  return await invoke("plugin_request", { method, params })
+  return await invoke("plugin_request", { method, params });
 }
 
 async function resolveHook(hook: string) {
-  return await invoke("resolve_hook", { hook })
+  return await invoke("resolve_hook", { hook });
 }
 
 async function callHook(hook: string, methodOrArgs: any, args?: any) {
@@ -6214,7 +6335,7 @@ async function callHook(hook: string, methodOrArgs: any, args?: any) {
     hook,
     method: args !== undefined ? methodOrArgs : undefined,
     params: args !== undefined ? args : methodOrArgs,
-  })
+  });
 }
 
 // exports + globals stay identical
@@ -6224,11 +6345,11 @@ async function callHook(hook: string, methodOrArgs: any, args?: any) {
 
 ### Migration checklist after this change
 
-| What | Files changed |
-|---|---|
-| Extract bridge | Create `rpc-bridge.ts`, update `App.tsx` to import from it |
+| What            | Files changed                                                                                |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| Extract bridge  | Create `rpc-bridge.ts`, update `App.tsx` to import from it                                   |
 | Tauri migration | Rewrite `rpc-bridge.ts` (1 file), write Rust host (1 file), write `tauri.conf.json` (1 file) |
-| Everything else | 0 changes — all plugin code, WCs, build script, manifests stay identical |
+| Everything else | 0 changes — all plugin code, WCs, build script, manifests stay identical                     |
 
 That's the entire migration surface — 3 files. The current complexity is already low enough. Want me to proceed with implementing the adapter?
 
@@ -6237,8 +6358,8 @@ That's the entire migration surface — 3 files. The current complexity is alrea
 ## User
 
 1. that's fine but what about these:
-findProjectRoot() + resolvePath() 	17 	Yes — trivial but needed for everything
-Health check interval 	7 	Yes — could be a plugin service
+   findProjectRoot() + resolvePath() 17 Yes — trivial but needed for everything
+   Health check interval 7 Yes — could be a plugin service
 
 ---
 
@@ -6255,17 +6376,19 @@ These run **before any plugin exists** — they're needed to find the project ro
 ### Health check (7 lines)
 
 Currently:
+
 ```typescript
 setInterval(() => {
   for (const plugin of plugins) {
     if (!plugin.alive) {
-      console.error(`[${plugin.config.name}] dead. needs restart.`)
+      console.error(`[${plugin.config.name}] dead. needs restart.`);
     }
   }
-}, 5000)
+}, 5000);
 ```
 
 This iterates a local `plugins[]` array that the host owns. Extracting it to a plugin means either:
+
 - The plugin polls the host ("give me status of all plugins") — more complexity
 - The host pushes status to the plugin — more plumbing
 
@@ -6278,6 +6401,7 @@ For 7 lines of logic that just logs dead plugins, it's not worth it.
 Nothing more. The current extracted set (`core-manifest`, `core-static`, `core-serve`) plus the frontend adapter is the right balance. The remaining ~211 lines of host are genuinely host-specific: process management, pipe I/O, and the skeleton RPC bridge — all of which must be rewritten per skeleton anyway.
 
 The only productive preparation is:
+
 1. Frontend `rpc-bridge.ts` adapter (isolates the skeleton-specific import)
 2. Clear documentation of what the host does (so the Rust rewrite has a spec)
 
@@ -6325,42 +6449,42 @@ Here's the exact code. **Read-only — implement these yourself.**
 ### File 1: `src/mainview/rpc-bridge.ts`
 
 ```typescript
-import { Electroview } from "electrobun/view"
+import { Electroview } from "electrobun/view";
 
 const electroview = new Electroview({
   rpc: Electroview.defineRPC({
     maxRequestTime: 20000,
     handlers: { requests: {}, messages: {} },
   }),
-})
+});
 
 async function request(method: string, params: any) {
-  const res = await electroview.rpc?.request.pluginRequest({ method, params })
-  if (!res.success) throw new Error(res.error || "RPC error")
-  return res.data
+  const res = await electroview.rpc?.request.pluginRequest({ method, params });
+  if (!res.success) throw new Error(res.error || "RPC error");
+  return res.data;
 }
 
 async function resolveHook(hook: string) {
-  const res = await electroview.rpc.request.resolveHook({ hook })
-  if (!res.success) throw new Error(res.error || "Hook resolution failed")
-  return res.data
+  const res = await electroview.rpc.request.resolveHook({ hook });
+  if (!res.success) throw new Error(res.error || "Hook resolution failed");
+  return res.data;
 }
 
 async function callHook(hook: string, methodOrArgs: any, args?: any) {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  const res = await electroview.rpc.request.callHook({ hook, method, params })
-  if (!res.success) throw new Error(res.error || "callHook failed")
-  return res.data
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  const res = await electroview.rpc.request.callHook({ hook, method, params });
+  if (!res.success) throw new Error(res.error || "callHook failed");
+  return res.data;
 }
 
-const rpc = { request, resolveHook, callHook }
-export default rpc
+const rpc = { request, resolveHook, callHook };
+export default rpc;
 
 // Globals for Web Components — same signatures, any WC can still call them
-window.__pluginRpc = request
-window.resolveHook = resolveHook
-window.callHook = callHook
+window.__pluginRpc = request;
+window.resolveHook = resolveHook;
+window.callHook = callHook;
 ```
 
 ### File 2: `src/mainview/App.tsx` — replace entire file
@@ -6433,7 +6557,7 @@ export default function App() {
       <div className="container mx-auto px-4 py-10 max-w-5xl">
         <h1 className="text-5xl font-bold text-center text-white mb-10 drop-shadow-lg">
           Electro Plugins
-        </h1> 
+        </h1>
         <div id="feed-container" />
       </div>
     </div>
@@ -6443,10 +6567,11 @@ export default function App() {
 
 ### Summary of changes
 
-| What | Where |
-|---|---|
+| What       | Where                                             |
+| ---------- | ------------------------------------------------- |
 | **Create** | `src/mainview/rpc-bridge.ts` — new file, 35 lines |
-| **Edit
+
+| \*\*Edit
 
 ---
 
@@ -6463,14 +6588,17 @@ The edit is just removing lines 5-31 from App.tsx and replacing the `Electroview
 ### App.tsx — changes
 
 **Line 2:** Remove `Electroview` import. Replace:
+
 ```typescript
-import { Electroview } from "electrobun/view"
-import type { PluginManifest } from "../shared/types"
+import { Electroview } from "electrobun/view";
+import type { PluginManifest } from "../shared/types";
 ```
+
 with:
+
 ```typescript
-import type { PluginManifest } from "../shared/types"
-import rpc from "./rpc-bridge"
+import type { PluginManifest } from "../shared/types";
+import rpc from "./rpc-bridge";
 ```
 
 **Lines 5-31 (entire block):** Remove everything from `const electroview = ...` through the `callHook` function. That's the bridge init + all 3 global function definitions. These move to `rpc-bridge.ts`.
@@ -6496,56 +6624,59 @@ You're in plan mode. I can't make edits. Here are the exact code changes — wor
 ### `src/mainview/rpc-bridge.ts` — create this new file
 
 ```typescript
-import { Electroview } from "electrobun/view"
+import { Electroview } from "electrobun/view";
 
 const electroview = new Electroview({
   rpc: Electroview.defineRPC({
     maxRequestTime: 20000,
     handlers: { requests: {}, messages: {} },
   }),
-})
+});
 
 async function request(method: string, params: any) {
-  const res = await electroview.rpc?.request.pluginRequest({ method, params })
-  if (!res.success) throw new Error(res.error || "RPC error")
-  return res.data
+  const res = await electroview.rpc?.request.pluginRequest({ method, params });
+  if (!res.success) throw new Error(res.error || "RPC error");
+  return res.data;
 }
 
 async function resolveHook(hook: string) {
-  const res = await electroview.rpc.request.resolveHook({ hook })
-  if (!res.success) throw new Error(res.error || "Hook resolution failed")
-  return res.data
+  const res = await electroview.rpc.request.resolveHook({ hook });
+  if (!res.success) throw new Error(res.error || "Hook resolution failed");
+  return res.data;
 }
 
 async function callHook(hook: string, methodOrArgs: any, args?: any) {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  const res = await electroview.rpc.request.callHook({ hook, method, params })
-  if (!res.success) throw new Error(res.error || "callHook failed")
-  return res.data
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  const res = await electroview.rpc.request.callHook({ hook, method, params });
+  if (!res.success) throw new Error(res.error || "callHook failed");
+  return res.data;
 }
 
-const rpc = { request, resolveHook, callHook }
-export default rpc
+const rpc = { request, resolveHook, callHook };
+export default rpc;
 
-window.__pluginRpc = request
-window.resolveHook = resolveHook
-window.callHook = callHook
+window.__pluginRpc = request;
+window.resolveHook = resolveHook;
+window.callHook = callHook;
 ```
 
 ### `src/mainview/App.tsx` — two edits
 
 **Edit 1 — imports (lines 1-4):** Replace:
+
 ```typescript
-import { useState, useEffect } from "react"
-import { Electroview } from "electrobun/view"
-import type { PluginManifest } from "../shared/types"
+import { useState, useEffect } from "react";
+import { Electroview } from "electrobun/view";
+import type { PluginManifest } from "../shared/types";
 ```
+
 with:
+
 ```typescript
-import { useState, useEffect } from "react"
-import type { PluginManifest } from "../shared/types"
-import rpc from "./rpc-bridge"
+import { useState, useEffect } from "react";
+import type { PluginManifest } from "../shared/types";
+import rpc from "./rpc-bridge";
 ```
 
 **Edit 2 — remove bridge init block (lines 5-31):** Delete everything from `const electroview = ...` down to the closing `}` of `callHook`. That's the entire block between the imports and `export default function App()`. Lines 5-31 inclusive. The globals (`window.__pluginRpc`, `window.resolveHook`, `window.callHook`) are now set in `rpc-bridge.ts`.
@@ -6569,6 +6700,7 @@ y yr we creating rpc-bridge in mainview and not a plugin?
 Good question. `rpc-bridge.ts` lives in the frontend (`src/mainview/`) because it's a **frontend concern** — it wraps the skeleton's browser-side RPC API (`Electroview` for now, `invoke()` for Tauri later). Plugins run in backend subprocesses; they don't import RPC libraries.
 
 If it were a plugin:
+
 - The frontend would need to make an RPC call to the plugin just to get the RPC functions it needs to make further RPC calls — circular dependency
 - The plugin would need to know about the frontend environment (Electroview/invoke), but plugins are supposed to be backend-only
 
@@ -6591,6 +6723,7 @@ And you're right: anything outside `plugins/` isn't a plugin. The adapter doesn'
 The real value of the adapter: **if you ever want to add a second frontend** (e.g., a CLI debug tool, or a React Native mobile view), that frontend imports the same bridge interface. But for a single desktop app that you're migrating once, it's pointless indirection.
 
 Scrap the bridge. On migration day:
+
 - Rewrite `src/bun/index.ts` in Rust (~211 lines)
 - Swap `Electroview.defineRPC(...)` in App.tsx for Tauri's `invoke()` (~10 lines changed in App.tsx)
 - Change nothing else
@@ -6637,13 +6770,10 @@ Questions before I detail it: OS? Rust installed? Keep the same directory?
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 9.3s)
 
-
-
-
-
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "rustc --version && cargo --version && uname -a"
@@ -6651,6 +6781,7 @@ Questions before I detail it: OS? Rust installed? Keep the same directory?
 ```
 
 **Output:**
+
 ```
 rustc 1.97.0-nightly (b954122bb 2026-05-20)
 cargo 1.97.0-nightly (4d1f98451 2026-05-15)
@@ -6661,6 +6792,7 @@ Linux Karim 7.0.8-1-cachyos #1 SMP PREEMPT_DYNAMIC Fri, 15 May 2026 18:31:42 +00
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "pkg-config --libs webkit2gtk-4.1 2>&1 || echo \"MISSING\""
@@ -6668,6 +6800,7 @@ Linux Karim 7.0.8-1-cachyos #1 SMP PREEMPT_DYNAMIC Fri, 15 May 2026 18:31:42 +00
 ```
 
 **Output:**
+
 ```
 -lwebkit2gtk-4.1 -lgtk-3 -lgdk-3 -lpangocairo-1.0 -lcairo-gobject -lgdk_pixbuf-2.0 -latk-1.0 -lpango-1.0 -lcairo -lharfbuzz -lsoup-3.0 -lgio-2.0 -lgmodule-2.0 -pthread -lz -ljavascriptcoregtk-4.1 -lgobject-2.0 -lglib-2.0
 
@@ -6698,18 +6831,18 @@ fresh project
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 28.4s)
 
-
-
 Here's the plan. I'll explain each step, then you say "go" and I execute.
 
 ### Migration plan
 
 **Step 1: Create new Tauri project**
+
 - `npm create tauri-app@latest` in a fresh directory
 - Pick `React + TypeScript + Vite` as the frontend template
 - This gives you: `src-tauri/` Rust crate, `src/` React frontend, Vite config, `tauri.conf.json`
 
 **Step 2: Copy plugin system over**
+
 - Copy `plugins/` directory — all 11 plugin dirs + `_shared/`
 - Copy `scripts/build-plugins.ts` — the WC build system is skeleton-agnostic
 - Copy `src/shared/types.ts` — the `PluginManifest` type definition
@@ -6717,6 +6850,7 @@ Here's the plan. I'll explain each step, then you say "go" and I execute.
 - Copy `tailwind.config.js`, `postcss.config.js`, `tsconfig.json` (update as needed)
 
 **Step 3: Install frontend deps**
+
 - `npm install` the Tauri scaffold deps
 - Add: `tailwindcss`, `postcss`, `autoprefixer`, `vite-plugin-css-injected-by-js`
 - Keep: `react`, `react-dom`, `preact`, `vue`, `@vitejs/plugin-react`, `@vitejs/plugin-vue`, `@preact/preset-vite`
@@ -6782,6 +6916,7 @@ fn main() {
 ```
 
 The tricky Rust bits:
+
 - Need `tokio` for async oneshot channels (or use `std::sync::mpsc` with a dedicated reader thread)
 - The stdin writer needs `std::process::ChildStdin` — must be carefully moved into a background thread
 - The stdout reader runs in a spawned thread, parses JSON lines, matches pending request IDs
@@ -6790,6 +6925,7 @@ The tricky Rust bits:
 **Step 5: Update frontend**
 
 `src/App.tsx` — replace the RPC bridge section. Instead of:
+
 ```typescript
 import { Electroview } from "electrobun/view"
 const electroview = new Electroview({...})
@@ -6800,29 +6936,32 @@ window.__pluginRpc = async (method, params) => {
 ```
 
 use:
+
 ```typescript
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@tauri-apps/api/core";
 window.__pluginRpc = async (method: string, params: any) => {
-  return await invoke("plugin_request", { method, params })
-}
+  return await invoke("plugin_request", { method, params });
+};
 window.resolveHook = async (hook: string) => {
-  return await invoke("resolve_hook", { hook })
-}
+  return await invoke("resolve_hook", { hook });
+};
 window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  return await invoke("call_hook", { hook, method, params })
-}
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  return await invoke("call_hook", { hook, method, params });
+};
 ```
 
 Rest of `App.tsx` (manifest loading, WC loading, imperative element creation) stays identical.
 
 **Step 6: Update scripts and configs**
+
 - `package.json`: replace `electrobun` scripts with Tauri scripts (`tauri dev`, `tauri build`)
 - `vite.config.ts`: add Tauri dev server config (prevent open browser)
 - `tsconfig.json`: update `include` paths to match new structure
 
 **Step 7: Test**
+
 - `cd new-project && npm install`
 - `bun run build:plugins` — builds WC frontends
 - `npm run tauri dev` — launches Tauri window
@@ -6831,15 +6970,15 @@ Rest of `App.tsx` (manifest loading, WC loading, imperative element creation) st
 
 Actually writing the Rust is the meaty part. If you know 50% of the Rust book (ownership, match, Option/Result), the code maps directly from the TypeScript:
 
-| Bun/TS | Rust equivalent |
-|---|---|
-| `Bun.spawn([cmd,...args], {stdin:"pipe",stdout:"pipe"})` | `Command::new(cmd).args(args).stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()` |
-| `stream.getReader()` + async loop | `BufReader::new(stdout).lines()` in a spawned thread |
-| `const msg = JSON.stringify(...) + "\n"; stdin.write(msg)` | `writeln!(stdin, "{}", serde_json::to_string(&msg)?)` |
-| `const msg = JSON.parse(line)` | `let msg: Value = serde_json::from_str(&line)?` |
-| `new Promise((resolve, reject) => { ... })` + `Map<id, {resolve, reject, timer}>` | `let (tx, rx) = oneshot::channel()` + `HashMap<u64, Sender>` |
-| `setTimeout(() => reject(...), 10000)` | `tokio::time::timeout(Duration::from_secs(10), rx).await` |
-| `BrowserView.defineRPC({handlers: {requests: {pluginRequest: ...}}})` | `#[tauri::command]` + `invoke_handler(gen![...])` |
+| Bun/TS                                                                            | Rust equivalent                                                                     |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `Bun.spawn([cmd,...args], {stdin:"pipe",stdout:"pipe"})`                          | `Command::new(cmd).args(args).stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()` |
+| `stream.getReader()` + async loop                                                 | `BufReader::new(stdout).lines()` in a spawned thread                                |
+| `const msg = JSON.stringify(...) + "\n"; stdin.write(msg)`                        | `writeln!(stdin, "{}", serde_json::to_string(&msg)?)`                               |
+| `const msg = JSON.parse(line)`                                                    | `let msg: Value = serde_json::from_str(&line)?`                                     |
+| `new Promise((resolve, reject) => { ... })` + `Map<id, {resolve, reject, timer}>` | `let (tx, rx) = oneshot::channel()` + `HashMap<u64, Sender>`                        |
+| `setTimeout(() => reject(...), 10000)`                                            | `tokio::time::timeout(Duration::from_secs(10), rx).await`                           |
+| `BrowserView.defineRPC({handlers: {requests: {pluginRequest: ...}}})`             | `#[tauri::command]` + `invoke_handler(gen![...])`                                   |
 
 ### Risk areas
 
@@ -6867,7 +7006,6 @@ If B, I need to disable plan mode. Which do you prefer?
 ---
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 18.8s)
-
 
 Naming suggestions:
 
@@ -6905,6 +7043,7 @@ Actually, I realize I'm missing some important details about the Rust host — s
 **Tool: webfetch**
 
 **Input:**
+
 ```json
 {
   "url": "https://v2.tauri.app/start/frontend/react/",
@@ -6913,6 +7052,7 @@ Actually, I realize I'm missing some important details about the Rust host — s
 ```
 
 **Error:**
+
 ```
 Request timed out
 ```
@@ -6921,13 +7061,10 @@ Request timed out
 
 ## Assistant (Plan · DeepSeek V4 Flash Free · 10.2s)
 
-
-
-
-
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "cargo search tauri --limit 5 2>&1 | head -20",
@@ -6936,6 +7073,7 @@ Request timed out
 ```
 
 **Output:**
+
 ```
 tauri = "2.11.5"                       # Make tiny, secure apps for all desktop platforms with Tauri
 tauri-plugin-widgets = "0.3.0"         # A Tauri plugin to interact with App Widgets on Android, iOS, and macOS (WidgetKit). On W…
@@ -6950,6 +7088,7 @@ note: to learn more about a package, run `cargo info <name>`
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "bun --version 2>&1"
@@ -6957,6 +7096,7 @@ note: to learn more about a package, run `cargo info <name>`
 ```
 
 **Output:**
+
 ```
 1.3.14
 
@@ -6977,11 +7117,13 @@ bun create tauri-app
 ```
 
 When prompted:
+
 - Project name: `electro-app` (or whatever you chose)
 - Frontend: React + TypeScript + Vite
 - Package manager: bun
 
 This creates:
+
 ```
 electro-app/
 ├── src/
@@ -7028,6 +7170,7 @@ The Tauri scaffold already includes `@tauri-apps/api` and `@tauri-apps/cli`.
 **Step 4: Update `Cargo.toml`** (`src-tauri/Cargo.toml`)
 
 Add these dependencies to the scaffolded `Cargo.toml`:
+
 ```toml
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -7309,21 +7452,21 @@ Replace the scaffold's `src/main.tsx` with the one from the current project (`sr
 Replace the Electrobun-specific bridge with Tauri's `invoke()`:
 
 ```typescript
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@tauri-apps/api/core";
 
 window.__pluginRpc = async (method: string, params: any) => {
-  return await invoke("plugin_request", { method, params })
-}
+  return await invoke("plugin_request", { method, params });
+};
 
 window.resolveHook = async (hook: string) => {
-  return await invoke("resolve_hook", { hook })
-}
+  return await invoke("resolve_hook", { hook });
+};
 
 window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  return await invoke("call_hook", { hook, method, params })
-}
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  return await invoke("call_hook", { hook, method, params });
+};
 ```
 
 The rest of `App.tsx` (the `init()` function, WC loading, etc.) stays identical — it only calls `window.__pluginRpc`, `window.resolveHook`, and `window.callHook`.
@@ -7365,6 +7508,7 @@ export default defineConfig({
 **Step 10: Clean up old files**
 
 Remove from the new project:
+
 - The old `src/App.css`, `src/index.css` if scaffolded — replace with Tailwind
 - Any Electrobun-specific files that might have been copied
 
@@ -7375,6 +7519,7 @@ Actually, I need to check one more thing — how `#[tauri::command]` functions w
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "cargo info tauri 2>&1 | head -30",
@@ -7383,6 +7528,7 @@ Actually, I need to check one more thing — how `#[tauri::command]` functions w
 ```
 
 **Output:**
+
 ```
     Updating crates.io index
 tauri
@@ -7435,6 +7581,7 @@ bun create tauri-app
 ```
 
 Interactive answers:
+
 - **Project name:** `electro-app` (or your choice)
 - **Frontend:** React + TypeScript (Vite)
 - **Package manager:** bun
@@ -7464,6 +7611,7 @@ The scaffold already has `react`, `react-dom`, `@tauri-apps/api`, `@tauri-apps/c
 ### Step 4: Update `src-tauri/Cargo.toml`
 
 Add these dependencies after the scaffolded `[dependencies]` section:
+
 ```toml
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -7475,20 +7623,24 @@ tokio = { version = "1", features = ["full"] }
 This is the big one. The file replaces `src/bun/index.ts`. Here's what it needs to do:
 
 **Types:**
+
 - `PluginInstance { name, stdin (Arc<Mutex<ChildStdin>>), alive, methods, hooks }`
 - `AppState { plugins: Mutex<Vec<Plugin>>, pending: Mutex<HashMap<u64, oneshot::Sender>>, next_id: AtomicU64 }`
 
 **Functions:**
+
 - `spawn_plugin(name, run, methods, hooks, extra_args, base_dir, state)` — spawns the subprocess, wraps stdin in Arc<Mutex>, starts stdout reader thread (BufReader + line parsing + match id + send through oneshot), starts stderr reader thread, registers in state
 - `resolve_path(p, base_dir)` — same as the TS version
 - `find_project_root()` — walk up from env var or cwd
 
 **3 Tauri commands:**
+
 - `plugin_request(method: String, params: Value)` — split method on first dot, find plugin, generate id, create oneshot, write JSON to stdin, await with 10s timeout
 - `resolve_hook(hook: String)` — iterate plugins, find by hooks.contains, return `{name, methods}`
 - `call_hook(hook, method?, params?)` — resolve first, then call plugin_request
 
 **Setup function:**
+
 1. Spawn 3 core plugins with baseDir as extra arg
 2. Call `plugin_request("core-manifest.scan", json!({"full": true}))` internally
 3. For each user manifest with `run`, call `spawn_plugin`
@@ -7529,20 +7681,20 @@ Replace the Electrobun-specific RPC bridge with Tauri's `invoke()`:
 Remove `Electroview` import + `defineRPC` block + 3 global functions. Replace with:
 
 ```typescript
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@tauri-apps/api/core";
 
 window.__pluginRpc = async (method: string, params: any) => {
-  return await invoke("plugin_request", { method, params })
-}
+  return await invoke("plugin_request", { method, params });
+};
 window.resolveHook = async (hook: string) => {
-  const res = await invoke("resolve_hook", { hook })
-  return res as { name: string; methods: string[] }
-}
+  const res = await invoke("resolve_hook", { hook });
+  return res as { name: string; methods: string[] };
+};
 window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
-  const method = args !== undefined ? methodOrArgs : undefined
-  const params = args !== undefined ? args : methodOrArgs
-  return await invoke("call_hook", { hook, method, params })
-}
+  const method = args !== undefined ? methodOrArgs : undefined;
+  const params = args !== undefined ? args : methodOrArgs;
+  return await invoke("call_hook", { hook, method, params });
+};
 ```
 
 The rest of App.tsx (`useEffect`, `init()`, WC loading, render) stays the same.
@@ -7567,9 +7719,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 ### Step 9: Update `vite.config.ts`
 
 ```typescript
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import tailwindcss from "@tailwindcss/vite"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -7583,7 +7735,7 @@ export default defineConfig({
       : undefined,
     watch: { ignored: ["**/src-tauri/**"] },
   },
-})
+});
 ```
 
 ### Step 10: Update `package.json` scripts
@@ -7689,6 +7841,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx"
@@ -7696,6 +7849,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/mainview/App.tsx</path>
 <type>file</type>
@@ -7703,38 +7857,38 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 1: import { useState, useEffect } from "react"
 2: import { Electroview } from "electrobun/view"
 3: import type { PluginManifest } from "../shared/types"
-4: 
+4:
 5: const electroview = new Electroview({
 6:   rpc: Electroview.defineRPC({
 7:     maxRequestTime: 20000,
 8:     handlers: { requests: {}, messages: {} },
 9:   }),
 10: })
-11: 
+11:
 12: // -- Globals --
 13: window.__pluginRpc = async (method: string, params: any) => {
 14:   const res = await electroview.rpc?.request.pluginRequest({ method, params })
 15:   if (!res.success) throw new Error(res.error || "RPC error")
-16:     return res.data 
+16:     return res.data
 17: }
-18: 
+18:
 19: window.resolveHook = async (hook: string) => {
 20:   const res = await electroview.rpc.request.resolveHook({ hook })
 21:   if (!res.success) throw new Error(res.error || "Hook resolution failed")
 22:   return res.data
 23: }
-24: 
+24:
 25: window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
 26:   const method = args !== undefined ? methodOrArgs : undefined
 27:   const params = args !== undefined ? args : methodOrArgs
 28:   const res = await electroview.rpc.request.callHook({ hook, method, params })
 29:   if (!res.success) throw new Error(res.error || "callHook failed")
-30:   return res.data 
+30:   return res.data
 31: }
-32: 
+32:
 33: export default function App() {
 34:   const [manifests, setManifests] = useState<PluginManifest[]>([])
-35: 
+35:
 36:   useEffect(() => {
 37:     init().catch(e => {
 38:       console.error("[app] init() failed:", e)
@@ -7747,7 +7901,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 45:     const all: PluginManifest[] = await window.__pluginRpc('core-manifest.scan', {})
 46:     console.log("[app] manifests received:", all.map(m => `${m.name}${m.feeds?.length ? " (feeds)" : ""}${m.ui ? " (ui:"+m.ui+")" : ""}${m.hooks?.length ? " (hooks:"+m.hooks+")" : ""}`))
 47:     setManifests(all)
-48: 
+48:
 49:     const loaded = new Set<string>()
 50:     const uiPlugins: PluginManifest[] = []
 51:     for (const m of all) {
@@ -7767,7 +7921,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 65:         }
 66:       }
 67:     }
-68: 
+68:
 69:     // Create WC elements directly, outside React's VDOM
 70:     const container = document.getElementById("feed-container")
 71:     if (container) {
@@ -7782,20 +7936,20 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 80:     }
 81:     console.log("[app] init complete, ui plugins:", uiPlugins.map(p => p.ui).join(", ") || "none")
 82:   }
-83: 
+83:
 84:   async function loadFrontend(path: string) {
 85:     const result = await window.__pluginRpc("core-static.read", { path })
 86:     const script = document.createElement("script")
 87:     script.textContent = result.code
 88:     document.body.appendChild(script)
 89:   }
-90: 
+90:
 91:   return (
 92:     <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600">
 93:       <div className="container mx-auto px-4 py-10 max-w-5xl">
 94:         <h1 className="text-5xl font-bold text-center text-white mb-10 drop-shadow-lg">
 95:           Electro Plugins
-96:         </h1> 
+96:         </h1>
 97:         <div id="feed-container" />
 98:       </div>
 99:     </div>
@@ -7809,6 +7963,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/mainview/main.tsx"
@@ -7816,6 +7971,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/mainview/main.tsx</path>
 <type>file</type>
@@ -7823,7 +7979,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 1: import { createRoot } from "react-dom/client";
 2: import "./index.css";
 3: import App from "./App";
-4: 
+4:
 5: createRoot(document.getElementById("root")!).render(<App />);
 
 (End of file - total 5 lines)
@@ -7833,6 +7989,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/mainview/index.html"
@@ -7840,6 +7997,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/mainview/index.html</path>
 <type>file</type>
@@ -7864,6 +8022,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/vite.config.ts"
@@ -7871,13 +8030,14 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/vite.config.ts</path>
 <type>file</type>
 <content>
 1: import { defineConfig } from "vite";
 2: import react from "@vitejs/plugin-react";
-3: 
+3:
 4: export default defineConfig({
 5: 	plugins: [react()],
 6: 	root: "src/mainview",
@@ -7898,6 +8058,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/package.json"
@@ -7905,6 +8066,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/package.json</path>
 <type>file</type>
@@ -7957,6 +8119,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/bun/index.ts"
@@ -7964,50 +8127,51 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/bun/index.ts</path>
 <type>file</type>
 <content>
 1: import { BrowserWindow, BrowserView } from "electrobun/bun";
-2: import { existsSync } from "fs" 
-3: import { join } from "path" 
-4: import type { PluginManifest } from "../shared/types" 
+2: import { existsSync } from "fs"
+3: import { join } from "path"
+4: import type { PluginManifest } from "../shared/types"
 5: import { Subprocess } from "bun";
-6: 
+6:
 7: interface PendingRequest {
 8: 	resolve: (value: any) => void
 9: 	reject: (reason: any) => void
 10: 	timer: Timer
 11: }
-12: 
+12:
 13: interface PluginInstance {
 14: 	config: PluginManifest
 15: 	process: Subprocess
 16: 	alive: boolean
 17: }
-18: 
+18:
 19: const plugins: PluginInstance[] = []
 20: const pendingRequests = new Map<number, PendingRequest>()
 21: let nextId = 1
-22: 
+22:
 23: function findProjectRoot(from: string): string {
-24: 	let dir = from 
+24: 	let dir = from
 25: 	while (true) {
-26: 		if (existsSync(join(dir, "package.json"))) return dir 
-27: 		const parent = join(dir, "..") 
+26: 		if (existsSync(join(dir, "package.json"))) return dir
+27: 		const parent = join(dir, "..")
 28: 		if (parent === dir) throw new Error("Could not find project root")
-29: 		dir = parent 
+29: 		dir = parent
 30: 	}
 31: }
-32: 
+32:
 33: const baseDir = findProjectRoot(import.meta.dir)
-34: 
+34:
 35: function resolvePath(p: string): string {
 36:   if (p.startsWith("/")) return p;
 37:   if (p.includes("/") || p.startsWith(".")) return join(baseDir, p);
 38:   return p;
 39: }
-40: 
+40:
 41: function spawnPlugin(config: Partial<PluginManifest> & { name: string }, run: string, extraArgs: string[] = []) {
 42: 	const parts = run.split(/\s+/)
 43: 	const cmd = resolvePath(parts[0])
@@ -8027,26 +8191,26 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 57: 		console.error(`[${config.name}] exited (code ${code})`)
 58: 	})
 59: }
-60: 
+60:
 61: spawnPlugin({ name: "core-manifest", methods: ["scan"] }, "bun plugins/core-manifest/main.ts", [baseDir])
 62: spawnPlugin({ name: "core-static", methods: ["read"] }, "bun plugins/core-static/main.ts", [baseDir])
 63: spawnPlugin({ name: "core-serve", methods: ["start", "stop"] }, "bun plugins/core-serve/main.ts", [baseDir])
-64: 
+64:
 65: const userManifests = (await routeRequest("core-manifest.scan", { full: true })) as any[]
-66: 
+66:
 67: for (const manifest of userManifests) {
 68: 	if (!manifest.run) continue
 69: 	spawnPlugin(manifest, manifest.run)
 70: }
-71: 
+71:
 72: console.log(`[host] Spawned plugins: ${plugins.map(p => p.config.name).join(", ") || "none"}`)
-73: 
+73:
 74: async function sendToPlugin(plugin: PluginInstance, id: number, method: string, params: any) {
 75: 	const msg = JSON.stringify({ id, method, params }) + "\n"
 76: 	const stdin = plugin.process.stdin
 77: 	if (stdin && typeof stdin !== "number") stdin.write(msg)
 78: }
-79: 
+79:
 80: function handlePluginResponse(plugin: PluginInstance, line: string) {
 81: 	try {
 82: 		const msg = JSON.parse(line)
@@ -8061,7 +8225,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 91: 		console.error(`[${plugin.config.name}] parse error:`, line)
 92: 	}
 93: }
-94: 
+94:
 95: async function readStream(stream: ReadableStream<any>, _name: string, onLine: (line: string) => void) {
 96: 	const reader = stream.getReader()
 97: 	const decoder = new TextDecoder()
@@ -8079,7 +8243,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 109: 		}
 110: 	} catch {}
 111: }
-112: 
+112:
 113: async function routeRequest(fullMethod: string, params: any): Promise<any> {
 114: 	const parts = fullMethod.split('.')
 115: 	const pluginName = parts[0]
@@ -8098,7 +8262,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 128: 		sendToPlugin(plugin, id, action, params)
 129: 	})
 130: }
-131: 
+131:
 132: const rpc = BrowserView.defineRPC({
 133:   maxRequestTime: 15000,
 134:   handlers: {
@@ -8154,18 +8318,18 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 184:     messages: {},
 185:   },
 186: });
-187: 
+187:
 188: const serveResult = (await routeRequest("core-serve.start", {})) as any
 189: const url = serveResult.url
 190: console.log(`[host] using server: ${url}`)
-191: 
+191:
 192: const mainWindow = new BrowserWindow({
 193: 	title: "Electro Plugins",
 194: 	url,
 195: 	frame: { width: 1024, height: 768, x: 200, y: 200 },
 196: 	rpc,
 197: })
-198: 
+198:
 199: setInterval(() => {
 200: 	for (const plugin of plugins) {
 201: 		if (!plugin.alive) {
@@ -8173,7 +8337,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 203: 		}
 204: 	}
 205: }, 5000)
-206: 
+206:
 207: process.on("SIGINT", async () => {
 208: 	try { await routeRequest("core-serve.stop", {}) } catch {}
 209: 	for (const p of plugins) p.process.kill()
@@ -8187,6 +8351,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/src/shared/types.ts"
@@ -8194,6 +8359,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/src/shared/types.ts</path>
 <type>file</type>
@@ -8203,31 +8369,31 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 3:   alive: boolean
 4:   methods: string[]
 5: }
-6: 
+6:
 7: export interface PluginRequestParams {
 8:   method: string
 9:   params: any
 10: }
-11: 
+11:
 12: export interface PluginRequestResults {
 13:   success: boolean
 14:   data?: any
 15:   error?: string
 16: }
-17: 
+17:
 18: export interface FeedContrib {
 19:   type: string    // e.g. "video", "post", "image"
 20:   method?: string // RPC method to call (defaults to methods[0])
 21:   card?: string   // WC tag, e.g. "yt-video-card" - path derived
 22: }
-23: 
+23:
 24: export interface PluginManifest {
 25:   name: string
-26:   version?: string 
-27:   description?: string 
-28:   author?: string 
-29:   run?: string 
-30:   methods?: string[] 
+26:   version?: string
+27:   description?: string
+28:   author?: string
+29:   run?: string
+30:   methods?: string[]
 31:   ui?: string           // tag name for main-UI WC (only feed plugin)
 32:   components?: string[] // WC tags to build (cards, sub-components, not mounted automatically)
 33:   feeds?: FeedContrib[]
@@ -8241,6 +8407,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/plugins/_shared/stdin.ts"
@@ -8248,15 +8415,16 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/plugins/_shared/stdin.ts</path>
 <type>file</type>
 <content>
 1: import { createInterface } from "readline"
-2: 
+2:
 3: export type SendFn = (id: number | null, result?: any, error?: string) => void
 4: export type Handler = (req: { id: number | null; method: string; params: any }, send: SendFn) => Promise<void> | void
-5: 
+5:
 6: export const createSend: () => SendFn = () => {
 7:   return (id, result?, error?) => {
 8:     const msg: any = { id }
@@ -8265,7 +8433,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 11:     process.stdout.write(JSON.stringify(msg) + "\n")
 12:   }
 13: }
-14: 
+14:
 15: export function startStdin(handler: Handler) {
 16:   const send = createSend()
 17:   const rl = createInterface({ input: process.stdin })
@@ -8298,6 +8466,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 **Tool: read**
 
 **Input:**
+
 ```json
 {
   "filePath": "/mnt/5TB/Projects/electro-plugins/tsconfig.json"
@@ -8305,6 +8474,7 @@ Let me re-read the current App.tsx to get the exact line numbers and content for
 ```
 
 **Output:**
+
 ```
 <path>/mnt/5TB/Projects/electro-plugins/tsconfig.json</path>
 <type>file</type>
@@ -8365,6 +8535,7 @@ The current App.tsx lines 13-30 have `if (!res.success) throw new Error(...)` gu
 Now, for the diffs, let me think about what exactly changes in each file for the Tauri migration.
 
 **Files to DELETE:**
+
 - `src/bun/index.ts` (replaced by Rust host)
 - `src/bun/` directory (empty after)
 - `electrobun.config.ts`
@@ -8373,6 +8544,7 @@ Now, for the diffs, let me think about what exactly changes in each file for the
 - `test.sh` (obsolete)
 
 **Files to CREATE:**
+
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 - `src-tauri/build.rs`
@@ -8381,6 +8553,7 @@ Now, for the diffs, let me think about what exactly changes in each file for the
 - `src-tauri/src/lib.rs` — the Rust host (~250 lines)
 
 **Files to MODIFY:**
+
 - `src/mainview/App.tsx` — change imports + bridge
 - `src/mainview/index.html` — title, script path
 - `vite.config.ts` — port, root, clearScreen, hmr
@@ -8388,6 +8561,7 @@ Now, for the diffs, let me think about what exactly changes in each file for the
 - `tsconfig.json` — maybe remove `"plugins"` from include (they don't need typechecking)
 
 **Files that STAY (no changes):**
+
 - Everything in `plugins/` — 0 changes
 - `scripts/build-plugins.ts` — 0 changes
 - `src/shared/types.ts` — 0 changes
@@ -8411,6 +8585,7 @@ Now the diffs. **All files assume a fresh project scaffolded with `bun create ta
 ### File changes (from scaffold to working app)
 
 **DELETE:**
+
 - `src-tauri/src/main.rs` (rename to `lib.rs` pattern or rewrite entirely)
 - Any scaffold `App.css`, `index.css` (Tailwind replaces)
 
@@ -8419,6 +8594,7 @@ Now the diffs. **All files assume a fresh project scaffolded with `bun create ta
 **MODIFY:**
 
 **`src-tauri/Cargo.toml`** — add deps after scaffolded `tauri`:
+
 ```
 + serde = { version = "1", features = ["derive"] }
 + serde_json = "1"
@@ -8426,6 +8602,7 @@ Now the diffs. **All files assume a fresh project scaffolded with `bun create ta
 ```
 
 **`src/mainview/App.tsx`** — 2 hunks:
+
 ```
 - import { Electroview } from "electrobun/view"
 - import type { PluginManifest } from "../shared/types"
@@ -8440,25 +8617,25 @@ Now the diffs. **All files assume a fresh project scaffolded with `bun create ta
 -     handlers: { requests: {}, messages: {} },
 -   }),
 - })
-- 
+-
 - window.__pluginRpc = async (method: string, params: any) => {
 -   const res = await electroview.rpc?.request.pluginRequest({ method, params })
 -   if (!res.success) throw new Error(res.error || "RPC error")
--     return res.data 
+-     return res.data
 - }
-- 
+-
 - window.resolveHook = async (hook: string) => {
 -   const res = await electroview.rpc.request.resolveHook({ hook })
 -   if (!res.success) throw new Error(res.error || "Hook resolution failed")
 -   return res.data
 - }
-- 
+-
 - window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
 -   const method = args !== undefined ? methodOrArgs : undefined
 -   const params = args !== undefined ? args : methodOrArgs
 -   const res = await electroview.rpc.request.callHook({ hook, method, params })
 -   if (!res.success) throw new Error(res.error || "callHook failed")
--   return res.data 
+-   return res.data
 - }
 
 + window.__pluginRpc = async (method: string, params: any) => {
@@ -8477,6 +8654,7 @@ Now the diffs. **All files assume a fresh project scaffolded with `bun create ta
 Everything below that (lines 33-101) stays **identical** — `useEffect`, `init()`, `loadFrontend()`, the render. Zero changes.
 
 **`package.json`** — scripts and deps:
+
 ```
 - "start": "bun run build:plugins && vite build && electrobun dev",
 - "dev": "electrobun dev --watch",
@@ -8499,6 +8677,7 @@ Everything below that (lines 33-101) stays **identical** — `useEffect`, `init(
 Remove `"@types/bun": "latest"`, `"concurrently": "^9.1.0"`. Keep `react`, `react-dom`, `@vitejs/plugin-react`, `tailwindcss`, `vite-plugin-css-injected-by-js`, etc.
 
 **`vite.config.ts`**:
+
 ```
 + import tailwindcss from "@tailwindcss/vite"
 - plugins: [react()],
@@ -8525,6 +8704,7 @@ Remove `"@types/bun": "latest"`, `"concurrently": "^9.1.0"`. Keep `react`, `reac
 ```
 
 **`tsconfig.json`** — update from old project config for the new structure:
+
 ```
 - "include": ["src", "plugins"],
 + "include": ["src"],
@@ -8533,6 +8713,7 @@ Remove `"@types/bun": "latest"`, `"concurrently": "^9.1.0"`. Keep `react`, `reac
 (Plugins are standalone Bun scripts, not part of the frontend TS project.)
 
 **`src/mainview/index.html`** — copy to project root (Tauri expects `index.html` at root, not in `src/mainview/`):
+
 ```
 - <title>React + Tailwind + Vite</title>
 + <title>Electro App</title>
@@ -8547,15 +8728,15 @@ No changes needed to the content itself, just the path moves.
 
 ### Files that stay identical (just copy them over)
 
-| Source | Destination |
-|--------|------------|
-| `plugins/` | `plugins/` |
+| Source                     | Destination                |
+| -------------------------- | -------------------------- |
+| `plugins/`                 | `plugins/`                 |
 | `scripts/build-plugins.ts` | `scripts/build-plugins.ts` |
-| `build/plugins/` | `build/plugins/` |
-| `src/shared/types.ts` | `src/shared/types.ts` |
-| `tailwind.config.js` | `tailwind.config.js` |
-| `postcss.config.js` | `postcss.config.js` |
-| `.gitignore` | `.gitignore` |
+| `build/plugins/`           | `build/plugins/`           |
+| `src/shared/types.ts`      | `src/shared/types.ts`      |
+| `tailwind.config.js`       | `tailwind.config.js`       |
+| `postcss.config.js`        | `postcss.config.js`        |
+| `.gitignore`               | `.gitignore`               |
 
 ---
 
@@ -8580,6 +8761,7 @@ The user wants me to read the Tauri scaffold files first. They created a fresh T
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "ls /mnt/5TB/electro-app/src-tauri/src/ 2>/dev/null && echo \"---\" && ls /mnt/5TB/electro-app/src-tauri/ 2>/dev/null"
@@ -8587,6 +8769,7 @@ The user wants me to read the Tauri scaffold files first. They created a fresh T
 ```
 
 **Output:**
+
 ```
 (no output)
 ```
@@ -8594,6 +8777,7 @@ The user wants me to read the Tauri scaffold files first. They created a fresh T
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "find /mnt/5TB/ -maxdepth 2 -name \"tauri.conf.json\" -o -name \"Cargo.toml\" | head -10"
@@ -8601,6 +8785,7 @@ The user wants me to read the Tauri scaffold files first. They created a fresh T
 ```
 
 **Output:**
+
 ```
 (no output)
 ```
@@ -8618,6 +8803,7 @@ Let me check what `bun create tauri-app` would produce by looking at the create-
 **Tool: websearch**
 
 **Input:**
+
 ```json
 {
   "query": "bun create tauri-app React TypeScript Vite scaffold file structure",
@@ -8626,7 +8812,8 @@ Let me check what `bun create tauri-app` would produce by looking at the create-
 ```
 
 **Output:**
-```
+
+````
 {
   "search_id": "search_7e57aa803b3048268eb9ebf1e73ea0a7",
   "results": [
@@ -8720,11 +8907,12 @@ Let me check what `bun create tauri-app` would produce by looking at the create-
   ],
   "session_id": "ses_0b7dd3b35ffeecaxK8nY5HYFxL"
 }
-```
+````
 
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "ls /mnt/5TB/electro-app/ 2>/dev/null || ls /mnt/5TB/Projects/electro-app/ 2>/dev/null || echo \"NO PROJECT DIR FOUND - do you have a new tauri project created somewhere?\""
@@ -8732,6 +8920,7 @@ Let me check what `bun create tauri-app` would produce by looking at the create-
 ```
 
 **Output:**
+
 ```
 NO PROJECT DIR FOUND - do you have a new tauri project created somewhere?
 
@@ -8750,6 +8939,7 @@ Let me look at the official create-tauri-app React template on GitHub to underst
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git clone --depth 1 https://github.com/tauri-apps/create-tauri-app /tmp/cta 2>&1 | tail -3; find /tmp/cta/templates -type d -maxdepth 1 2>/dev/null",
@@ -8758,6 +8948,7 @@ Let me look at the official create-tauri-app React template on GitHub to underst
 ```
 
 **Output:**
+
 ```
 Cloning into '/tmp/cta'...
 /tmp/cta/templates
@@ -8805,6 +8996,7 @@ The user said "flux" - seems like they want me to continue/give them the informa
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "find /tmp/cta/templates/template-react-ts -type f | head -30 && echo \"---\" && find /tmp/cta/templates/_base_ -type f | head -20"
@@ -8812,6 +9004,7 @@ The user said "flux" - seems like they want me to continue/give them the informa
 ```
 
 **Output:**
+
 ```
 /tmp/cta/templates/template-react-ts/vite.config.ts.lte
 /tmp/cta/templates/template-react-ts/tsconfig.node.json
@@ -8855,4 +9048,3 @@ The user said "flux" - seems like they want me to continue/give them the informa
 ## Assistant (Plan · DeepSeek V4 Flash Free · 6.7s)
 
 ---
-

@@ -28,17 +28,13 @@ if (cached) {
   } catch {}
 }
 
-startStdin(async (request, send) => {
-  const method = request.method;
-  const params = request.params || {};
-  const reqId = request.id;
-
+startStdin(async ({ method, params, id }, send) => {
   try {
     if (method === "feed") {
       const fresh = loadCookie();
       if (fresh) cookieStr = fresh;
       if (!cookieStr) {
-        send(reqId, null, "Not Authenticated");
+        send(id, null, "Not Authenticated");
         return;
       }
       const tube = await Innertube.create({
@@ -93,14 +89,14 @@ startStdin(async (request, send) => {
         }
       }
       if (videos.length === 0 && seenFeedNudge) {
-        send(reqId, null, "Not Authenticated (cookie expired)");
+        send(id, null, "Not Authenticated (cookie expired)");
         return;
       }
-      send(reqId, videos.slice(0, params.limit || 30));
+      send(id, videos.slice(0, params.limit || 30));
     } else {
-      send(reqId, null, "Method not found: " + method);
+      send(id, null, "Method not found: " + method);
     }
   } catch (e: any) {
-    send(reqId, null, e.message || String(e));
+    send(id, null, e.message || String(e));
   }
 });

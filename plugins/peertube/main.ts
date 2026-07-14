@@ -1,9 +1,6 @@
 import { startStdin } from "#shared/stdin.ts"
 
-startStdin(async (request, send) => {
-  const method = request.method
-  const params = request.params || {}
-  const reqId = request.id
+startStdin(async ({ method, params, id }, send) => {
 
   try {
     if (method === "list") {
@@ -31,11 +28,11 @@ startStdin(async (request, send) => {
         language: v.language?.label || "",
         embedUrl: v.embedPath ? "https://peertube.cpy.re" + v.embedPath : "",
       }))
-      send(reqId, items)
+      send(id, items)
     } else {
-      send(reqId, null, "Method not found: " + method)
+      send(id, null, "Method not found: " + method)
     }
   } catch (e: any) {
-    send(reqId, null, e.message || String(e))
+    send(id, null, e.message || String(e))
   }
 })

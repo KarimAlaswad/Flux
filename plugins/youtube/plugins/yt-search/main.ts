@@ -11,14 +11,11 @@ try {
   if (data) cookieStr = data 
 } catch {}
 
-startStdin(async (request, send) => {
-  const method = request.method
-  const params = request.params
-  const reqId = request.id
+startStdin(async ({ method, params, id }, send) => {
 
   try {
     if (method === "search") {
-      if (!cookieStr) { send(reqId, null, "Not authenticated"); return }
+      if (!cookieStr) { send(id, null, "Not authenticated"); return }
       const tube = await Innertube.create({ cookie: cookieStr, cache: new UniversalCache(true) })
       const search = await Promise.race([
         tube.search(params.query),
@@ -32,11 +29,11 @@ startStdin(async (request, send) => {
         duration: v.duration?.seconds || 0,
         thumbnail: v.thumbnails?.[0]?.url || "",
       }))
-      send(reqId, results)
+      send(id, results)
     } else {
-      send(reqId, null, "Method not found: " + method)
+      send(id, null, "Method not found: " + method)
     }
   } catch (e: any) {
-    send(reqId, null, e.message || String(e))
+    send(id, null, e.message || String(e))
   }
 })
