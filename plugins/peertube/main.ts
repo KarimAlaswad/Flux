@@ -1,15 +1,6 @@
-import { createInterface } from "readline"
+import { startStdin } from "#shared/stdin.ts"
 
-// -- Send JSON response to stdout --
-function send(id: number | null, result?: any, error?: string) {
-  const msg: any = { id };
-  if (error) msg.error = error
-  else msg.result = result
-  process.stdout.write(JSON.stringify(msg) + "\n")
-}
-
-// -- Handle one RPC request --
-async function handleRequest(request: any) {
+startStdin(async (request, send) => {
   const method = request.method
   const params = request.params || {}
   const reqId = request.id
@@ -47,26 +38,4 @@ async function handleRequest(request: any) {
   } catch (e: any) {
     send(reqId, null, e.message || String(e))
   }
-}
-
-// -- stdin reader (one JSON line at a time), queued to ensure serial processing --
-const rl = createInterface({ input: process.stdin })
-let busy = false
-const queue: string[] = []
-rl.on("line", (line: string) => {
-  const trimmed = line.trim()
-  if (!trimmed) return
-  queue.push(trimmed)
-  if (!busy) processNext()
 })
-async function processNext() {
-  busy = true
-  while (queue.length > 0) {
-    try {
-      await handleRequest(JSON.parse(queue.shift()!))
-    } catch (e: any) {
-      send(null, null, e.message || "Parse error")
-    }
-  }
-  busy = false
-}

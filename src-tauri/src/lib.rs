@@ -273,6 +273,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_libmpv::init())
         .setup(move |app| {
             let handles = tauri::async_runtime::block_on(async {
                 let mut handles = Vec::new();

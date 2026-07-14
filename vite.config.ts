@@ -4,9 +4,20 @@ import react from "@vitejs/plugin-react";
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
+const wcReload = {
+  name: "wc-reload",
+  configureServer(server) {
+    server.watcher.add("build/plugins/**/*.js");
+    server.watcher.on("change", (p) => {
+      if (p.includes("build/plugins/"))
+        server.ws.send({ type: "full-reload"})
+    })
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), wcReload],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

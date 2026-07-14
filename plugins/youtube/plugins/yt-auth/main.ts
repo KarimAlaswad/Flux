@@ -1,4 +1,4 @@
-import { createInterface } from "readline";
+import { startStdin } from "#shared/stdin.ts"
 import { Innertube, UniversalCache } from "youtubei.js";
 import { join } from "path";
 import {
@@ -18,13 +18,6 @@ let accountName: string | null = null;
 const cookieFile = join(import.meta.dir, "..", "..", ".youtube-cookie");
 const HOME = homedir();
 const OS = platform();
-
-function send(id: number | null, result?: any, error?: string) {
-  const msg: any = { id };
-  if (error) msg.error = error;
-  else msg.result = result;
-  process.stdout.write(JSON.stringify(msg) + "\n");
-}
 
 function loadCookie(): string | null {
   try {
@@ -179,7 +172,7 @@ async function discoverAllCookies(): Promise<CookieEntry[] | null> {
   return all;
 }
 
-async function handleRequest(request: any) {
+startStdin(async (request, send) => {
   const method = request.method;
   const reqId = request.id;
   try {
@@ -221,25 +214,4 @@ async function handleRequest(request: any) {
   } catch (e: any) {
     send(reqId, null, e.message || String(e));
   }
-}
-
-const rl = createInterface({ input: process.stdin });
-const queue: string[] = [];
-let busy = false;
-rl.on("line", (line: string) => {
-  const trimmed = line.trim();
-  if (!trimmed) return;
-  queue.push(trimmed);
-  if (!busy) processNext();
-});
-async function processNext() {
-  busy = true;
-  while (queue.length > 0) {
-    try {
-      await handleRequest(JSON.parse(queue.shift()!));
-    } catch {
-      send(null, null, "Parse error");
-    }
-  }
-  busy = false;
-}
+})

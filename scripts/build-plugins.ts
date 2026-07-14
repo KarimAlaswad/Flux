@@ -104,6 +104,9 @@ function findPluginDirs(dir) {
 const buildDir = join(process.cwd(), "build", "plugins");
 if (!existsSync(buildDir)) mkdirSync(buildDir, { recursive: true });
 
+const isWatch = process.argv.includes("--watch")
+const watchers: any[] = []
+
 const pluginDirs = findPluginDirs("plugins");
 for (const dir of pluginDirs) {
   const manifest = JSON.parse(await Bun.file(join(dir, "plugin.json")).text());
@@ -130,7 +133,7 @@ for (const dir of pluginDirs) {
     }
 
     const output = join(buildDir, tag + ".js");
-    if (!needsRebuild(file, output)) {
+    if (!isWatch && !needsRebuild(file,output)) {
       console.log(`  skip ${tag}`);
       continue;
     }
@@ -154,7 +157,7 @@ for (const dir of pluginDirs) {
 
     writeFileSync(
       cssFile,
-      "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n",
+      "@import \"tailwindcss\"\n",
     );
     if (fw.entry) writeFileSync(entryFile, fw.entry(tag, tag + "." + ext));
 
@@ -164,10 +167,11 @@ for (const dir of pluginDirs) {
       [
         `import { defineConfig } from "vite"`,
         `import injectCss from "vite-plugin-css-injected-by-js"`,
+        `import tailwindcss from "@tailwindcss/vite"`,
         fw.import,
         `export default defineConfig({`,
         `  root: ${JSON.stringify(dir)},`,
-        `  plugins: [${fw.plugin}, injectCss()],`,
+        `  plugins: [${fw.plugin}, tailwindcss(), injectCss()],`,
         `  define: { 'process.env.NODE_ENV': JSON.stringify('production') },`,
         `  build: {`,
         `    lib: { entry: ${libEntry}, formats: ["iife"], name: "Widget", fileName: () => ${JSON.stringify(tag + ".js")} },`,
@@ -178,12 +182,33 @@ for (const dir of pluginDirs) {
       ].join("\n"),
     );
 
-    await $`bunx vite build --config ${configFile}`;
-
-    unlinkSync(configFile);
-    if (fw.entry) unlinkSync(entryFile);
-    unlinkSync(cssFile);
+    if (isWatch) {
+      console.log(`[watch] ${tag} => ${output}`);
+      watchers.push(Bun.spawn(["bun", "vite", "build", "--config", configFile, "--watch"], {
+        stdio: ["inherit", "inherit", "inherit"],
+      }));
+    } else {
+      await $`bunx vite build --config ${configFile}`
+      unlinkSync(configFile)
+      if (fw.entry) unlinkSync(entryFile)
+        unlinkSync(cssFile)
+    }
   }
 }
 
-console.log("done");
+if (isWatch) {
+  console.log(`[watch] watching ${watchers.length} build(s), Ctrl+C to stop`)
+  process.on("SIGINT", () => {
+    watchers.forEach(w => w.kill())
+    for (const d of pluginDirs) {
+      for (const f of [".vite.config.mjs", "entry.tsx", "style.css"]) {
+        const p = join(d, f)
+        if (existsSync(p)) unlinkSync(p)
+      }
+    }
+    process.exit(0)
+  })
+  await Promise.all(watchers.map(w => w.exited))
+} else {
+  console.log("done")
+}

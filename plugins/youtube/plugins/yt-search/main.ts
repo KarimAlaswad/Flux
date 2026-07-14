@@ -1,4 +1,4 @@
-import { createInterface } from "readline"
+import { startStdin } from "#shared/stdin.ts"
 import { Innertube, UniversalCache } from "youtubei.js"
 import { join } from "path"
 import { existsSync, readFileSync } from "fs"
@@ -6,19 +6,12 @@ import { existsSync, readFileSync } from "fs"
 let cookieStr: string | null = null
 const cookieFile = join(import.meta.dir, "..", "..", ".youtube-cookie")
 
-function send(id: number | null, result?: any, error?: string) {
-  const msg: any = { id }
-  if (error) msg.error = error
-  else msg.result = result
-  process.stdout.write(JSON.stringify(msg) + "\n")
-}
-
 try {
   const data = readFileSync(cookieFile, "utf-8").trim()
   if (data) cookieStr = data 
 } catch {}
 
-async function handleRequest(request: any) {
+startStdin(async (request, send) => {
   const method = request.method
   const params = request.params
   const reqId = request.id
@@ -46,11 +39,4 @@ async function handleRequest(request: any) {
   } catch (e: any) {
     send(reqId, null, e.message || String(e))
   }
-}
-
-const rl = createInterface({ input: process.stdin })
-rl.on("line", (line: string) => {
-  const trimmed = line.trim()
-  if (!trimmed) return
-  try { handleRequest(JSON.parse(trimmed)) } catch { send(null, null, "Parse error") }
 })

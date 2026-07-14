@@ -2,10 +2,10 @@ html, body, #root, #feed-container {
   background: transparent !important;
 }
 
-#feed-container > * {
+/* #feed-container > * {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
   border-radius: 8px;
   margin: 8px;
   padding: 12px;
-}
+} */
