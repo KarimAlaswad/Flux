@@ -85,6 +85,7 @@ startStdin(async ({ method, params, id }, send) => {
             views: parts[1]?.text?.text || "",
             published: parts[2]?.text?.text || "",
             thumbnail: v.content_image?.image?.[0]?.url || "",
+            url: "https://www.youtube.com/watch?v=" + v.content_id,
           });
         }
       }

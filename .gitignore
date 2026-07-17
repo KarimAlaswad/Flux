@@ -28,8 +28,3 @@ dist-ssr
 omp-session-2026-07-11T16-17-04-116Z_019f51f7-d474-7000-be37-f83f719a580b.html
 opencode.json
 prompt.txt
-
-# Build artifacts
-plugins/**/.vite.config.mjs
-plugins/**/entry.tsx
-plugins/**/style.css

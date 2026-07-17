@@ -38,6 +38,20 @@ export default function Feed({ manifests }: FeedProps) {
     loadFeed()
   }, [manifests])
 
+  // Hide feed container when video plays
+  useEffect(() => {
+    const el = document.querySelector("feed-widget") as HTMLElement
+    if (!el) return
+    const hide = () => { el.style.display = "none" }
+    const show = () => { el.style.display = "" }
+    window.addEventListener("modal-load", hide)
+    window.addEventListener("modal-close", show)
+    return () => {
+      window.removeEventListener("modal-load", hide)
+      window.removeEventListener("modal-close", show)
+    }
+  }, [])
+
   async function loadFeed() {
     console.log("[feed] loadFeed: manifests.length =", manifests?.length ?? 0)
     setLoading(true)

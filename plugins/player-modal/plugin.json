@@ -1,0 +1,8 @@
+{
+  "name": "player-modal",
+  "version": "1.0.0",
+  "description": "Backdrop overlay for video players",
+  "author": "Me",
+  "hooks": ["player.modal"],
+  "ui": "player-modal"
+}

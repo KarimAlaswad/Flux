@@ -7,7 +7,7 @@
     "#shared/*": "./plugins/_shared/*"
   },
   "scripts": {
-    "dev": "tauri dev",
+    "dev": "WAYLAND_DISPLAY= GDK_BACKEND=x11 tauri dev",
     "build": "bun run build:plugins && tauri build",
     "build:plugins": "bun scripts/build-plugins.ts",
     "dev:watch": "bun run build:plugins --watch & bun run dev; kill %1 2>/dev/null",
@@ -19,7 +19,6 @@
     "@tauri-apps/plugin-opener": "^2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tauri-plugin-libmpv-api": "^0.3.2",
     "vite-plugin-css-injected-by-js": "^5.0.1",
     "youtubei.js": "^17.2.0"
   },

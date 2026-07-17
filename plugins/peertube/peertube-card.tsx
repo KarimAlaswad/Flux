@@ -7,15 +7,11 @@ export default function PeerTubeCard({ item }: { item: any }) {
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  const handleClick = async () => {
-    if (item.embedUrl) {
-      await window.__pluginRpc('video-player.load', {
-        url: item.embedUrl + "?autoplay=1",
-        title: item.title,
-      })
-      window.dispatchEvent(new CustomEvent("player-load", {
-        detail: { url: item.embedUrl + "?autoplay=1", title: item.title }
-      }))
+  const handleClick = () => {
+    if (item.url) {
+      window.dispatchEvent(
+        new CustomEvent("player-load", { detail: { url: item.url, title: item.title } })
+      )
     }
   }
 
