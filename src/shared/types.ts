@@ -1,35 +1,24 @@
 export interface PluginInfo {
   name: string
-  alive: boolean
   methods: string[]
 }
 
-export interface PluginRequestParams {
-  method: string
-  params: any
-}
-
-export interface PluginRequestResults {
-  success: boolean
-  data?: any
-  error?: string
-}
-
 export interface FeedContrib {
-  type: string    // e.g. "video", "post", "image"
-  method?: string // RPC method to call (defaults to methods[0])
-  card?: string   // WC tag, e.g. "yt-video-card" - path derived
+  type?: string // e.g. "video", "post", "image"
+  method?: string // RPC method to call (default to methods[0])
+  card?: string // WC tag, e.g. "yt-video-card" - path derived
 }
 
 export interface PluginManifest {
   name: string
-  version?: string 
-  description?: string 
-  author?: string 
-  run?: string 
-  methods?: string[] 
-  ui?: string           // tag name for main-UI WC (only feed plugin)
-  components?: string[] // WC tags to build (cards, sub-components, not mounted automatically)
+  version?: string
+  description?: string
+  author?: string
+  run?: string
+  methods?: string[]
+  ui?: string // tag name for main-UI WC 
+  components?: string[] // WC tags to build but NOT auto-mount (resolved by slot consumers)
   feeds?: FeedContrib[]
   hooks?: string[]
+  slots?: string[] // named placeholders this plugin fills
 }

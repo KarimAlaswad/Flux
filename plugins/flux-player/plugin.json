@@ -1,0 +1,9 @@
+{
+  "name": "movi-player",
+  "version": "1.0.0",
+  "description": "Video player wrapping movi-player",
+  "author": "Me",
+  "hooks": ["video.player"],
+  "components": ["flux-player"],
+  "slots": ["video.player"]
+}

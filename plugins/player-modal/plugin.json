@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "Backdrop overlay for video players",
   "author": "Me",
-  "hooks": ["player.modal"],
+  "hooks": ["video.modal"],
   "ui": "player-modal"
 }

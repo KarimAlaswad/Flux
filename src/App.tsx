@@ -55,6 +55,17 @@ export default function App() {
       }
     }
 
+    // Load components 
+    for (const m of all) {
+      for (const tag of (m.components || [])) {
+        if (!loaded.has(tag)) {
+          loaded.add(tag)
+          console.log(`[app] loading component: ${tag}`)
+          await loadFrontend(`build/plugins/${tag}.js`)
+        }
+      }
+    }
+
     // Create WC elements directly, outside React's VDOM
     const container = document.getElementById("feed-container")
     if (container) {

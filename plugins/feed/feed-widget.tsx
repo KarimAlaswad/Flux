@@ -44,11 +44,11 @@ export default function Feed({ manifests }: FeedProps) {
     if (!el) return
     const hide = () => { el.style.display = "none" }
     const show = () => { el.style.display = "" }
-    window.addEventListener("modal-load", hide)
-    window.addEventListener("modal-close", show)
+    window.addEventListener("video.modal.show", hide);
+    window.addEventListener("video.modal.hide", show);
     return () => {
-      window.removeEventListener("modal-load", hide)
-      window.removeEventListener("modal-close", show)
+      window.removeEventListener("video.modal.show", hide);
+      window.removeEventListener("video.modal.hide", show);
     }
   }, [])
 
@@ -292,6 +292,7 @@ function CardRenderer({ plugin, data }: { plugin: FeedSource; data: any }) {
     customElements.whenDefined(tag).then(() => {
       if (!container.isConnected) return // component unmounted while loading
       const card = document.createElement(tag)
+      data._plugin = plugin.name
       card.item = data
       container.appendChild(card)
     })

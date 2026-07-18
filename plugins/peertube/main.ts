@@ -29,6 +29,15 @@ startStdin(async ({ method, params, id }, send) => {
         embedUrl: v.embedPath ? "https://peertube.cpy.re" + v.embedPath : "",
       }))
       send(id, items)
+    } else if (method === "resolve") {
+        const url = params?.url
+        if (!url) { send(id, null, "Missing url"); return }
+        const uuid = url.split("/").pop()
+        const api = `https://${new URL(url).hostname}/api/v1/videos/${uuid}`
+        const resp = await fetch(api)
+        const data = await resp.json()
+        const file = data.files?.[0]?.fileUrl || data.streamingPlaylists?.[0]?.playlistUrl
+        send(id, { url: file || url })
     } else {
       send(id, null, "Method not found: " + method)
     }

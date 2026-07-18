@@ -5,7 +5,7 @@
   "author": "Me",
   "run": "bun ./main.ts",
   "hooks": ["feed.video"],
-  "methods": ["list"],
+  "methods": ["list", "resolve"],
   "feeds": [
     {
       "type": "video",

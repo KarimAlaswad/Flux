@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "fs";
 
 let cookieStr: string | null = null;
 const cookieFile = join(import.meta.dir, "..", "..", ".youtube-cookie");
+let tube: any = null
 
 function loadCookie(): string | null {
   try {
@@ -19,7 +20,7 @@ function loadCookie(): string | null {
 const cached = loadCookie();
 if (cached) {
   try {
-    const tube = await Innertube.create({
+    tube = await Innertube.create({
       cookie: cached,
       cache: new UniversalCache(true),
     });
@@ -37,10 +38,13 @@ startStdin(async ({ method, params, id }, send) => {
         send(id, null, "Not Authenticated");
         return;
       }
-      const tube = await Innertube.create({
-        cookie: cookieStr,
-        cache: new UniversalCache(true),
-      });
+      if (!tube) {
+        tube = await Innertube.create({
+          cookie: cookieStr,
+          cache: new UniversalCache(true),
+        })
+      };
+
       const home = await Promise.race([
         tube.getHomeFeed(),
         new Promise<any>((_, reject) =>
@@ -94,8 +98,24 @@ startStdin(async ({ method, params, id }, send) => {
         return;
       }
       send(id, videos.slice(0, params.limit || 30));
+    } else if (method === "resolve") {
+      const url = params?.url
+      if (!url) { send(id, null, "Missing url"); return }
+      const videoId = new URL(url).searchParams.get("v")
+      if (!videoId) { send(id, null, "Invalid Youtube URL"); return }
+      if (!tube) {
+        tube = await Innertube.create({
+          cookie: cookieStr,
+          cache: new UniversalCache(true),
+        })
+      }
+      const info = await tube.getInfo(videoId)
+      const stream = info.streaming_data?.formats?.find(
+        (f: any) => f.mimeType?.includes("mp4")
+      )
+      send(id, { url: stream?.url || url })
     } else {
-      send(id, null, "Method not found: " + method);
+      send(id, null, "Method not found: " + method)
     }
   } catch (e: any) {
     send(id, null, e.message || String(e));

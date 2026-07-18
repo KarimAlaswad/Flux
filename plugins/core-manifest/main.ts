@@ -41,6 +41,8 @@ startStdin(async ({ method, params, id }, send) => {
       hooks: m.hooks || [],
       ui: m.ui || null,
       feeds: m.feeds || null,
+      components: m.components || null,
+      slots: m.slots || null,
     }));
     send(id, safe);
   } else {

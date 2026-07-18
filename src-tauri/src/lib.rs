@@ -16,7 +16,7 @@ use tokio::time::{Duration, timeout};
 #[serde(rename_all = "camelCase")]
 struct FeedContrib {
     #[serde(rename = "type")]
-    feed_type: String,
+    feed_type: Option<String>,
     method: Option<String>,
     card: Option<String>,
 }
@@ -34,6 +34,7 @@ struct PluginManifest {
     components: Option<Vec<String>>,
     feeds: Option<Vec<FeedContrib>>,
     hooks: Option<Vec<String>>,
+    slots: Option<Vec<String>>,
 }
 
 // -- Plugin process handle --
@@ -273,7 +274,6 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_libmpv::init())
         .setup(move |app| {
             let handles = tauri::async_runtime::block_on(async {
                 let mut handles = Vec::new();

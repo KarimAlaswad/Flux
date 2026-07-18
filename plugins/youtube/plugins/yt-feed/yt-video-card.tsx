@@ -4,7 +4,7 @@ export default function YTVideoCard({ item }: { item: any }) {
   const handleClick = () => {
     if (item.url) {
       window.dispatchEvent(
-        new CustomEvent("player-load", { detail: { url: item.url, title: item.title } })
+        new CustomEvent("video.player.load", { detail: { url: item.url, title: item.title, source: item._plugin } })
       )
     }
   }
