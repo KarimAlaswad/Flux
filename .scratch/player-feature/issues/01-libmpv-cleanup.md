@@ -4,8 +4,8 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] Remove `.plugin(tauri_plugin_libmpv::init())` from `src-tauri/src/lib.rs`
-- [ ] Verify `Cargo.toml` has no `tauri-plugin-libmpv` dependency (remove if present)
-- [ ] Run `cargo check` — compilation succeeds
+- [x] Remove `.plugin(tauri_plugin_libmpv::init())` from `src-tauri/src/lib.rs`
+- [x] Verify `Cargo.toml` has no `tauri-plugin-libmpv` dependency (remove if present)
+- [x] Run `cargo check` — compilation succeeds

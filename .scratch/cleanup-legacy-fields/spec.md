@@ -1,6 +1,6 @@
 # Clean up legacy fields and standardise plugin packaging
 
-Status: ready-for-agent
+Status: needs-info
 
 ## Problem Statement
 

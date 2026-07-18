@@ -1,6 +1,6 @@
 # Video player with modular modal wrapper
 
-Status: ready-for-agent
+Status: ready-for-human
 
 ## Problem Statement
 

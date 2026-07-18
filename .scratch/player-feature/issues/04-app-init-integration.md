@@ -4,11 +4,11 @@
 
 **Blocked by:** 02 — Modal refactor, 03 — Player plugin + card migration
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] App.tsx init: after creating `<player-modal>`, resolve player tag via `resolveHook("video.player")`
-- [ ] Create player WC element, append it inside the modal's slot
-- [ ] Both start hidden (player has `style="display:none"`, modal already hidden)
-- [ ] Full chain: click card → `"video.player.load"` → player plays → `"video.modal.show"` → modal shows
-- [ ] Close → `"video.player.hide"` → player stops → `"video.modal.hide"` → modal hides
-- [ ] Verify swap: change manifest to a different player tag and confirm it works
+- [x] App.tsx init: loads `components` tags (lines 58-67), including flux-player
+- [x] Modal resolves slot internally — scans `.manifests` for `slots: ["video.player"]`, reads `components[0]`, creates WC, appends to self
+- [x] Both start hidden (player not yet triggered, modal hidden by default)
+- [x] Full chain: click card → `"video.player.load"` → player plays → `"video.modal.show"` → modal shows
+- [x] Close → `"video.player.hide"` → player stops → `"video.modal.hide"` → modal hides
+- [x] Verify swap: change manifest to a different player tag and confirm it works

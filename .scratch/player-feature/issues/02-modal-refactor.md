@@ -9,10 +9,10 @@ Event mappings:
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] player-modal: remove title/URL state, add `<slot>`
-- [ ] player-modal: listen for `"video.modal.show"`/`"video.modal.hide"`
-- [ ] player-modal: close button dispatches `"video.player.hide"` instead of `"modal-close"`
-- [ ] feed-widget: migrate `"modal-load"` → `"video.modal.show"` and `"modal-close"` → `"video.modal.hide"`
-- [ ] Verify: dispatching `"video.modal.show"` shows the modal, close dispatches `"video.player.hide"`
+- [x] player-modal: remove title/URL state, add `<slot>` (div ref as slot container at `player-modal.tsx:5`)
+- [x] player-modal: listen for `"video.modal.show"`/`"video.modal.hide"` (at `player-modal.tsx:11-12`)
+- [x] player-modal: close button dispatches `"video.player.hide"` instead of `"modal-close"` (at `player-modal.tsx:20`)
+- [x] feed-widget: migrate `"modal-load"` → `"video.modal.show"` and `"modal-close"` → `"video.modal.hide"` (at `feed-widget.tsx:47-48`)
+- [x] Verify: dispatching `"video.modal.show"` shows the modal, close dispatches `"video.player.hide"`
