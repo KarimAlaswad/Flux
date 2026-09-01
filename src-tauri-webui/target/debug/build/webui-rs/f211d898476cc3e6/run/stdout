@@ -1,0 +1,4 @@
+cargo:warning=WebUI library not found. Downloading: https://github.com/webui-dev/webui/releases/download/nightly/webui-linux-gcc-x64.zip
+cargo:warning=WebUI library ready.
+cargo:rustc-link-search=native=/home/karim/.cargo/git/checkouts/rust-webui-25023bde9b47bd96/ef9a83d
+cargo:rustc-link-lib=static=webui-2-static

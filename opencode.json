@@ -3,13 +3,16 @@
   "permission": {
     "bash": {
       "rm *": "deny",
+      "git *": "ask",
     },
     "edit": {
       "*": "deny",
-      "CONTEXT.md": "allow",
-      "AGENTS.md": "allow",
-      "docs/adr/*.md": "allow",
-      ".scratch/**/*": "allow"
+      "*.md": "allow",
+      "**/*.md": "allow",
+      ".scratch/**/*": "allow",
+      "lessons/*.html": "allow",
+      "assets/*": "allow",
+      "reference/*.html": "allow"
     }
   }
 }

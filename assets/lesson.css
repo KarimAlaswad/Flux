@@ -1,0 +1,132 @@
+/* Flux Teaching — shared lesson stylesheet */
+/* Tufte-inspired: clean, readable, print-friendly */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;600&display=swap');
+
+:root {
+  --text: #1a1a1a;
+  --muted: #666;
+  --bg: #faf9f5;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --border: #d4d4d4;
+  --code-bg: #f4f4f4;
+  --sans: 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+  --serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e0e0e0;
+    --muted: #999;
+    --bg: #1a1a1a;
+    --accent: #60a5fa;
+    --accent-light: #1e3a5f;
+    --border: #404040;
+    --code-bg: #252525;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1, h2, h3, h4 { font-family: var(--sans); font-weight: 600; line-height: 1.3; margin-top: 1.5em; margin-bottom: 0.5em; }
+h1 { font-size: 2rem; margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 0.3em; }
+h2 { font-size: 1.4rem; color: var(--accent); }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1rem; font-style: italic; }
+
+p { margin-bottom: 1em; }
+p, li { orphans: 3; widows: 3; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, pre {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--code-bg);
+  border-radius: 3px;
+}
+code { padding: 0.1em 0.3em; }
+pre {
+  padding: 1em;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin-bottom: 1em;
+  border: 1px solid var(--border);
+}
+
+blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1em;
+  margin-left: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+ul, ol { margin-bottom: 1em; padding-left: 1.5em; }
+li { margin-bottom: 0.3em; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+
+/* Callout boxes */
+.callout {
+  background: var(--accent-light);
+  border-left: 4px solid var(--accent);
+  padding: 1em 1.2em;
+  margin-bottom: 1em;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.95em;
+}
+.callout strong { color: var(--accent); }
+
+/* Exercise boxes */
+.exercise {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 1em 1.2em;
+  margin-bottom: 1em;
+  border-radius: 4px;
+}
+.exercise h3 { margin-top: 0; font-size: 1rem; color: var(--text); }
+
+/* Code blocks in exercise */
+.exercise code { background: var(--bg); }
+
+/* Quiz styling */
+.quiz { margin-bottom: 1.5em; }
+.quiz-question { font-weight: 600; margin-bottom: 0.5em; }
+.quiz-options { list-style: none; padding-left: 0; }
+.quiz-options li { margin-bottom: 0.3em; }
+.quiz-options label { cursor: pointer; }
+.quiz-answer { display: none; margin-top: 0.5em; padding: 0.5em 1em; background: #d1fae5; border-left: 3px solid #059669; border-radius: 0 4px 4px 0; font-size: 0.9em; }
+.quiz-answer.revealed { display: block; }
+
+/* Metadata block */
+.lesson-meta {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 2em;
+}
+
+/* Print */
+@media print {
+  body { font-size: 12pt; color: #000; background: #fff; max-width: none; padding: 0.5in; }
+  pre { background: #f8f8f8; border: 0.5pt solid #ccc; }
+  .callout { border-left: 2pt solid #000; background: #f8f8f8; }
+  .exercise { border: 0.5pt solid #ccc; background: #f8f8f8; }
+  a { color: #000; }
+}

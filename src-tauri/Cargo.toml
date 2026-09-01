@@ -23,3 +23,8 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+tauri-plugin-cors-fetch = "5.0.0"
+tauri-plugin-mcp-bridge = "0.12.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "2.0"

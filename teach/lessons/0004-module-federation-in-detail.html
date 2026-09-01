@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 4: Module Federation in Detail — The Runtime Module System</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+<style>
+  .architecture-flow {
+    font-family: var(--mono);
+    font-size: 0.8em;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    background: var(--code-bg);
+    padding: 1em;
+    border-radius: 4px;
+    margin-bottom: 1em;
+    border: 1px solid var(--border);
+  }
+  .config-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    margin-bottom: 1em;
+  }
+  .config-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 1em;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 0.85em;
+    background: var(--code-bg);
+  }
+  .config-card h4 {
+    margin-top: 0;
+    font-size: 0.9rem;
+  }
+  .code-small { font-size: 0.8em; }
+  .key-insight { color: var(--accent); font-weight: 600; }
+  .version-diagram {
+    font-family: var(--mono);
+    font-size: 0.78em;
+    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+    background: var(--code-bg);
+    padding: 0.8em;
+    border-radius: 4px;
+    margin-bottom: 1em;
+    border: 1px solid var(--border);
+  }
+  .field-table { font-size: 0.85em; width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+  .field-table th, .field-table td { padding: 0.4em 0.6em; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+  .field-table th { background: var(--code-bg); font-family: var(--sans); font-size: 0.85rem; }
+  .field-table code { font-size: 0.9em; }
+  .decision-tree {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    background: var(--code-bg);
+    padding: 1em;
+    border-radius: 4px;
+    margin-bottom: 1em;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<h1>Module Federation in Detail — The Runtime Module System</h1>
+<p class="lesson-meta">Lesson 4 · ~45 minutes · System Design</p>
+
+<h2>What Module Federation actually is</h2>
+
+<p>Module Federation (MF) is an <strong>architectural pattern</strong> and a <strong>runtime system</strong> for sharing JavaScript modules between independently-built applications. It was introduced in Webpack 5, and has since evolved into MF 2.0 — a multi-bundler, multi-framework platform managed by the <code>@module-federation/enhanced</code> package family.</p>
+
+<p>At its core, MF solves one problem: <strong>how does application A import a module from application B at runtime, using the same framework instance, without rebuilding A?</strong></p>
+
+<div class="callout">
+  <strong>Conceptual model:</strong> MF turns every application into both a potential library consumer <em>and</em> a potential library provider. The module boundary shifts from the file system (npm install) to the network (remote HTTP request). From the consumer's perspective, <code>import('remote/Widget')</code> looks like a dynamic import — but the module arrives from another running application, not from node_modules.
+</div>
+
+<h2>The two eras: Webpack 5 MF vs MF 2.0</h2>
+
+<p>There are two distinct versions of Module Federation, and it's important to know which one you're dealing with:</p>
+
+<table class="field-table">
+  <tr>
+    <th>Feature</th>
+    <th>Webpack 5 built-in MF</th>
+    <th>MF 2.0 (<code>@module-federation/enhanced</code>)</th>
+  </tr>
+  <tr>
+    <td>Package</td>
+    <td>Built into webpack 5</td>
+    <td><code>@module-federation/enhanced</code></td>
+  </tr>
+  <tr>
+    <td>Bundler support</td>
+    <td>Webpack 5 only</td>
+    <td>Webpack, Rspack, Vite, Rsbuild, Modern.js, Metro</td>
+  </tr>
+  <tr>
+    <td>Type generation</td>
+    <td>Manual (no built-in DTS)</td>
+    <td>Auto-generates <code>@mf-types.zip</code> + API types</td>
+  </tr>
+  <tr>
+    <td>Manifest</td>
+    <td>No manifest</td>
+    <td><code>mf-manifest.json</code> + <code>mf-stats.json</code></td>
+  </tr>
+  <tr>
+    <td>Runtime plugins</td>
+    <td>No plugin system</td>
+    <td>Runtime hook system (beforeInit, beforeLoadShare, errorLoadRemote, etc.)</td>
+  </tr>
+  <tr>
+    <td>Chrome DevTool</td>
+    <td>No</td>
+    <td>Dedicated DevTool extension</td>
+  </tr>
+  <tr>
+    <td>SSR</td>
+    <td>Limited</td>
+    <td>First-class Node.js support</td>
+  </tr>
+  <tr>
+    <td>Bridge</td>
+    <td>No</td>
+    <td>Cross-framework (React, Vue 3)</td>
+  </tr>
+  <tr>
+    <td>Async startup</td>
+    <td>Synchronous by default</td>
+    <td><code>experiments.asyncStartup</code></td>
+  </tr>
+</table>
+
+<p>This lesson covers <strong>MF 2.0</strong>. The concepts (host, remote, share scope) are the same in both versions, but MF 2.0 adds the tooling that makes it production-ready.</p>
+
+<h2>Core concepts</h2>
+
+<h3>Producer (Remote)</h3>
+<p>An application that <strong>exposes</strong> modules for others to consume. Configured via the <code>exposes</code> field. A producer produces a <code>remoteEntry.js</code> (or <code>mf-manifest.json</code>) that describes what it offers.</p>
+
+<h3>Consumer (Host)</h3>
+<p>An application that <strong>consumes</strong> modules from producers. Configured via the <code>remotes</code> field. A host declares which remote applications it pulls modules from.</p>
+
+<h3>Bidirectional (Host+Remote)</h3>
+<p>An application can be both a host and a remote simultaneously — exposing its own modules while consuming modules from others. This is the most common pattern in micro-frontend architectures.</p>
+
+<h2>The runtime architecture</h2>
+
+<h3>How a remote module gets loaded</h3>
+
+<p>When a host imports a remote module, this sequence happens:</p>
+
+<div class="architecture-flow">
+┌─ HOST ─────────────────────────────────────────────────┐
+│                                                         │
+│  import('remote/Widget')                                │
+│       │                                                 │
+│       ▼                                                 │
+│  MF runtime intercepts the import                       │
+│       │                                                 │
+│       ▼                                                 │
+│  1. Fetch remoteEntry.js  ◄─────── HTTP GET             │
+│     (or mf-manifest.json)                               │
+│       │                                                 │
+│       ▼                                                 │
+│  2. remoteEntry.js registers with Share Scope           │
+│     "I exist, I need react@^18, I expose ./Widget"      │
+│       │                                                 │
+│       ▼                                                 │
+│  3. Share Scope negotiates shared deps:                 │
+│     - Host has react@18.2.0 (singleton: true)           │
+│     - Remote needs react@^18 (singleton: true)          │
+│     - ✅ Match — reuse host's React                     │
+│       │                                                 │
+│       ▼                                                 │
+│  4. Remote's Widget chunk is fetched and executed       │
+│     (uses host's React instance)                        │
+│       │                                                 │
+│       ▼                                                 │
+│  5. Widget module is returned to the consumer           │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+</div>
+
+<p>The critical piece is Step 3 — the <strong>Share Scope</strong>. Without it, each remote would bundle its own React, doubling memory and breaking hooks, context, and other singleton-dependent APIs.</p>
+
+<h3>The Share Scope</h3>
+
+<p>The Share Scope is a <strong>runtime registry</strong> of shared dependencies. It's a global data structure (attached to <code>window.__FEDERATION__</code>) that maps <code>(packageName, shareKey, shareScope)</code> to a module factory.</p>
+
+<p>Every MF participant — host and remote alike — registers its shared dependencies into this scope when its <code>remoteEntry.js</code> loads. The scope then negotiates which version wins.</p>
+
+<div class="callout">
+  <strong>Pattern recognition:</strong> The Share Scope is a <strong>registry</strong> (lesson 0003). The <em>capability</em> is a package name + version range. The <em>provider</em> is a module instance in memory. The <em>address</em> is the module's exports object. This is the same pattern as DNS, service discovery, and Flux's <code>resolve_hook</code> — just at the JavaScript module loading level.
+</div>
+
+<h3>The remoteEntry.js manifest</h3>
+
+<p>Every producer generates a <code>remoteEntry.js</code> file. This is not the actual application code — it's a <strong>bootstrap manifest</strong> that:</p>
+<ul>
+  <li>Registers the producer in the Share Scope</li>
+  <li>Lists which modules are exposed and where their chunks live</li>
+  <li>Declares which shared dependencies the producer needs</li>
+  <li>Provides factory functions for the exposed modules</li>
+</ul>
+
+<p>MF 2.0 also supports <code>mf-manifest.json</code> — a declarative JSON version of the same information. When configured with <code>manifest: true</code>, the producer emits both the JS entry and the JSON manifest. Consumers can reference the manifest URL instead of <code>remoteEntry.js</code>, which enables:</p>
+<ul>
+  <li>Dynamic type hinting</li>
+  <li>Resource preloading</li>
+  <li>Chrome DevTool debugging</li>
+</ul>
+
+<h2>Configuration deep dive</h2>
+
+<h3>exposes</h3>
+
+<p>The <code>exposes</code> field declares which modules a producer makes available to consumers.</p>
+
+<pre class="code-small">// module-federation.config.ts
+export default createModuleFederationConfig({
+  name: 'my-components',
+  exposes: {
+    './Button': './src/components/Button.tsx',
+    './Card': './src/components/Card.tsx',
+    './Widget': './src/widgets/Widget.tsx',
+  },
+});
+</pre>
+
+<p>Key rules:</p>
+<ul>
+  <li>Expose keys <strong>must start with <code>./</code></strong> — this is not a convention, it's a spec requirement. <code>"./Button"</code> is valid; <code>"Button"</code> is not.</li>
+  <li>The value is a path relative to the project root (or the MF config location).</li>
+  <li>Exposed modules get extracted into separate chunks during the build.</li>
+  <li>Consumers import them by key: <code>import('my-components/Button')</code>.</li>
+</ul>
+
+<h3>remotes</h3>
+
+<p>The <code>remotes</code> field declares which producers a host consumes from.</p>
+
+<pre class="code-small">// Reference by remoteEntry.js:
+remotes: {
+  'remote': 'remote@http://localhost:3001/remoteEntry.js',
+},
+
+// Reference by mf-manifest.json (preferred for MF 2.0):
+remotes: {
+  'remote': 'remote@http://localhost:3001/mf-manifest.json',
+},
+</pre>
+
+<p>The format is <code>'alias@url'</code> where:</p>
+<ul>
+  <li><strong>alias</strong> — the name used in imports (<code>import('remote/Button')</code>)</li>
+  <li><strong>url</strong> — the entry point (either <code>remoteEntry.js</code> or <code>mf-manifest.json</code>)</li>
+</ul>
+
+<p>Using the manifest URL (instead of <code>remoteEntry.js</code>) enables all MF 2.0 features: type downloading, resource preloading, and DevTool integration.</p>
+
+<h3>shared</h3>
+
+<p>The <code>shared</code> field is the heart of MF's dependency management. It declares which packages should be shared between host and remote, and how version conflicts should be handled.</p>
+
+<h4>Basic form: array of package names</h4>
+
+<pre class="code-small">shared: ['react', 'react-dom'],
+</pre>
+
+<p>This tells MF: "I use react and react-dom, and I'm willing to share them with other participants." MF will use the version from <code>package.json</code> as the <code>requiredVersion</code>.</p>
+
+<h4>Advanced form: object with per-package config</h4>
+
+<pre class="code-small">shared: {
+  react: {
+    singleton: true,
+    requiredVersion: '^18.2.0',
+    eager: false,
+    shareScope: 'default',
+  },
+  'react-dom': {
+    singleton: true,
+    requiredVersion: '^18.2.0',
+  },
+},
+</pre>
+
+<p>Each field controls a different aspect of the sharing behavior:</p>
+
+<table class="field-table">
+  <tr><th>Field</th><th>Type</th><th>Default</th><th>What it controls</th></tr>
+  <tr>
+    <td><code>singleton</code></td>
+    <td><code>boolean</code></td>
+    <td><code>false</code></td>
+    <td>Whether only <strong>one</strong> instance of this package may exist in the entire share scope. Set to <code>true</code> for React, Vue, Angular — libraries that use global state, context, or have side effects when multiple instances exist.</td>
+  </tr>
+  <tr>
+    <td><code>requiredVersion</code></td>
+    <td><code>string</code></td>
+    <td>Version from <code>package.json</code></td>
+    <td>The semver range this participant <strong>requires</strong>. If the resolved shared version falls outside this range, a console warning is emitted (or an error in strict mode).</td>
+  </tr>
+  <tr>
+    <td><code>eager</code></td>
+    <td><code>boolean</code></td>
+    <td><code>false</code></td>
+    <td>Whether to include this dependency in the initial bundle instead of lazy-loading it. Use with caution — it increases bundle size but avoids async loading for entry-point dependencies.</td>
+  </tr>
+  <tr>
+    <td><code>shareScope</code></td>
+    <td><code>string</code></td>
+    <td><code>"default"</code></td>
+    <td>Which named share scope this package participates in. Multiple scopes allow isolating different dependency pools (e.g., running two React ecosystems side by side: one in <code>"default"</code>, another in <code>"legacy"</code>).</td>
+  </tr>
+  <tr>
+    <td><code>shareKey</code></td>
+    <td><code>string</code></td>
+    <td>The property key</td>
+    <td>The lookup key used in the Share Scope at runtime. Both producer and consumer must use the <strong>same</strong> <code>shareKey</code> for negotiation to succeed.</td>
+  </tr>
+  <tr>
+    <td><code>import</code></td>
+    <td><code>string | false</code></td>
+    <td><code>undefined</code></td>
+    <td>Controls the actual import path. Set to <code>false</code> to declare a dependency without bundling it — rely entirely on a consumer providing it.</td>
+  </tr>
+</table>
+
+<div class="callout">
+  <strong>Common mistake:</strong> Forgetting the trailing slash on subpath imports. <code>'react-dom'</code> only intercepts <code>import 'react-dom'</code>. Code like <code>import { createRoot } from 'react-dom/client'</code> will <strong>not</strong> be shared — it loads a second copy of React DOM, breaking the singleton contract. Fix: use <code>'react-dom/': { request: 'react-dom/' }</code> in the shared config. See the <a href="https://module-federation.io/configure/shared.md">shared config docs</a> for details.
+</div>
+
+<h4>shareStrategy: version-first vs loaded-first</h4>
+
+<p>The <code>shareStrategy</code> controls how the Share Scope prioritizes which version of a shared dependency to use when multiple participants offer different versions:</p>
+
+<table class="field-table">
+  <tr><th>Strategy</th><th>Behavior</th><th>When to use</th></tr>
+  <tr>
+    <td><code>version-first</code> (default)</td>
+    <td>Prioritizes the highest satisfying version. <strong>All remotes are loaded during initialization</strong> so their shared deps are registered immediately. If a remote is offline, initialization may fail.</td>
+    <td>Strict version requirements, controlled deployment environment, all remotes are expected to be available.</td>
+  </tr>
+  <tr>
+    <td><code>loaded-first</code></td>
+    <td>Prioritizes reusing already-loaded dependencies. Remotes are loaded <strong>on-demand</strong> — only when a module is actually requested. Offline remotes don't block initialization.</td>
+    <td>Performance-sensitive apps, unreliable network, partial availability tolerance.</td>
+  </tr>
+</table>
+
+<p>The difference matters most when a remote is unreachable:</p>
+
+<ul>
+  <li><strong>version-first</strong>: App initialization may hang or fail because the remote's <code>remoteEntry.js</code> can't be fetched during the init phase.</li>
+  <li><strong>loaded-first</strong>: The host starts fine. Only the specific <code>import('remote/Widget')</code> call fails, which can be caught with an error boundary.</li>
+</ul>
+
+<p>Version-first requires error handling for the <code>errorLoadRemote</code> hook with <code>lifecycle: 'beforeLoadShare'</code> — see the <a href="https://module-federation.io/configure/shareStrategy.md">shareStrategy docs</a> for the plugin pattern.</p>
+
+<h2>The Share Scope negotiation algorithm (in detail)</h2>
+
+<p>When a host loads a remote, the Share Scope goes through this decision tree for each shared package:</p>
+
+<div class="decision-tree">For each shared package P:
+
+1. Is P already registered in the Share Scope?
+   │
+   ├── NO → Register P from the current participant.
+   │         (First registration always wins for "first version seen")
+   │
+   └── YES → Is singleton: true on either participant?
+              │
+              ├── NO → Load a separate copy for each participant.
+              │         (Multiple instances coexist — works for utility libs)
+              │
+              └── YES → Compare versions:
+                         │
+                         ├── singletons match or one is
+                         │    compatible with the other's
+                         │    requiredVersion range?
+                         │    │
+                         │    ├── YES → Use the higher satisfying version.
+                         │    │          Warn if lower-version participant
+                         │    │          exists but is usable.
+                         │    │
+                         │    └── NO → Incompatible singletons:
+                         │              Error or fallback depending on config.
+                         │              (Two apps need react@^17 and react@^19
+                         │               — no single version satisfies both.)
+                         │
+                         └── shareStrategy?
+                              ├── version-first → Use highest available version.
+                              └── loaded-first → Use the already-loaded version.
+</div>
+
+<div class="callout">
+  <strong>Key insight:</strong> The negotiation is <strong>not</strong> a conflict-resolution protocol — it's a <strong>best-effort match</strong>. If versions are compatible, it reuses the loaded instance. If they're incompatible and <code>singleton: true</code>, it errors. If singleton is <code>false</code>, each side loads its own copy and they coexist silently. You control how strict or lenient the sharing is via these config knobs.
+</div>
+
+<h2>Type safety across module boundaries</h2>
+
+<p>One of MF 2.0's biggest improvements over Webpack 5 MF is <strong>automatic type generation and consumption</strong>. Just as npm packages ship <code>.d.ts</code> files, MF remotes can ship type definitions for their exposed modules.</p>
+
+<h3>How it works</h3>
+
+<table class="field-table">
+  <tr><th>Role</th><th>What happens</th><th>Configuration</th></tr>
+  <tr>
+    <td>Producer</td>
+    <td>During build, MF runs TypeScript on the exposed modules and packages the type declarations into <code>@mf-types.zip</code> (or a custom name). Also generates <code>@mf-types.d.ts</code> for runtime API types.</td>
+    <td><code>dts: { generateTypes: true }</code> (enabled by default)</td>
+  </tr>
+  <tr>
+    <td>Consumer</td>
+    <td>During build, MF automatically fetches the remote's <code>@mf-types.zip</code>, extracts it to <code>@mf-types/&lt;remote-name&gt;/</code>, and TypeScript resolves imports via <code>paths</code>.</td>
+    <td><code>dts: { consumeTypes: true }</code> (enabled by default)</td>
+  </tr>
+</table>
+
+<h3>Consumer tsconfig setup</h3>
+
+<pre class="code-small">// tsconfig.json
+{
+  "compilerOptions": {
+    "paths": {
+      "*": ["./@mf-types/*"]
+    }
+  }
+}
+</pre>
+
+<p>With this, <code>import('remote/Button')</code> is type-checked against the actual remote types, not <code>any</code>. If the remote updates its Button props, the consumer's build catches the mismatch.</p>
+
+<h3>Advanced DTS options</h3>
+
+<table class="field-table">
+  <tr><th>Option</th><th>What it does</th></tr>
+  <tr><td><code>extractThirdParty: true</code></td><td>Include types of third-party deps used by exposed modules (e.g., antd types). Needed when the consumer doesn't have antd installed.</td></tr>
+  <tr><td><code>extractRemoteTypes: true</code></td><td>Include types from remotes that the producer itself consumes (nested type re-export).</td></tr>
+  <tr><td><code>generateAPITypes: true</code></td><td>Generate types for the runtime <code>loadRemote</code> API — enables type-safe <code>loadRemote('remote/Button')</code> calls.</td></tr>
+  <tr><td><code>compilerInstance: 'tsgo'</code></td><td>Use the faster TypeScript GO compiler for type generation (significantly faster than <code>tsc</code>).</td></tr>
+  <tr><td><code>compileInChildProcess: true</code></td><td>Run type generation in a child process (reduces memory pressure).</td></tr>
+</table>
+
+<h2>Cross-framework with Bridge</h2>
+
+<p>The Bridge is MF's solution for <strong>application-level, cross-framework module sharing</strong>. While basic MF shares components within the same framework (React ↔ React), Bridge enables sharing entire applications across frameworks (React ↔ Vue).</p>
+
+<h3>The Bridge contract</h3>
+
+<p>Bridge uses a simple <strong>render/destroy</strong> lifecycle contract that's framework-agnostic:</p>
+
+<pre class="code-small">// Any framework exports this:
+export default function createProvider() {
+  return {
+    render(info: { dom: HTMLElement; basename?: string }) {
+      // Mount the app to the DOM node
+    },
+    destroy(info: { dom: HTMLElement }) {
+      // Unmount and clean up
+    },
+  };
+}
+</pre>
+
+<p>The consumer loads this provider and calls <code>render</code> on a DOM node it controls. Because the contract is just <code>render</code> and <code>destroy</code> on a <code>HTMLElement</code>, the actual framework internally is irrelevant to the host.</p>
+
+<h3>React Bridge APIs</h3>
+
+<pre class="code-small">// Producer side — export a React app
+import { createBridgeComponent } from '@module-federation/bridge-react';
+
+const provider = createBridgeComponent({
+  rootComponent: App,
+  renderOptions: { basename: '/remote-app' },
+});
+
+export default provider;
+</pre>
+
+<pre class="code-small">// Consumer side — load a remote React app
+import { createRemoteAppComponent } from '@module-federation/bridge-react';
+
+const RemoteApp = createRemoteAppComponent({
+  loader: () => import('remote/export-app'),
+  fallback: &lt;div&gt;Loading...&lt;/div&gt;,
+});
+
+function Host() {
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Host App&lt;/h1&gt;
+      &lt;RemoteApp /&gt;
+    &lt;/div&gt;
+  );
+}
+</pre>
+
+<h3>Component-level lazy loading</h3>
+
+<p>For finer-grained control, Bridge offers <code>createLazyComponent</code> — a per-component lazy loading API that builds in <code>React.lazy</code>, <code>Suspense</code>, error boundaries, and data prefetching:</p>
+
+<pre class="code-small">const LazyButton = createLazyComponent({
+  loader: () => import('remote/Button'),
+  loading: &lt;ButtonSkeleton /&gt;,
+  fallback: ({ error }) => &lt;ErrorFallback error={error} /&gt;,
+});
+</pre>
+
+<h2>Runtime diagnostics</h2>
+
+<h3>Error codes</h3>
+
+<p>MF 2.0 emits structured runtime error codes prefixed with <code>RUNTIME-</code>. The most common:</p>
+
+<table class="field-table">
+  <tr><th>Code</th><th>Meaning</th><th>Typical cause</th></tr>
+  <tr><td><code>RUNTIME-001</code></td><td>Remote entry load failure</td><td>URL is wrong, CORS error, network down</td></tr>
+  <tr><td><code>RUNTIME-008</code></td><td>Script execution error</td><td>Remote entry downloaded but threw during eval (syntax error, missing global)</td></tr>
+  <tr><td><code>RUNTIME-006</code></td><td>Async entry not configured</td><td>Missing <code>experiments.asyncStartup: true</code> in bundler config</td></tr>
+  <tr><td><code>RUNTIME-007</code></td><td>Shared dependency mismatch</td><td>Two participants require incompatible singleton versions</td></tr>
+</table>
+
+<p>When you see one of these in the browser console, the diagnostic flow is:</p>
+<ol>
+  <li>Is the remote entry URL reachable? (Check <code>Network</code> tab) → If not: <strong>RUNTIME-001</strong> (network error)</li>
+  <li>Is the URL reachable but the script throws? → <strong>RUNTIME-008</strong> (execution error)</li>
+  <li>Is the share scope complaining about version conflicts? → <strong>RUNTIME-007</strong></li>
+</ol>
+
+<h3>Debug mode</h3>
+
+<p>Enable debug mode via browser console:</p>
+<pre class="code-small">localStorage.setItem('FEDERATION_DEBUG', 'true');
+// Then reload the page
+</pre>
+
+<p>This exposes the <code>__FEDERATION__</code> global, which contains the full runtime state: all registered instances, their remotes, shared dependencies, and the current share scope contents. You can inspect it directly:</p>
+<pre class="code-small">// In browser console:
+console.log(window.__FEDERATION__);
+// View: instances, remotes, shared scope, version negotiation results
+</pre>
+
+<h3>Observability plugin</h3>
+
+<p>MF 2.5.0+ ships an <code>@module-federation/observability-plugin</code> that collects full loading traces — from manifest fetch through share scope negotiation to module evaluation. It outputs a structured JSON report with phases, timing, and failure points. When error codes alone aren't enough, this is the next step.</p>
+
+<div class="callout">
+  <strong>System design principle:</strong> Runtime error codes are the <strong>first signal</strong> — they tell you <em>what</em> broke. Observability reports are the <strong>second signal</strong> — they tell you <em>where in the pipeline</em> it broke. The combination lets you distinguish between network failures (fix the URL), build failures (fix the producer), and config conflicts (fix the shared config).
+</div>
+
+<h2>Putting it together: a complete configuration</h2>
+
+<p>Here's a complete MF 2.0 setup with two applications:</p>
+
+<h3>Producer (<code>remote/</code>)</h3>
+
+<pre class="code-small">// module-federation.config.ts
+import { createModuleFederationConfig } from '@module-federation/rsbuild-plugin';
+
+export default createModuleFederationConfig({
+  name: 'my-components',
+  filename: 'remoteEntry.js',
+  exposes: {
+    './Button': './src/components/Button.tsx',
+    './Card': './src/components/Card.tsx',
+  },
+  shared: {
+    react: { singleton: true, requiredVersion: '^18.2.0' },
+    'react-dom': { singleton: true, requiredVersion: '^18.2.0' },
+  },
+});
+</pre>
+
+<h3>Consumer (<code>host/</code>)</h3>
+
+<pre class="code-small">// module-federation.config.ts
+import { createModuleFederationConfig } from '@module-federation/rsbuild-plugin';
+
+export default createModuleFederationConfig({
+  name: 'my-host',
+  remotes: {
+    'my-components': 'my-components@http://localhost:3001/mf-manifest.json',
+  },
+  shared: {
+    react: { singleton: true, requiredVersion: '^18.2.0' },
+    'react-dom': { singleton: true, requiredVersion: '^18.2.0' },
+  },
+});
+</pre>
+
+<pre class="code-small">// src/App.tsx
+const RemoteButton = React.lazy(() =&gt; import('my-components/Button'));
+
+function App() {
+  return (
+    &lt;Suspense fallback={&lt;div&gt;Loading...&lt;/div&gt;}&gt;
+      &lt;RemoteButton label="Click me" /&gt;
+    &lt;/Suspense&gt;
+  );
+}
+</pre>
+
+<h3>Build plugin integration (per bundler)</h3>
+
+<table class="field-table">
+  <tr><th>Bundler</th><th>Package</th><th>Plugin</th></tr>
+  <tr><td>Rsbuild</td><td><code>@module-federation/rsbuild-plugin</code></td><td><code>pluginModuleFederation(config)</code></td></tr>
+  <tr><td>Rspack</td><td><code>@module-federation/enhanced</code></td><td><code>new ModuleFederationPlugin(config)</code></td></tr>
+  <tr><td>Webpack</td><td><code>@module-federation/enhanced</code></td><td><code>new ModuleFederationPlugin(config)</code></td></tr>
+  <tr><td>Vite</td><td><code>@module-federation/vite</code></td><td><code>federation(config)</code></td></tr>
+  <tr><td>Modern.js</td><td><code>@module-federation/modern-js-v3</code></td><td><code>moduleFederationPlugin()</code></td></tr>
+</table>
+
+<h2>Tying to Flux: system design perspective</h2>
+
+<div class="callout">
+  <strong>The fundamental question:</strong> Where does MF fit in a system's dependency management strategy? And where <em>shouldn't</em> it?
+</div>
+
+<p>Flux currently uses <strong>IIFE bundles with duplicated dependencies</strong> — each plugin bundles its own React. This is the maximally simple approach: zero runtime coordination, zero shared state, zero version negotiation. Each plugin is a completely independent artifact.</p>
+
+<p>MF would let Flux share a single React instance across all plugins, reducing bundle size from ~600KB to ~130KB. But it would introduce:</p>
+<ul>
+  <li><strong>A bundler requirement</strong> — all plugins must use a supported bundler (Webpack/Rspack/Vite with MF plugin), unless they use the pure runtime API</li>
+  <li><strong>A runtime dependency</strong> — the MF runtime (~15KB) must load before any plugin</li>
+  <li><strong>Version coupling</strong> — if a plugin needs React 19 but the host provides React 18, there's a conflict</li>
+  <li><strong>Startup coordination</strong> — with <code>version-first</code> strategy, all remotes must be reachable during init</li>
+</ul>
+
+<p>Compare with the alternative approaches:</p>
+
+<table class="field-table">
+  <tr><th>Dimension</th><th>IIFE (Flux now)</th><th>MF 2.0</th><th>ESM + import maps</th></tr>
+  <tr><td>Bundle size</td><td>~160KB per plugin</td><td>~130KB shared + ~2KB per plugin</td><td>~130KB shared + ~2KB per plugin</td></tr>
+  <tr><td>Plugin independence</td><td>Full — runs on any host</td><td>Partial — needs compatible shared scope</td><td>Partial — needs host to provide import map</td></tr>
+  <tr><td>Bundler requirement</td><td>Any IIFE-capable</td><td>Webpack/Rspack/Vite with MF plugin</td><td>Any ESM-capable</td></tr>
+  <tr><td>Version conflicts</td><td>None (duplicated)</td><td>Singleton conflicts can break things</td><td>Managed via import map scopes</td></tr>
+  <tr><td>Runtime deps</td><td>None</td><td>~15KB MF runtime</td><td>None (browser native)</td></tr>
+  <tr><td>Type sharing</td><td>None</td><td>Built-in DTS generation</td><td>Manual</td></tr>
+  <tr><td>Cross-framework</td><td>Via Bridge pattern</td><td>Via MF Bridge</td><td>Via import map + any framework</td></tr>
+</table>
+
+<p>For Flux specifically, the IIFE approach makes sense because <strong>each plugin is inherently isolated</strong> — they run as separate subprocesses, communicating over JSON-RPC. There's no runtime sharing between plugins to begin with. The duplicated React is in the <strong>frontend widgets</strong> (the Web Components that render on the host page), not in the backend subprocesses.</p>
+
+<p>If Flux ever wants to share a single React instance across its frontend widgets, either MF or ESM+import-maps would work. The choice depends on whether you want the additional tooling (type generation, runtime diagnostics, Bridge) that MF provides, or the simplicity of a browser-native approach.</p>
+
+<div class="callout">
+  <strong>The system design skill:</strong> The right answer depends on your constraints. Flux optimizes for <strong>independence at any cost</strong> — each plugin must work on any host, forever, without coordination. That makes IIFE the right choice. A different system with different constraints (e.g., a large micro-frontend product where all teams use React) would optimize for <strong>sharing at any cost</strong> — and MF would be the right choice. The skill is knowing which trade-off to make.
+</div>
+
+<h2>Primary sources</h2>
+
+<ul>
+  <li><a href="https://module-federation.io/guide/start/index.md">MF 2.0 documentation — Introduction</a>: The official docs. Start here for concepts, configuration reference, and integration guides per bundler/framework.</li>
+  <li><a href="https://module-federation.io/configure/shared.md">Shared configuration reference</a>: The complete documentation for <code>shared</code>, <code>singleton</code>, <code>requiredVersion</code>, <code>shareKey</code>, <code>shareScope</code>, and <code>shareStrategy</code>. Essential reading for understanding the negotiation algorithm.</li>
+  <li><a href="https://module-federation.io/guide/runtime/runtime-api.md">Runtime API reference</a>: <code>createInstance</code>, <code>loadRemote</code>, <code>loadShare</code>, <code>preloadRemote</code>, <code>registerRemotes</code>, <code>registerShared</code> — the complete runtime API surface.</li>
+  <li><a href="https://module-federation.io/configure/dts.md">DTS configuration</a>: Type generation and consumption — how MF bridges the type gap between independently-built modules.</li>
+  <li><a href="https://module-federation.io/guide/bridge/overview.md">Bridge overview</a>: Cross-framework application-level module sharing — the render/destroy lifecycle contract.</li>
+  <li><a href="https://module-federation.io/guide/troubleshooting/runtime.md">Runtime troubleshooting</a>: Runtime error codes and common fixes.</li>
+  <li><a href="https://module-federation.io/blog/hoisted-runtime.md">Async startup announcement</a>: Why <code>experiments.asyncStartup</code> matters and how it changes the initialization sequence.</li>
+  <li><a href="https://module-federation.io/guide/start/npm-packages.md">NPM packages guide</a>: Which package to install for which bundler/framework combination.</li>
+  <li><a href="https://module-federation.io/guide/basic/type-prompt.md">Type hinting guide</a>: Practical examples of type generation and consumption, including nested type re-export and third-party type extraction.</li>
+</ul>
+
+<hr>
+
+<h2>Exercises</h2>
+
+<div class="exercise">
+<h3>1. Trace the negotiation</h3>
+<p>Three applications participate in MF:</p>
+<ul>
+  <li>Host A: <code>shared: { react: { singleton: true, requiredVersion: '^18.0.0' } }</code> — has React 18.2.0</li>
+  <li>Remote B: <code>shared: { react: { singleton: true, requiredVersion: '^17.0.0' } }</code> — has React 17.0.2</li>
+  <li>Remote C: <code>shared: { react: { singleton: true, requiredVersion: '^19.0.0' } }</code> — has React 19.0.0</li>
+</ul>
+<p>Trace what happens when each remote loads into Host A. Which React version does each remote end up using? Does any scenario produce a warning or error?</p>
+</div>
+
+<div class="exercise">
+<h3>2. Config audit on Flux</h3>
+<p>Flux doesn't use MF, but let's think about what would need to change. Open <code>scripts/build-plugins.ts</code> and find the Vite config generation. Identify:</p>
+<ul>
+  <li>Where would you add the MF plugin config?</li>
+  <li>What would you put in <code>exposes</code> (what modules does each plugin expose)?</li>
+  <li>What would you put in <code>shared</code>? (Hint: React is already bundled. Would you switch to external + shared, or keep it bundled?)</li>
+  <li>What <code>shareStrategy</code> would make sense for Flux — <code>version-first</code> or <code>loaded-first</code>? Why?</li>
+</ul>
+</div>
+
+<div class="exercise">
+<h3>3. The shareKey puzzle</h3>
+<p>A consumer configures:</p>
+<pre>shared: {
+  'my-react': {
+    import: 'react',
+    shareKey: 'react',
+    singleton: true,
+  },
+}</pre>
+<p>The remote configures:</p>
+<pre>shared: {
+  react: { singleton: true },
+}</pre>
+<p>Will these two negotiate successfully? Why or why not? (Hint: what's the remote's default <code>shareKey</code>?) What happens if the consumer omits <code>shareKey: 'react'</code>?</p>
+</div>
+
+<div class="exercise">
+<h3>4. The version-first trap</h3>
+<p>Your team sets <code>shareStrategy: 'version-first'</code> on a production app. A remote's deployment goes down temporarily. What happens during app initialization? Is there a way to make it resilient without switching to <code>loaded-first</code>? (Hint: look at the <code>errorLoadRemote</code> hook.)</p>
+</div>
+
+<hr>
+
+<h2>Follow-up questions</h2>
+
+<p>Some things to ask yourself — or ask me — to go deeper:</p>
+<ul>
+  <li>How does MF's Share Scope compare to Flux's <code>resolve_hook</code> registry? Both map a capability to a provider — but one maps package names to module instances, and the other maps hook names to plugin processes. What does that difference imply about their reliability and failure modes?</li>
+  <li>If Flux switched its frontend widgets from IIFE to ESM+import-maps (the recommendation from the research), what MF features would you lose? What would you gain?</li>
+  <li>The Bridge pattern's render/destroy contract is very similar to Flux's plugin lifecycle (start/stop via the subprocess). Is there a generalizable pattern here — "all cross-boundary modules should expose a lifecycle, not just exports"?</li>
+  <li>MF 2.0's DTS generation is essentially <em>cross-project type checking at build time</em>. How does this compare to npm packages shipping <code>.d.ts</code> files? What are the trade-offs between these two type-sharing strategies?</li>
+</ul>
+
+<p><strong>Any part of this still unclear? The negotiation algorithm in the Share Scope is the hardest piece — it's worth tracing through a few examples until the decision tree feels intuitive.</strong></p>
+
+<p>Reference: <a href="../reference/glossary.html">System Design Glossary</a></p>
+
+</body>
+</html>

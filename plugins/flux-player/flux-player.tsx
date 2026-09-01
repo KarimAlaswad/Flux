@@ -1,37 +1,61 @@
-import "movi-player"
+import "movi-player";
+import { Logger, LogLevel } from "movi-player";
 import { useEffect, useRef } from "react";
+
+// movi-player's Logger routes through globalThis.__movilog
+globalThis.__movilog = console;
+Logger.setLevel(LogLevel.INFO);
 
 export default function MoviPlayer({ item }: { item: any }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = document.createElement("movi-player");
-    el.style.width = "100%";
-    el.style.height = "100%";
+    let currentEl: HTMLElement | null = null;
 
-    const onLoad = (e: any) => {
+    const onLoad = async (e: any) => {
       const { url, title, source } = e.detail || {};
       if (!url) return;
+
+      if (typeof window.AudioContext !== "undefined") {
+        const actx = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )();
+        actx.resume().then(() => actx.close());
+      }
+
+      if (currentEl) {
+        currentEl.remove();
+      }
+
+      const playerEl = document.createElement("movi-player");
+      playerEl.style.width = "100%";
+      playerEl.style.height = "100%";
+      playerEl.setAttribute("autoplay", "");
+      playerEl.setAttribute("controls", "");
+      playerEl.setAttribute("fallback", "native");
+      if (title) playerEl.setAttribute("title", title);
+
+      currentEl = playerEl;
+      containerRef.current?.appendChild(playerEl);
+      window.dispatchEvent(new CustomEvent("video.modal.show"));
+
       const resolvePromise = source
         ? window.__pluginRpc(source + ".resolve", { url })
-        : Promise.resolve({ url })
-      resolvePromise.then((result: any) => {
-        const streamUrl = result?.url || url
-        if (containerRef.current && !el.isConnected) {
-          el.setAttribute("src", streamUrl)
-          if (title) el.setAttribute("title", title)
-          containerRef.current.appendChild(el)
-        }
-        window.dispatchEvent(new CustomEvent("video.modal.show"))
-      }).catch((err: any) => {
-        console.error("[flux-player] resolve error:", err?.message ?? err)
-        // Fallback: play original URL
-        window.dispatchEvent(new CustomEvent("video.modal.show"))
-      })
+        : Promise.resolve({ url });
+
+      const result = await resolvePromise.catch(() => ({ url }));
+      const streamUrl = result?.url || url;
+
+      if (currentEl === playerEl) {
+        playerEl.setAttribute("src", streamUrl);
+      }
     };
 
     const onHide = () => {
-      el.remove();
+      if (currentEl) {
+        currentEl.remove();
+        currentEl = null;
+      }
       window.dispatchEvent(new CustomEvent("video.modal.hide"));
     };
 
@@ -40,14 +64,14 @@ export default function MoviPlayer({ item }: { item: any }) {
     return () => {
       window.removeEventListener("video.player.load", onLoad);
       window.removeEventListener("video.player.hide", onHide);
-      el.remove();
+      if (currentEl) currentEl.remove();
     };
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-black flex items-center justify-center"
+      className="absolute inset-0 bg-black flex items-center justify-center"
     />
   );
 }

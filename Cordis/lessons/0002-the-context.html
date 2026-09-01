@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 002: The Context - One Object, Two Roles</title>
+  <link rel="stylesheet" href="../assets/cordis-style.css">
+</head>
+<body>
+
+<h1>Lesson 002: The Context</h1>
+
+<p class="footer">Cordis Learning Workspace &middot; Lesson 2 of ? &middot; <a href="../MISSION.md">Mission</a></p>
+
+<p>We are building from zero. Every concept is explained before we use it.</p>
+
+<h2>Part 1: What is a JavaScript Object?</h2>
+
+<p>An <strong>object</strong> is a collection of <strong>key-value pairs</strong> (also called <strong>properties</strong>):</p>
+
+<pre><code>const dog = {
+  name: "Rex",     // key: "name",   value: "Rex"
+  breed: "Lab",    // key: "breed",  value: "Lab"
+  age: 5           // key: "age",    value: 5
+}</code></pre>
+
+<div class="diagram">
++-------------------+
+|      dog          |
+|                   |
+|  name   -> "Rex"  |
+|  breed  -> "Lab"  |
+|  age    -> 5      |
++-------------------+</div>
+
+<p>You access a property by name:</p>
+
+<pre><code>dog.name    // "Rex"
+dog.age     // 5</code></pre>
+
+<p>This is called a <strong>property read</strong>. JavaScript looks up the key and returns the value.</p>
+
+<h2>Part 2: What is a Proxy?</h2>
+
+<p>A <strong>Proxy</strong> wraps an object and <strong>intercepts</strong> operations on it. You define a handler that runs <em>instead of</em> the normal behavior.</p>
+
+<p>Here is a plain object:</p>
+
+<pre><code>const person = { name: "Alice" }
+person.name   // "Alice" -- normal property read</code></pre>
+
+<p>Now the same object wrapped in a Proxy:</p>
+
+<pre><code>const handler = {
+  get(target, prop) {
+    console.log("Someone is reading:", prop)
+    return target[prop]
+  }
+}
+
+const person = new Proxy({ name: "Alice" }, handler)
+person.name   // prints: "Someone is reading: name"
+              // returns: "Alice"</code></pre>
+
+<p>What happened?</p>
+
+<div class="diagram">
+WITHOUT Proxy:                 WITH Proxy:
+
+  person.name                    person.name
+      |                              |
+      v                              v
++-----------------+            +--------------------+
+| Look up "name"  |            | HANDLER fires:     |
+| in the object   |            | get(target, "name")|
++-----------------+            +--------------------+
+      |                              |
+      v                              v
+  Returns "Alice"               Logs "Someone is reading: name"
+                                Then looks up "name" in the object
+                                Returns "Alice"</div>
+
+<p>The Proxy <strong>intercepted</strong> the property read. The handler ran code <em>before</em> the actual lookup happened.</p>
+
+<p><strong>Key idea:</strong> you can run custom code every time someone reads a property.</p>
+<h2>Part 3: Why Does Cordis Use a Proxy?</h2>
+
+<p>In Cordis, every <code>ctx</code> object is wrapped in a Proxy. When you write:</p>
+
+<pre><code>ctx.tools</code></pre>
+
+<p>You think you are doing a normal property read. But the Proxy intercepts it and does something extra:</p>
+
+<div class="diagram">
+You write: ctx.tools
+
+What actually happens:
+
+  1. Proxy handler fires: "Someone wants ctx.tools"
+  2. Handler looks up "tools" in the service store
+  3. Handler RECORDS: "this plugin now depends on 'tools'"
+  4. Handler returns the service (or undefined if not ready yet)</div>
+
+<p><strong>Why track dependencies?</strong> Because of the <code>inject</code> system. When you declare:</p>
+
+<pre><code>export const inject = ['tools']</code></pre>
+
+<p>You are saying: "Do not load my plugin until <code>ctx.tools</code> exists." The Proxy makes this possible by watching every property read.</p>
+
+<div class="callout">
+  <span class="callout-label">Key insight</span>
+  Without the Proxy, reading <code>ctx.tools</code> would be invisible to the framework. The framework could not track which services your plugin needs, and could not hold your plugin PENDING until they are available.
+</div>
+
+<h2>Part 4: What is ctx?</h2>
+
+<p><code>ctx</code> (short for "context") is the single object every Cordis plugin receives. It is the <strong>workbench</strong> where you do everything:</p>
+
+<div class="diagram">
++---------------------------------------------------+
+|                      ctx                           |
+|                                                    |
+|  WHERE YOU ACT:          WHAT YOU NEED:            |
+|  (register things)       (declare dependencies)    |
+|                                                    |
+|  ctx.on(...)             inject: ['tools']         |
+|  ctx.effect(...)         inject: ['llm']           |
+|  ctx.tools.register(...)                          |
+|                                                    |
++---------------------------------------------------+</div>
+
+<p>Both directions go through the <strong>same object</strong>. The Proxy handles both automatically.</p>
+<h2>Part 5: What is a Service?</h2>
+
+<p>A <strong>Service</strong> is a named capability that lives on <code>ctx</code>. Think of it as a <strong>tool</strong> or <strong>feature</strong> that other plugins can use.</p>
+
+<p>Some services you might find on <code>ctx</code>:</p>
+
+<table>
+  <thead>
+    <tr><th>Service name</th><th>What it provides</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ctx.tools</code></td><td>A registry where plugins can register model-callable tools</td></tr>
+    <tr><td><code>ctx.llm</code></td><td>Access to language model APIs</td></tr>
+    <tr><td><code>ctx.logger</code></td><td>Logging (console output with levels like INFO, WARN, ERROR)</td></tr>
+    <tr><td><code>ctx.events</code></td><td>An event bus for plugin-to-plugin communication</td></tr>
+  </tbody>
+</table>
+
+<p>A service is registered by calling <code>ctx.provide('name', implementation)</code>. Once registered, any plugin can access it via <code>ctx.name</code>.</p>
+
+<div class="diagram">
+After: ctx.provide('tools', myToolRegistry)
+
++---------------------------------------------------+
+|                      ctx                           |
+|                                                    |
+|  Service Store:                                    |
+|  +-----------+                                     |
+|  | "tools"   | -> myToolRegistry (the instance)    |
+|  +-----------+                                     |
+|                                                    |
++---------------------------------------------------+
+
+Any plugin can now do: ctx.tools -> myToolRegistry</div>
+
+<h2>Part 6: What is ctx.tools?</h2>
+
+<p><code>ctx.tools</code> is a <strong>Service</strong> that provides a <strong>tool registry</strong>. It is not just a list of tools &mdash; it is an object with methods for managing tools.</p>
+
+<p>In the DeepSeek Harness (which uses Cordis), <code>ctx.tools</code> has these methods:</p>
+
+<table>
+  <thead>
+    <tr><th>Method</th><th>What it does</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ctx.tools.register(tool)</code></td><td>Add a tool to the registry</td></tr>
+    <tr><td><code>ctx.tools.get(name)</code></td><td>Look up a tool by name</td></tr>
+    <tr><td><code>ctx.tools.execute(exec)</code></td><td>Run a tool (goes through the full pipeline: pre-check, execute, post-check)</td></tr>
+    <tr><td><code>ctx.tools.guard(fn)</code></td><td>Add a permission guard (can deny tool calls)</td></tr>
+    <tr><td><code>ctx.tools.restrict(filter)</code></td><td>Hide certain tools from the model in this scope</td></tr>
+  </tbody>
+</table>
+
+<h2>Part 7: What Does "Registering a Tool" Mean?</h2>
+
+<p>A <strong>tool</strong> is something an AI model can call. For example, a tool called <code>read_file</code> lets the model read files from disk. A tool called <code>bash</code> lets the model run shell commands.</p>
+
+<p>When you <strong>register</strong> a tool, you are telling the system: "Here is a new capability the model can use." You provide:</p>
+
+<pre><code>ctx.tools.register(defineTool({
+  name: 'greet',                          // what the model calls it
+  description: 'Greet someone by name.',  // what the model sees
+  parameters: {                           // what arguments it accepts
+    name: { type: 'string', required: true }
+  },
+  output: {
+    schema: { type: 'string' },
+    render: (args, value) => [{ type: 'text', text: value }],
+  },
+  async execute(args) {
+    return `Hello, ${args.name}!`         // the actual logic
+  },
+}))</code></pre>
+
+<p>Here is what happens when you register:</p>
+
+<div class="diagram">
+Step 1: You call ctx.tools.register(tool)
+
+Step 2: The tool registry stores the tool definition
+
+Step 3: The tool's schema is added to the system prompt
+        (so the model knows the tool exists)
+
+Step 4: When the model calls the tool:
+        a. Pre-checks run (permissions, validation)
+        b. execute() runs
+        c. Post-checks run (result validation)
+        d. The result goes back to the model
+
+Step 5: When your plugin unloads, the tool is
+        AUTOMATICALLY unregistered (no leak!)</div>
+
+<p><strong>Why "automatically"?</strong> Because registration is an <strong>effect</strong> &mdash; it tracks a disposer. When the plugin unloads, the disposer runs and removes the tool. This is the temporal composability from Lesson 1 in action.</p>
+<h2>Part 8: How inject Tracking Works</h2>
+
+<p>When you declare <code>inject: ['tools']</code>, you are creating a <strong>contract</strong> with the framework:</p>
+
+<div class="diagram">
+YOUR PLUGIN:                    FRAMEWORK:
+
+  inject: ['tools']               "OK, I will watch for 'tools'"
+                                  "I will NOT load this plugin yet"
+                                  "I will hold it in PENDING state"
+                                  ...
+                                  "Aha! ctx.tools just appeared!"
+                                  "Now I will load this plugin"
+                                  ...
+  apply(ctx) {                    "Dependencies are met. Running apply()."
+    ctx.tools.register(...)       "The plugin is now ACTIVE."
+  }</div>
+
+<p>The Proxy is what makes this possible. Every time your plugin reads <code>ctx.tools</code>, the Proxy fires and the framework notes the dependency.</p>
+
+<p><strong>The full sequence:</strong></p>
+
+<ol>
+  <li><strong>Plugin registered</strong> &mdash; framework sees <code>inject: ['tools']</code></li>
+  <li><strong>Framework checks:</strong> does <code>ctx.tools</code> exist? No. &rarr; Plugin stays <strong>PENDING</strong></li>
+  <li><strong>Another plugin provides tools:</strong> <code>ctx.provide('tools', registry)</code></li>
+  <li><strong>Framework notifies all waiting fibers:</strong> "tools just appeared"</li>
+  <li><strong>Your plugin re-checks:</strong> does <code>ctx.tools</code> exist? Yes! &rarr; Plugin moves to <strong>LOADING</strong></li>
+  <li><strong><code>apply(ctx)</code> runs</strong> &mdash; plugin is now <strong>ACTIVE</strong></li>
+</ol>
+
+<p>If <code>ctx.tools</code> disappears later (the provider unloads), your plugin <strong>automatically unloads too</strong>. When <code>ctx.tools</code> reappears, your plugin <strong>automatically reloads</strong>.</p>
+
+<div class="callout callout-success">
+  <span class="callout-label">Spatial composability in action</span>
+  This is the "reactive coeffects" from Lesson 1. Plugins declare what they need. The runtime manages the dependency graph. No boot scripts. No manual ordering.
+</div>
+
+<h2>Part 9: ctx.tools vs ctx.get('tools')</h2>
+
+<p>These two look similar but do different things:</p>
+
+<table>
+  <thead>
+    <tr><th>Expression</th><th>What it does</th><th>Tracks dependency?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ctx.tools</code></td><td>Resolves via the Proxy</td><td><strong>Yes</strong> &mdash; tells the framework "I need this"</td></tr>
+    <tr><td><code>ctx.get('tools')</code></td><td>Reads without the Proxy</td><td><strong>No</strong> &mdash; just peeking, not committing</td></tr>
+  </tbody>
+</table>
+
+<p><strong>When to use which?</strong></p>
+
+<ul>
+  <li><code>ctx.tools</code> &mdash; when your plugin genuinely needs this service to function</li>
+  <li><code>ctx.get('tools')</code> &mdash; when you want to check if something exists without declaring a dependency (e.g., optional feature)</li>
+</ul>
+
+<div class="diagram">
+ctx.tools          ->  "I NEED tools. Hold me until they exist."
+ctx.get('tools')   ->  "Just curious. Do tools exist? No? OK, I'll handle it."</div>
+<h2>Part 10: Scoping with extend() and isolate()</h2>
+
+<p><code>ctx</code> is not a flat object. It is a <strong>tree</strong>. You create child contexts for scoping:</p>
+
+<h3>extend() &mdash; add metadata</h3>
+
+<pre><code>const child = ctx.extend({ debug: true })</code></pre>
+
+<p>This creates a child context that inherits all of <code>ctx</code>'s services but adds its own <code>debug</code> property:</p>
+
+<div class="diagram">
+ctx (parent):
+  tools -> toolRegistry
+  logger -> loggerInstance
+  debug -> (not set)
+
+child (created via ctx.extend({ debug: true })):
+  tools -> toolRegistry       (inherited from parent)
+  logger -> loggerInstance    (inherited from parent)
+  debug -> true               (own property, shadows nothing)</div>
+
+<p>The child inherits services from the parent through the prototype chain. If you set <code>debug</code> on the child, the parent is NOT affected.</p>
+
+<h3>isolate() &mdash; separate a service scope</h3>
+
+<pre><code>const isolated = ctx.isolate('tools')</code></pre>
+
+<p>This creates a child where <code>tools</code> resolves independently:</p>
+
+<div class="diagram">
+ctx (parent):
+  tools -> toolRegistryA
+
+isolated (created via ctx.isolate('tools')):
+  tools -> (empty! different scope)
+  logger -> loggerInstance   (still inherited)
+
+Now: isolated.provide('tools', toolRegistryB)
+
+ctx.tools        -> toolRegistryA  (parent unchanged)
+isolated.tools   -> toolRegistryB  (child has its own)</div>
+
+<p>Why would you want this?</p>
+<ul>
+  <li>Running two chat sessions with different tool sets</li>
+  <li>Testing &mdash; give a plugin a mock without affecting the real one</li>
+  <li>Nested applications with different configurations</li>
+</ul>
+
+<h2>Part 11: Flux Comparison</h2>
+
+<table>
+  <thead>
+    <tr><th>Concept</th><th>Cordis</th><th>Flux</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Access a service</td><td><code>ctx.tools</code> (Proxy property read)</td><td><code>resolve_hook('tools')</code> (IPC call)</td></tr>
+    <tr><td>Declare dependency</td><td><code>inject: ['tools']</code> (automatic hold)</td><td>Manual ordering in config</td></tr>
+    <tr><td>Provide a service</td><td><code>ctx.provide('tools', impl)</code></td><td><code>register_hook('tools', handler)</code></td></tr>
+    <tr><td>Scope services</td><td><code>ctx.isolate('tools')</code></td><td>Not supported</td></tr>
+    <tr><td>Cleanup on unload</td><td>Automatic (disposers run in reverse)</td><td>Process kill (may leave traces)</td></tr>
+  </tbody>
+</table>
+
+<h2>Check Your Understanding</h2>
+
+<div class="quiz" id="quiz1">
+  <div class="quiz-question">What does a JavaScript Proxy do?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">It makes objects faster</li>
+    <li class="quiz-option" data-correct="true">It intercepts operations (like property reads) and runs custom code</li>
+    <li class="quiz-option" data-correct="false">It creates a copy of an object</li>
+    <li class="quiz-option" data-correct="false">It deletes properties from an object</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback1"></div>
+</div>
+
+<div class="quiz" id="quiz2">
+  <div class="quiz-question">Why does Cordis wrap ctx in a Proxy?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">For better performance</li>
+    <li class="quiz-option" data-correct="true">To track which services each plugin depends on</li>
+    <li class="quiz-option" data-correct="false">To prevent plugins from accessing services</li>
+    <li class="quiz-option" data-correct="false">To make the code look cleaner</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback2"></div>
+</div>
+
+<div class="quiz" id="quiz3">
+  <div class="quiz-question">What happens when you call ctx.tools.register(tool)?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">The tool is sent to the AI model immediately</li>
+    <li class="quiz-option" data-correct="true">The tool is stored in the registry and added to the system prompt</li>
+    <li class="quiz-option" data-correct="false">The tool replaces an existing tool</li>
+    <li class="quiz-option" data-correct="false">Nothing, it is just a placeholder</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback3"></div>
+</div>
+
+<div class="quiz" id="quiz4">
+  <div class="quiz-question">What is the difference between ctx.tools and ctx.get('tools')?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">They are exactly the same</li>
+    <li class="quiz-option" data-correct="false">ctx.get('tools') is faster</li>
+    <li class="quiz-option" data-correct="true">ctx.tools tracks a dependency; ctx.get('tools') does not</li>
+    <li class="quiz-option" data-correct="false">ctx.tools returns the raw object; ctx.get returns a copy</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback4"></div>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  const feedback = quiz.querySelector('.quiz-feedback');
+  quiz.querySelectorAll('.quiz-option').forEach(option => {
+    option.addEventListener('click', () => {
+      if (quiz.dataset.answered) return;
+      quiz.dataset.answered = 'true';
+      const isCorrect = option.dataset.correct === 'true';
+      option.classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (isCorrect) {
+        feedback.textContent = 'Correct. ' + getExplanation(quiz.id);
+      } else {
+        feedback.textContent = 'Not quite. ' + getExplanation(quiz.id);
+        quiz.querySelector('[data-correct="true"]').classList.add('correct');
+      }
+      feedback.classList.add('show');
+    });
+  });
+});
+
+function getExplanation(quizId) {
+  const explanations = {
+    quiz1: 'A Proxy wraps an object and intercepts operations like property reads. The handler fires instead of the normal behavior, letting you run custom code before or instead of the default action.',
+    quiz2: 'The Proxy lets the framework watch every property read on ctx. When a plugin reads ctx.tools, the framework notes the dependency. This is how inject tracking works -- the framework knows which services each plugin needs.',
+    quiz3: 'register() stores the tool in the tool registry. The tool schema is automatically added to the system prompt (so the AI model knows it exists). When the model calls the tool, the registry routes through the execution pipeline.',
+    quiz4: 'ctx.tools goes through the Proxy, which tracks the dependency (the framework notes "this plugin needs tools"). ctx.get("tools") reads without the Proxy, so no dependency is tracked. Use ctx.get when you are just checking availability without committing.'
+  };
+  return explanations[quizId] || '';
+}
+</script>
+
+<h2>Primary Source</h2>
+
+<p>Read the <a href="https://deepseek-harness.github.io/deepseek-harness/en/reference/cordis-api/context">Context API Reference</a> for the full method signatures. Pay attention to <code>extend()</code>, <code>isolate()</code>, and <code>intercept()</code>.</p>
+
+<h2>What is Next</h2>
+
+<p>In the next lesson, we dive into <strong>Effects</strong> &mdash; how <code>ctx.effect()</code> tracks and undoes side effects. This is the mechanism that makes temporal composability work.</p>
+
+<div class="callout">
+  <span class="callout-label">Ask your teacher</span>
+  Anything unclear? Especially: what a Proxy actually is, why inject tracking matters, or how isolate() differs from extend().
+</div>
+
+<nav class="nav">
+  <a href="0001-spatiotemporal-composability.html">&larr; Lesson 1</a>
+  <a href="0003-effects.html">Next: Effects &rarr;</a>
+</nav>
+
+<footer class="footer">
+  Cordis Learning Workspace &middot; Based on <a href="https://github.com/cordiverse/paper">A Programming Paradigm for Spatiotemporal Composability</a>
+</footer>
+
+</body>
+</html>

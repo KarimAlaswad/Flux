@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 3: What Is a Registry?</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+<style>
+  .analogy {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 1em 1.2em;
+    margin-bottom: 1em;
+    border-radius: 0 4px 4px 0;
+  }
+  .analogy p:last-child { margin-bottom: 0; }
+  .before-after {
+    display: flex;
+    gap: 1.5em;
+    margin-bottom: 1em;
+  }
+  .before-after > div {
+    flex: 1;
+    padding: 1em;
+    border-radius: 4px;
+  }
+  .before { background: #fef2f2; border: 1px solid #fecaca; }
+  .after { background: #ecfdf5; border: 1px solid #a7f3d0; }
+  .before h4 { color: #dc2626; margin-top: 0; }
+  .after h4 { color: #059669; margin-top: 0; }
+  .timeline {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    line-height: 1.8;
+    margin: 1em 0;
+    padding: 1em;
+    background: var(--code-bg);
+    border-radius: 4px;
+  }
+  .code-small { font-size: 0.85em; }
+  @media (max-width: 600px) {
+    .before-after { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>What Is a Registry?</h1>
+<p class="lesson-meta">Lesson 3 · ~25 minutes</p>
+
+<h2>The problem you already hit</h2>
+
+<p>In our grilling session, I said "the Registry should be a separate piece" and you said: <strong>"I don't understand what a registry is and why it's needed."</strong></p>
+
+<p>This is the right question. Let's build the concept from scratch using what you already know about Flux.</p>
+
+<h2>The front desk analogy</h2>
+
+<div class="analogy">
+<p>Imagine a large office building. You're a delivery driver. You need to find "Acme Corp" to deliver a package. You have two choices:</p>
+<ol>
+  <li><strong>Without a front desk:</strong> You walk through every floor, open every door, and look for a sign that says "Acme Corp." If there are 100 offices, you check all 100. If Acme moves to a different floor, your route breaks.</li>
+  <li><strong>With a front desk:</strong> You go to the lobby. A person sits at a desk with a directory. You say "Where's Acme Corp?" They say "Room 204, third door on the left." You go directly there.</li>
+</ol>
+<p>The front desk is a <strong>registry</strong>. It keeps a directory that maps "what you're looking for" to "where to find it." It's a single place you can ask, instead of searching everywhere.</p>
+</div>
+
+<p>Flux has the same problem. When the feed-widget needs YouTube videos, it currently calls <code>__pluginRpc('yt-feed.feed', {})</code> — which is the equivalent of walking directly to "yt-feed's office." But what if:</p>
+
+<ul>
+  <li>yt-feed gets renamed to yt-home-feed?</li>
+  <li>Someone writes a better YouTube feed plugin in Python?</li>
+  <li>The user wants to swap yt-feed for invidious-feed?</li>
+  <li>yt-feed crashes and a backup needs to take over?</li>
+</ul>
+
+<p>In all these cases, the feed-widget's hardcoded call breaks. The widget was written with the expectation that "the YouTube feed plugin is named yt-feed" — a piece of knowledge it should not need to have.</p>
+
+<h2>What a registry actually stores</h2>
+
+<p>A registry is just a table. In its simplest form:</p>
+
+<pre class="code-small">
+| Capability (what you need) | Provider (who does it)    | Address (how to reach them) |
+|----------------------------|---------------------------|-----------------------------|
+| "feed.video"               | yt-feed                   | subprocess pid 1234         |
+| "yt-auth"                  | yt-auth                   | subprocess pid 1235         |
+| "video.player"             | movi-player               | subprocess pid 1242         |
+| "core.manifest.scan"       | core-manifest             | subprocess pid 1230         |
+</pre>
+
+<p>Three columns, that's it. A plugin says "I can do X, reach me at Y." The registry writes it down. A consumer says "I need X." The registry reads the table and says "go to Y."</p>
+
+<h3>What the research teaches us</h3>
+
+<p>The <code>reference/research-registries-and-discovery.md</code> studied 8 production registry systems. All of them store some variation of this three-column table:</p>
+
+<table>
+  <tr><th>System</th><th>Capability key</th><th>Provider ID</th><th>Address</th><th>Extra metadata</th></tr>
+  <tr><td>Consul</td><td>Service name</td><td>Service ID</td><td>IP:port</td><td>Tags, health checks</td></tr>
+  <tr><td>DNS-SD (Bonjour)</td><td>Service type (e.g. <code>_http._tcp</code>)</td><td>Instance name</td><td>Host:port</td><td>Key-value TXT records</td></tr>
+  <tr><td>Kubernetes</td><td>Service name</td><td>Pod labels</td><td>Cluster IP:port</td><td>Selectors, annotations</td></tr>
+  <tr><td>OSGi</td><td>Service interface (Java class)</td><td>Service registration</td><td>In-process reference</td><td>Properties map</td></tr>
+  <tr><td>JupyterLab</td><td>Token ID (e.g. <code>ILabShell</code>)</td><td>Plugin ID</td><td>In-process DI container</td><td>Requirements, optional deps</td></tr>
+  <tr><td><strong>Flux (proposed)</strong></td><td><strong>Hook name</strong></td><td><strong>Plugin name</strong></td><td><strong>subprocess stdin</strong></td><td><strong>Methods, health, manifest</strong></td></tr>
+</table>
+
+<p>Source: <a href="../reference/research-registries-and-discovery.md">research-registries-and-discovery.md</a>, synthesis section</p>
+
+<h2>Where Flux already has one (but doesn't call it that)</h2>
+
+<p>Look at <code>src-tauri/src/lib.rs</code>, lines 215-230:</p>
+
+<pre class="code-small">
+#[tauri::command]
+async fn resolve_hook(
+    state: tauri::State&lt;'_, AppState&gt;,
+    hook: String,
+) -> Result&lt;Value, String&gt; {
+    let plugins = state.plugins.lock().await;
+    let plugin = plugins
+        .iter()
+        .find(|p| p.hooks.contains(&hook))
+        .ok_or_else(|| format!("No plugin provides hook: {}", hook))?;
+
+    Ok(serde_json::json!({ "name": plugin.name, "methods": plugin.methods }))
+}
+</pre>
+
+<p>This <em>is</em> a registry query! It searches the plugin list for one that has the right hook, and returns its name and methods. The <code>state.plugins</code> vector <em>is</em> the registry table. The problem is: it lives inside the Rust binary, mixed in with 300 lines of other concerns (spawning, routing, timeouts).</p>
+
+<div class="callout">
+<strong>Key insight:</strong> Flux already has a registry — it's just embedded in the Rust host. The question from our grilling session is: <strong>does it need to be?</strong> What if the registry were a separate, swappable piece that any language could implement?
+</div>
+
+<h2>What the core looks like with vs without a separate registry</h2>
+
+<div class="before-after">
+  <div class="before">
+    <h4>Without registry (current Flux)</h4>
+    <p>The Rust binary does everything: discover plugins, spawn them, hold the list, route RPC, enforce timeouts. Every piece is a hardcoded structural dependency:</p>
+    <pre style="font-size:0.75em; line-height:1.4;">lib.rs {
+  discover_plugins()  // filesystem scan
+  spawn_plugin()      // subprocess lifecycle
+  PluginHandle {      // hold name + methods + hooks
+    name, methods, hooks, stdin, pending
+  }
+  resolve_hook()      // search PluginHandles
+  call_hook()         // resolve + route
+  plugin_request()    // route by name
+}</pre>
+  </div>
+  <div class="after">
+    <h4>With separate registry</h4>
+    <p>The core does only one thing: start the Registry. Everything else goes through it:</p>
+    <pre style="font-size:0.75em; line-height:1.4;">Registry (separate piece) {
+  table: Map&lt;capability, provider&gt;
+  register(plugin)    // "I do X"
+  resolve(hook)       // "Who does X?"
+  health_check()      // "Are you alive?"
+  list()              // "Show everything"
+}
+
+Core (minimal boot) {
+  start Registry      // that's it
+}</pre>
+  </div>
+</div>
+
+<h2>How this changes the philosophy of the system</h2>
+
+<h3>Before: The system is a "host with guests"</h3>
+
+<p>The Rust binary is the landlord. It knows where every plugin lives, who they are, what they do. Plugins are <em>tenants</em> — they exist at the host's pleasure. The host decides everything. If you rewrite the host, all plugins break because they depended on the host's specific implementation.</p>
+
+<h3>After: The system is a "marketplace"</h3>
+
+<p>The Registry is the market square. Plugins are <em>vendors</em> who show up, rent a stall, and advertise "I sell vegetables" (capability). Consumers walk through the market and ask "where can I buy vegetables?" The Registry points them to the right vendor. The vendors don't know each other. The consumers don't need to know which vendor sells vegetables — they just need vegetables.</p>
+
+<p>This is the <strong>decoupling</strong> that makes 100% modularity possible:</p>
+
+<ul>
+  <li><strong>No plugin imports another plugin by name</strong> — they import a <em>capability</em> from the Registry</li>
+  <li><strong>The core can be rewritten</strong> — as long as the new core can start the Registry and speak JSON-RPC, nothing changes</li>
+  <li><strong>Plugins can be hot-swapped</strong> — unregister one, register another. The consumer never notices</li>
+  <li><strong>Languages don't matter</strong> — the Registry is just another process that speaks JSON-RPC</li>
+</ul>
+
+<h2>Scaling: what a registry offers as the system grows</h2>
+
+<p>Right now Flux has ~11 plugins. But think about:</p>
+
+<ul>
+  <li>50 plugins</li>
+  <li>500 plugins</li>
+  <li>A community plugin store where anyone publishes</li>
+  <li>Plugins that depend on other plugins' capabilities</li>
+</ul>
+
+<p>A registry makes all of these possible without changing the core:</p>
+
+<table>
+  <tr><th>What you want</th><th>Without registry</th><th>With registry</th></tr>
+  <tr>
+    <td>New plugin type</td>
+    <td>Modify the Rust host to understand it</td>
+    <td>Plugin registers its new hook. Done.</td>
+  </tr>
+  <tr>
+    <td>Swap feed source</td>
+    <td>Edit feed-widget's hardcoded plugin name</td>
+    <td>New source registers same hook. Registry returns newest. Zero code changes.</td>
+  </tr>
+  <tr>
+    <td>Plugin crashes</td>
+    <td>Host must detect and clean up</td>
+    <td>Registry's health check notices. Marks it dead. Routes to backup.</td>
+  </tr>
+  <tr>
+    <td>Introspect the system</td>
+    <td>Read lib.rs source code</td>
+    <td>Query Registry: "list all capabilities" → returns everything live</td>
+  </tr>
+  <tr>
+    <td>Find what uses a capability</td>
+    <td>Grep the codebase</td>
+    <td>Query Registry: "who provides feed.video?" → instant answer</td>
+  </tr>
+  <tr>
+    <td>Dependency graph</td>
+    <td>You can't know without reading every plugin</td>
+    <td>Plugins declare what they need. Registry validates the graph at boot.</td>
+  </tr>
+</table>
+
+<h2>What the Registry is NOT</h2>
+
+<p>Some common confusions the research cleared up:</p>
+
+<ul>
+  <li><strong>It's not a database.</strong> It doesn't store plugin data. It stores <em>addresses</em> and <em>capabilities</em>. The data still lives in the plugins themselves.</li>
+  <li><strong>It's not a message bus.</strong> It doesn't route messages between plugins. It just says "plugin X is at address Y." The caller still sends the message directly.</li>
+  <li><strong>It's not an orchestrator.</strong> It doesn't start or stop plugins. It just knows where they are.</li>
+  <li><strong>It's not a configuration store.</strong> Though you could extend it to hold config (as Consul does with its key-value store), the core responsibility is discovery.</li>
+</ul>
+
+<p>Source: <a href="https://developer.hashicorp.com/consul/docs/services/usage/register-services-checks">Consul docs — Services Usage</a> for the distinction between service registry and message bus.</p>
+
+<h2>Exercise: Trace Flux's current registry</h2>
+
+<div class="exercise">
+<h3>Read the code, find where the registry lives</h3>
+<ol>
+  <li>Open <code>src-tauri/src/lib.rs</code></li>
+  <li>Find <code>struct AppState</code> (line 53) — this holds the plugins vector</li>
+  <li>Find <code>resolve_hook</code> (line 216) — this is the registry query</li>
+  <li>Find <code>spawn_plugin</code> (line 104) — this is the registry registration (it creates PluginHandles)</li>
+  <li>Count: how many different responsibilities do these ~300 lines handle? (spawning, timeouts, manifest discovery, routing, hook resolution, error handling)</li>
+</ol>
+
+<p>Now imagine extracting <em>just the registry piece</em> — the ability to register and resolve hooks — into a separate process. What would change? What would stay the same?</p>
+
+<div class="callout">
+<strong>Hint:</strong> The Rust host currently does 6 things. A Registry process would do 1 thing (registration + discovery). The remaining 5 things stay in a smaller Rust core, or move into other specialized pieces.
+</div>
+</div>
+
+<h2>Primary sources</h2>
+
+<ul>
+  <li><a href="https://developer.hashicorp.com/consul/docs/services/usage/register-services-checks">Consul — Register Services and Checks</a>: The production service registry that inspired much of this lesson's design</li>
+  <li><a href="https://datatracker.ietf.org/doc/rfc6763/">RFC 6763 — DNS-Based Service Discovery</a>: The original "what is a registry" specification, defining how services advertise themselves via DNS</li>
+  <li><a href="https://docs.osgi.org/specification/osgi.core/8.0.0/framework.service.html">OSGi Core Specification — Service Layer</a>: The Java ecosystem's model for registering and discovering services at runtime</li>
+  <li><a href="../reference/research-registries-and-discovery.md">Our research: Service Registries &amp; Capability Discovery</a> — the full 8-system analysis</li>
+  <li><a href="../reference/research-decoupled-architectures.md">Our research: Truly Decoupled Architectures</a> — how a registry enables the "marketplace" philosophy</li>
+</ul>
+
+<hr>
+
+<p><strong>Questions?</strong> The registry concept connects to everything else we discussed — the microkernel, the boot process, capability routing. Any part of this that's still fuzzy?</p>
+
+<p>Reference: <a href="../reference/glossary.html">System Design Glossary</a></p>
+
+</body>
+</html>

@@ -274,6 +274,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_cors_fetch::init())
+        .plugin(tauri_plugin_mcp_bridge::init())
         .setup(move |app| {
             let handles = tauri::async_runtime::block_on(async {
                 let mut handles = Vec::new();
@@ -304,6 +306,19 @@ pub fn run() {
             app.manage(AppState {
                 plugins: Mutex::new(handles),
             });
+
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.as_ref().with_webview(|w| {
+                    #[cfg(target_os = "linux")]
+                    {
+                        use webkit2gtk::{WebViewExt, SettingsExt};
+                        if let Some(settings) = w.inner().settings() {
+                            settings.set_media_playback_requires_user_gesture(false);
+                        }
+                    }
+                });
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

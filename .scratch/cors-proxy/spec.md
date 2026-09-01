@@ -1,6 +1,6 @@
 # CORS-Bypassed Video Streaming via `tauri-plugin-cors-fetch`
 
-Status: `ready-for-agent`
+Status: `done`
 
 ## Problem Statement
 
@@ -130,6 +130,23 @@ The CORS plugin returns a standard `Response` with a `ReadableStream` body. `Htt
 ### CSP note
 
 `tauri.conf.json` already has `"csp": null` (disabled), so no CSP configuration is needed for the plugin.
+
+## Completion Notes
+
+Implemented 2026-07-18. All 4 changes applied and verified:
+
+- ✅ Plugin compiles and registers in Tauri builder
+- ✅ `window.CORSFetch` defined, `fetch` is patched (different from `fetchNative`)
+- ✅ Range requests return `206 Partial Content` through the proxy
+- ✅ Data flows via IPC (`fetch_read_body` returns correct bytes)
+
+### Remaining issue (unrelated to CORS proxy)
+
+Video doesn't play in `<movi-player>` despite the proxy working correctly. Player enters `movi-linear` (sequential download) mode. Likely a handoff issue in `flux-player.tsx` or a `SharedArrayBuffer` mismatch. movi-player Logger defaults to `SILENT` (no errors visible).
+
+See handoff: `/tmp/flux-cors-proxy-handoff.md`
+
+---
 
 ### Version compatibility
 

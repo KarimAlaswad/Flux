@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 2: Architecture Audit — What's Wrong With Flux?</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+<style>
+table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-family: var(--sans); font-size: 0.9em; }
+th, td { padding: 0.4em 0.6em; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; color: var(--accent); }
+.danger { color: #dc2626; }
+.warn { color: #d97706; }
+.ok { color: #059669; }
+.problem { margin-bottom: 1.5em; padding: 1em; border: 1px solid var(--border); border-radius: 4px; }
+.problem h3 { margin-top: 0; }
+.problem .ref { font-family: var(--mono); font-size: 0.85em; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>Architecture Audit — What's Wrong With Flux?</h1>
+<p class="lesson-meta">Lesson 2 · ~15 minutes</p>
+
+<h2>The skill: Architecture audit</h2>
+
+<p>Before you can fix a system, you need to know what's broken. An <strong>architecture audit</strong> is a systematic evaluation of a system's design. It's a core skill: the ability to look at unfamiliar code and quickly identify where the design works, where it doesn't, and what to fix first.</p>
+
+<p>The audit methodology (you can apply this to any system):</p>
+
+<ol>
+  <li><strong>List the modules</strong> — what are the pieces?</li>
+  <li><strong>Map dependencies</strong> — what depends on what?</li>
+  <li><strong>Evaluate each boundary</strong> — is the interface clean? Is coupling low? Is cohesion high?</li>
+  <li><strong>Identify hot spots</strong> — where do the problems cluster?</li>
+  <li><strong>Rank by impact</strong> — what hurts most and is cheapest to fix?</li>
+</ol>
+
+<p>Let's apply this to Flux.</p>
+
+<h2>Step 1: Modules</h2>
+
+<p>Flux has these modules at the process/component level:</p>
+
+<table>
+  <tr><th>Module</th><th>Type</th><th>Responsibility</th></tr>
+  <tr><td>Rust host (lib.rs)</td><td>Process</td><td>Tauri shell, spawns plugins, routes RPC, 15s timeout</td></tr>
+  <tr><td>core-manifest</td><td>Subprocess</td><td>Recursive scan for plugin.json files</td></tr>
+  <tr><td>core-static</td><td>Subprocess</td><td>Read files from build/plugins/</td></tr>
+  <tr><td>core-serve</td><td>Subprocess</td><td>Vestigial — does nothing useful</td></tr>
+  <tr><td>yt-feed</td><td>Subprocess</td><td>Fetch YouTube home feed via Innertube</td></tr>
+  <tr><td>yt-auth</td><td>Subprocess</td><td>Discover browser cookies, manage YouTube auth</td></tr>
+  <tr><td>yt-search</td><td>Subprocess</td><td>Search YouTube via Innertube</td></tr>
+  <tr><td>peertube</td><td>Subprocess</td><td>Fetch PeerTube API feed + resolve video URLs</td></tr>
+  <tr><td>feed-widget</td><td>Web Component</td><td>Merge + display feed from multiple sources</td></tr>
+  <tr><td>player-modal</td><td>Web Component</td><td>Modal overlay for video player (stub)</td></tr>
+  <tr><td>movi-player</td><td>Web Component</td><td>Video player, fills modal slot</td></tr>
+  <tr><td>build-plugins</td><td>Build script</td><td>Compile WC sources to IIFE bundles</td></tr>
+</table>
+
+<h2>Step 2: Dependency map</h2>
+
+<p>Arrows point from consumer to dependency (<code>A → B</code> means A depends on B):</p>
+
+<pre style="font-size:0.8em; line-height:1.6; font-family:var(--mono);">
+feed-widget → plugin manifest schema (shared types)
+feed-wizard → yt-video-card, peertube-card (via WC tag names)
+feed-widget → yt-auth (hardcoded "login" method search in manifests)
+feed-widget → __pluginRpc (global Tauri bridge)
+feed-widget → CustomEvent: "video.modal.show/hide"
+
+player-modal → movi-player (via slot resolution)
+player-modal → CustomEvent: "video.player.hide"
+
+yt-feed → yt-auth (via hardcoded cookie file path)
+yt-feed → Innertube (npm dependency)
+yt-feed → #shared/stdin.ts
+
+yt-auth → browser filesystem (cookie discovery)
+yt-auth → #shared/stdin.ts
+
+peertube → PeerTube API (HTTP)
+peertube → #shared/stdin.ts
+
+Rust host → all subprocesses (spawn + stdin/stdout)
+Rust host → PluginManifest struct (duplicated from frontend types)
+
+App.tsx → core-manifest  (first call on init)
+App.tsx → core-static    (load WC scripts)
+App.tsx → global __pluginRpc, resolveHook, callHook
+</pre>
+
+<h2>Step 3: Evaluate boundaries</h2>
+
+<h3>Problem #1: Duplicated manifest type — two sources of truth</h3>
+<p><code>src/shared/types.ts</code> defines <code>PluginManifest</code> and <code>FeedContrib</code>. <code>src-tauri/src/lib.rs</code> re-defines the same structs (lines 15-38). They must stay manually in sync. This is a <strong>maintenance coupling</strong> problem: any change to the manifest schema requires touching two files in different languages.</p>
+<p class="ref">Files: src/shared/types.ts ↔ src-tauri/src/lib.rs:15-38</p>
+
+<h3>Problem #2: Hardcoded cookie path — implicit coupling</h3>
+<p>Both <code>yt-feed/main.ts:15</code> and <code>yt-auth/main.ts:18</code> hardcode the same path: <code>join(import.meta.dir, "..", "..", ".youtube-cookie")</code>. This path depends on the directory nesting being exactly <code>plugins/youtube/plugins/yt-feed/</code>. Move the plugin — path breaks. This is <strong>fragile implicit coupling</strong> through a shared file system convention.</p>
+<p class="ref">Files: plugins/youtube/plugins/yt-feed/main.ts:15, plugins/youtube/plugins/yt-auth/main.ts:18</p>
+
+<h3>Problem #3: Three layers of timeout — conflicting strategy</h3>
+<p>The Rust host enforces 15s (<code>lib.rs:206</code>). yt-feed enforces 8s internally (<code>main.ts:59</code>). feed-widget enforces 15s frontend-side (<code>feed-widget.tsx:88</code>). The tightest timeout (8s) wins for yt-feed, but for other plugins only the outer Rust timeout applies. This is inconsistent — different plugins experience different timeout behaviors, and the frontend timeout duplicates the host's job.</p>
+<p class="ref">Files: lib.rs:206, yt-feed/main.ts:59, feed-widget.tsx:88</p>
+
+<h3>Problem #4: feed-widget's DOM kill switch</h3>
+<p><code>forceClearLoading()</code> (<code>feed-widget.tsx:161-169</code>) directly manipulates the DOM to remove a loading indicator because React state didn't reliably update. This is a <strong>design smell</strong> — a React component that bypasses its own state management means the rendering model is not trusted.</p>
+<p class="ref">File: feed-widget.tsx:161-169</p>
+
+<h3>Problem #5: Serial request processing in shared stdin</h3>
+<p><code>#shared/stdin.ts</code> processes requests one at a time (serial queue in <code>processNext()</code>, line 26-36). The Rust host maps responses by ID and can handle out-of-order responses, but the plugin can't send a response until the current request finishes. If yt-feed's <code>feed</code> method takes 8 seconds, a concurrent <code>resolve</code> call blocks behind it. This is a <strong>performance coupling</strong> between methods that should be independent.</p>
+<p class="ref">File: plugins/_shared/stdin.ts:26-36</p>
+
+<h3>Problem #6: player-modal is a stub with no backend</h3>
+<p>The modal shows/hides but has no actual video playback. The movi-player slot is created but never properly wired. The event chain (<code>player-load</code> → <code>modal-show</code> → ...) has a known mismatch: the card dispatches <code>player-load</code> but listeners expect <code>modal-load</code>.</p>
+<p class="ref">Files: player-modal.tsx, AGENTS.md (known issue #1)</p>
+
+<h3>Problem #7: Error handling is all strings</h3>
+<p>Every error in the system is a plain string. Rust returns <code>Result&lt;Value, String&gt;</code>. Plugins send <code>{"error": "message"}</code>. The frontend patterns through with <code>??</code> operators. No error codes, no structured errors, no categories. You can't programmatically distinguish "not authenticated" from "network error" from "timeout."</p>
+
+<h3>Problem #8: core-serve is vestigial</h3>
+<p>Spawed as a subprocess but does nothing — Vite dev server handles serving. Consumes a process slot and adds startup latency.</p>
+
+<h3>Problem #9: Build script writes temp files into plugin directories</h3>
+<p><code>.vite.config.mjs</code>, <code>entry.tsx</code>, <code>style.css</code> are created inside each plugin directory during build. If interrupted, these remain as garbage. Adding a plugin requires modifying the build script's config generation.</p>
+<p class="ref">File: scripts/build-plugins.ts:154-183</p>
+
+<h2>Step 4: Hot spots</h2>
+
+<p>Problems cluster in two areas:</p>
+
+<ol>
+  <li><strong>The plugin protocol</strong> — duplicated types, inconsistent timeouts, serial processing, string errors. The interface between Rust host and plugins has the most design debt.</li>
+  <li><strong>The frontend state management</strong> — feed-widget's kill switch, event name mismatch, untrusted React rendering. The frontend architecture is fragile.</li>
+</ol>
+
+<h2>Step 5: Prioritized roadmap</h2>
+
+<p>Ranked by impact (how much pain it causes) vs cost (how hard it is to fix):</p>
+
+<table>
+  <tr><th>#</th><th>Problem</th><th>Impact</th><th>Cost</th><th>Lesson</th></tr>
+  <tr>
+    <td>1</td>
+    <td>Serial stdin processing blocks concurrent requests</td>
+    <td class="danger">High</td>
+    <td class="ok">Low</td>
+    <td>Concurrency lesson</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Error handling is all strings (no error types)</td>
+    <td class="danger">High</td>
+    <td class="ok">Low</td>
+    <td>Error modeling lesson</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Duplicated manifest types (Rust ↔ TypeScript)</td>
+    <td class="warn">Medium</td>
+    <td class="ok">Low</td>
+    <td>Single source of truth lesson</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Hardcoded cookie path between plugins</td>
+    <td class="warn">Medium</td>
+    <td class="ok">Low</td>
+    <td>Interface design lesson</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Inconsistent timeout layers</td>
+    <td class="warn">Medium</td>
+    <td class="ok">Low</td>
+    <td>Reliability boundaries lesson</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>feed-widget DOM kill switch</td>
+    <td class="danger">High</td>
+    <td class="warn">Medium</td>
+    <td>State management lesson</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>Event name mismatch (player-load vs modal-load)</td>
+    <td class="danger">High</td>
+    <td class="ok">Low</td>
+    <td>Event-driven design lesson</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>player-modal is a stub</td>
+    <td class="warn">Medium</td>
+    <td class="warn">Medium</td>
+    <td>Slot architecture lesson</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>core-serve is vestigial</td>
+    <td class="ok">Low</td>
+    <td class="ok">Low</td>
+    <td>Pruning lesson</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>Build script temp file pollution</td>
+    <td class="ok">Low</td>
+    <td class="ok">Low</td>
+    <td>Build hygiene lesson</td>
+  </tr>
+</table>
+
+<h2>Exercise: Choose where to start</h2>
+
+<div class="exercise">
+<p>Look at the roadmap above. The first 5 problems are all about <strong>the plugin protocol</strong> — the interface between the Rust host and plugin subprocesses. This is the core architectural interface of Flux, and it has the most issues.</p>
+
+<p>Before the next lesson, think about:</p>
+<ol>
+  <li>Which of these 10 problems is causing you the most pain right now?</li>
+  <li>If you could fix only one thing, which would it be?</li>
+  <li>Look at <code>plugins/_shared/stdin.ts</code> (the serial queue) — can you spot why concurrent requests would block?</li>
+</ol>
+
+<p>Tell me your answer and I'll design Lesson 3 around the concept you need to fix whichever problem you pick.</p>
+</div>
+
+<h2>Primary source</h2>
+
+<p>This whole lesson is an application of the concepts from <a href="https://web.stanford.edu/~ouster/cgi-bin/book.php"><em>A Philosophy of Software Design</em></a> (Ousterhout). Chapter 1 introduces the idea of <strong>strategic vs tactical programming</strong> — the audit shows that much of Flux was built tactically (one feature at a time) rather than strategically (with the system's long-term health in mind).</p>
+
+<p>For the audit methodology itself, see <a href="https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/">MIT 6.033: Computer System Engineering</a> — Lecture 1 covers modularity analysis.</p>
+
+<hr>
+
+<p><strong>Questions?</strong> Any of these problems surprise you? Want me to elaborate on why a specific issue matters? Ask.</p>
+
+<p>Reference: <a href="../reference/glossary.html">System Design Glossary</a></p>
+
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 004: Flux x Cordis - From Boot to Everything On Top</title>
+  <link rel="stylesheet" href="../assets/cordis-style.css">
+</head>
+<body>
+
+<h1>Lesson 004: Flux &times; Cordis &mdash; From Boot to Everything On Top</h1>
+
+<p class="footer">Cordis Learning Workspace &middot; Lesson 4 of ? &middot; <a href="../MISSION.md">Mission</a></p>
+
+<p>You learned the 7 Cordis components in <a href="0003-full-system-picture.html">Lesson 3</a>. Now we transplant them into Flux and walk the <strong>entire stack</strong>: what happens at second zero when you double-click the app icon, all the way up to a YouTube video playing on your screen.</p>
+
+<h2>The One-Sentence Idea</h2>
+
+<p><strong>Cordis runs everything inside one JavaScript process. Flux cannot do that &mdash; its plugins are separate OS processes in any language.</strong> So the transplant works like this:</p>
+
+<div class="diagram">
+CORDIS (in-process)              FLUX (multi-process)
+=====================            =============================
+Context + Proxy        becomes   The Rust skeleton's router
+Fiber (plugin life)    becomes   One supervisor per subprocess
+epoch string           becomes   Hash of provider fiber UIDs,
+                                 computed by the skeleton
+effect / disposer      becomes   Shutdown handshake over IPC,
+                                 then SIGTERM, then SIGKILL
+Service class          becomes   Capability declared in manifest,
+                                 registered at init handshake
+Events (5 modes)       becomes   Router-implemented modes
+                                 across process boundaries
+Proxy magic tracking   becomes   The explicit "inject" array
+                                 in the manifest</div>
+
+<p>The last row is the most important insight in this lesson: <strong>you don't need JavaScript's Proxy</strong>. Proxy was Cordis's DX sugar for auto-detecting dependencies. In Flux, the manifest's <code>inject</code> declaration does the same job explicitly &mdash; and it works in every language, because it is just data.</p>
+
+<h2>Ground Truth: What Flux Has Today</h2>
+
+<p>Your repo already contains the seeds of this exact architecture:</p>
+
+<div class="diagram">
+plugins/
+  _shared/stdin.ts     <- the stdio JSON line reader (seed of the
+                          fiber handshake loop)
+  core-manifest/       <- CORE plugin: serves manifests
+  core-serve/          <- CORE plugin: local server
+  core-static/         <- CORE plugin: static assets
+  feed/                <- FEATURE plugin: unified feed
+  flux-player/         <- FEATURE plugin: the video player
+  player-modal/        <- UI plugin: player shell
+  peertube/            <- PROVIDER plugin
+  youtube/             <- PROVIDER plugin
+    plugin.json        <- { name, version, description, author }
+    plugins/
+      yt-auth/         <- SUB-plugin of youtube!
+      yt-feed/         <- SUB-plugin of youtube!
+      yt-search        <- SUB-plugin of youtube!</div>
+
+<p>Notice two things. First, your <code>plugins/youtube/plugins/yt-auth</code> structure means <strong>recursive modularity already exists in your codebase today</strong>. Second, your plugin.json has no <code>inject</code>, no <code>provides</code>, no <code>mediaTypes</code> yet &mdash; that is exactly what this lesson adds.</p>
+<h2>The Layer Map</h2>
+
+<p>Here is the full stack, from the metal to the pixels. Each layer only knows the layer below it. This is your rule 15a made physical: messages always travel down through the skeleton, never sideways.</p>
+
+<div class="diagram">
+LAYER 5   UI COMPOSITION
+          React shell renders slots. Components are chosen
+          per media type by querying the component registry.
+          "show me everything that fills slot 'shorts.card'"
+              |
+              | (queries + rendered events, via Tauri IPC)
+              v
+LAYER 4   FEATURE PLUGINS  (the global features)
+          auto-scroll, download, translate, sponsorblock...
+          attach to MEDIA TYPES, not services.
+          One build works on every provider.
+              |
+              v
+LAYER 3   PROVIDER PLUGINS  (the media sources)
+          youtube, peertube, spotify, reddit...
+          each is one Fiber = one subprocess.
+          provides capabilities: "youtube", "shorts.source"
+              |
+              | (JSON-RPC over stdin/stdout)
+              v
+LAYER 2   KERNEL CONTEXT  (root fiber uid=0)
+          Core services load as ordinary plugins:
+          http, storage, manifest-registry, event-router.
+          They are FIRST among equals - not special-cased.
+              |
+              v
+LAYER 1   THE RUST SKELETON  (dumb host)
+          Owns exactly five things: window, process spawn,
+          message routing, protocol bridge, cleanup.
+          Nothing else. No logic. Ever.
+              |
+              v
+LAYER 0   OPERATING SYSTEM
+          Processes, pipes, signals, files.</div>
+<h2>Layer 1: The Rust Skeleton (the Dumb Host)</h2>
+
+<p>Your rule: "The host stays dumb. It routes by method prefix and does nothing else." Here is its complete job description &mdash; if a feature is not on this list, it does not belong in the skeleton:</p>
+
+<table>
+  <thead>
+    <tr><th>Owned by skeleton</th><th>What it means</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Window</td><td>Open the webview, load the React shell</td></tr>
+    <tr><td>Spawn</td><td>Fork plugin subprocesses, wire stdin/stdout pipes</td></tr>
+    <tr><td>Route</td><td>Method prefix to fiber lookup, forward bytes both ways</td></tr>
+    <tr><td>Bridge</td><td>Translate between protocol versions (JSON-RPC v1, msgpack...)</td></tr>
+    <tr><td>Cleanup</td><td>Graceful shutdown handshake, then kill orphans</td></tr>
+  </tbody>
+</table>
+
+<p>Compare with Cordis: the skeleton is what remains when you delete everything smart from Context. In Cordis, the Proxy handler is smart (it walks fibers, computes epochs). In Flux, that intelligence moves <strong>up into Layer 2's services</strong>, and the skeleton keeps only mechanical routing.</p>
+
+<div class="diagram">
+WHY THIS MATTERS (your rule 14):
+Adding 100+ plugins requires ZERO changes to routing code.
+The router table is DATA built at runtime from manifests.
+A new plugin = one more row in a HashMap. That's it.</div>
+
+<h2>Layer 2: The Kernel Context</h2>
+
+<p>The first thing the skeleton does after opening the window is create the root context. In Cordis this was <code>new Context()</code>. In Flux it is the same idea with one twist: <strong>core services are ordinary plugins too</strong>.</p>
+
+<div class="diagram">
+new KernelContext()                    (root fiber, uid=0, ACTIVE)
+
+  ctx.plugin(core-manifest)   PENDING -> LOADING -> ACTIVE
+      provides "manifests"    (scan plugins/, parse plugin.json)
+
+  ctx.plugin(core-serve)      inject: ["manifests"]
+                              waits until "manifests" exists
+      provides "serve"        (localhost HTTP for streams)
+
+  ctx.plugin(core-static)     inject: ["serve", "manifests"]
+      provides "ui.assets"    (plugin frontend bundles)
+
+Each arrow is an EPOCH transition:
+  PENDING (deps missing) -> LOADING (deps appeared) -> ACTIVE</div>
+
+<p>This is your rule 2 in action ("the core needs to be as small as possible"): there is no privileged core code. Delete core-serve and write core-serve-rs in Rust &mdash; as long as it provides the same capability name, nothing above notices.</p>
+<h2>Layer 3: Provider Plugins (Fibers Over Processes)</h2>
+
+<p>Here is where Cordis's Fiber meets your subprocess model. Each plugin gets <strong>one Fiber owned by the skeleton</strong>. The fiber's state machine drives the real OS process:</p>
+
+<div class="diagram">
+THE HANDSHAKE (what _shared/stdin.ts will grow into)
+
+skeleton                          youtube subprocess (any language)
+--------                          ---------------------------------
+fiber: PENDING
+  deps missing? none.
+  epoch ready -> LOADING
+spawn("bun run youtube/main.ts")
+  pipe stdin/stdout                starts, waits on stdin
+send line 1:
+  {"id":1,"method":"init",
+   "params":{
+     "config": {...user settings},
+     "inject":["http","storage"],
+     "grants":["net","fs.cache"]}}
+                                   reads init via stdin.ts
+                                   constructs its services
+send line 2 (response):
+  {"id":1,"result":{
+     "provides":["youtube"],
+     "emits":["feed.updated"],
+     "components":[
+       "shorts.card","video.card"]}}
+                                   declares capabilities back
+skeleton registers provides
+  -> reflect-store updated
+  -> dependents' epochs recompute
+fiber: ACTIVE</div>
+
+<p>Three details worth pausing on:</p>
+<ol>
+  <li><strong>The manifest is the promise; the handshake is the proof.</strong> plugin.json says what the plugin <em>intends</em> to provide. The init response confirms what it <em>actually</em> provided. The skeleton trusts the response, not the promise &mdash; this is how a plugin written in Python can evolve without touching its manifest.</li>
+  <li><strong>inject travels as data.</strong> The skeleton resolves "http" and "storage" to capability handles (small tokens the plugin can spend on routed calls). The plugin never sees process IDs or file descriptors.</li>
+  <li><strong>Language disappears at this boundary.</strong> The skeleton cannot tell whether youtube is Bun, Go, or Rust. That is rule 12 working exactly as designed.</li>
+</ol>
+
+<h2>Layer 4: Feature Plugins Attach to Media Types</h2>
+
+<p>Cordis events had 5 dispatch modes. Flux keeps all five, but now they cross process boundaries &mdash; the router implements the semantics by waiting (or not waiting) for responses:</p>
+
+<table>
+  <thead>
+    <tr><th>Mode</th><th>Skeleton implementation</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>emit</code></td><td>Fire-and-forget broadcast to subscriber pipes</td></tr>
+    <tr><td><code>waterfall</code></td><td>Sequential RPC chain; each subscriber may transform params; skip = pass through unchanged</td></tr>
+    <tr><td><code>parallel</code></td><td>Concurrent fan-out, join when all respond or timeout</td></tr>
+    <tr><td><code>bail</code></td><td>Fan-out in order, stop at first non-null result, return it</td></tr>
+    <tr><td><code>serial</code></td><td>In-order RPC, stop at first error/bail signal</td></tr>
+  </tbody>
+</table>
+<p>Features attach to <strong>media types</strong>, never to providers. The declaration lives in the manifest:</p>
+
+<div class="diagram">
+auto-scroll/plugin.json
+{
+  "name": "auto-scroll",
+  "inject": ["media.events"],
+  "hooks": {
+    "shorts.playback.started": "onPlay"
+  }
+}
+
+youtube declares it emits shorts.playback.started (via media.events)
+peertube declares the same
+=> auto-scroll works on BOTH with zero provider awareness.
+   Community builds once, works everywhere. (App rule 3)</div>
+
+<h2>Layer 5: UI Composition</h2>
+
+<p>The React shell is also a plugin consumer. It renders <strong>slots</strong>, and fills each slot by querying the component registry that Layer 3's handshake populated:</p>
+
+<div class="diagram">
+THE SHELL'S ONLY QUESTION:
+  "registry.components('shorts.card') -> ordered list"
+
+  [ youtube:ShortsCard,     <- declared by youtube handshake
+    peertube:ShortsCard ]   <- declared by peertube handshake
+
+User picks a default per slot (opinionation slider, rule 7):
+  slot 'video.player' -> flux-player (chosen)
+                       player-modal  (alternative)
+  Meta-plugins can preset all slots in one click,
+  user can still override any single slot.</div>
+
+<h2>Boot Sequence Timeline</h2>
+
+<p>All layers together, second zero to ready:</p>
+
+<div class="diagram">
+t=0     OS starts flux binary
+t=1     L1 skeleton opens window, loads React shell
+t=2     L2 root context created (root fiber ACTIVE)
+t=3     core-manifest loads, scans plugins/, parses manifests
+t=4     core-serve PENDING (waiting for "manifests")
+        core-static PENDING (waiting for "serve")
+t=5     "manifests" provided -> serve epoch fires -> LOADING
+t=6     serve ACTIVE -> static epoch fires -> LOADING -> ACTIVE
+t=7     providers spawn: youtube fiber LOADING, peertube LOADING
+        (handshakes run concurrently - processes are parallel)
+t=8     youtube provides "youtube" + components
+        feed plugin epoch fires: inject ["feed.sources"] met
+t=9     feed ACTIVE; shell queries slots; cards render
+t=10    READY - user sees composed home screen
+        (late plugins keep loading silently in background)</div>
+
+<p>Notice there is no boot order file anywhere. Order <em>emerges</em> from epochs &mdash; exactly like Cordis, but the ticks are process handshakes instead of function calls.</p>
+<h2>Life of One Action: You Tap Play on a Short</h2>
+
+<p>The full journey of a single click, top to bottom and back:</p>
+
+<div class="diagram">
+1  React card (youtube's ShortsCard) fires:
+     call "media.resolve" { source:"youtube", id:"abc123" }
+        |
+2  L1 router: prefix "media.*" -> owner = media-core fiber
+        |
+3  media-core (a plugin!) sees source=plugin:youtube
+   -> call "youtube.resolve" routed to youtube subprocess
+        |
+4  youtube resolves stream URL + metadata
+   -> result flows back up the same chain
+        |
+5  media-core returns { streamUrl, mediaType:"shorts" }
+        |
+6  shell renders slot 'video.player' -> flux-player mounts
+        |
+7  flux-player calls "media.playback.started"
+   EVENT waterfall across ALL subscribers of shorts:
+     sponsorblock: trims segments       (transforms params)
+     subtitle-fetcher: adds track       (transforms params)
+     auto-scroll: queues next short     (observes only)
+     watch-history: records             (observes only)
+        |
+8  Video plays. Every participant was a separate process
+   in a possibly different language. Nobody knew anybody.</div>
+
+<p>Step 7 is rule 15a made real: the skeleton owns the wire, so it can run a waterfall across processes exactly like Cordis ran one across functions.</p>
+
+<h2>Dynamic Lifecycle: Install, Remove, Update</h2>
+
+<p>This is where epochs earn their keep. Watch the cascade when you disable YouTube at runtime:</p>
+
+<div class="diagram">
+USER DISABLES YOUTUBE
+
+youtube fiber: ACTIVE -> UNLOADING
+  graceful handshake: send {"method":"dispose"}
+  wait flush window (say 3s) for plugin to clean up
+  then SIGTERM, then SIGKILL (escalation ladder)
+  disposers recorded at init run here: cache purge,
+  token revoke, temp file delete
+fiber: DISPOSED
+
+skeleton removes provides ["youtube", components...]
+  |
+every dependent recomputes its epoch -> INACTIVE
+  |
+feed fiber: ACTIVE -> UNLOADING -> PENDING
+  (not killed forever - DORMANT, waiting)
+  |
+shell re-queries slots -> youtube cards vanish cleanly
+
+LATER: USER INSTALLS "youtube-v2" (provides same caps)
+
+new fiber uid=41 -> LOADING -> ACTIVE
+  |
+dependents' epochs change INACTIVE -> ":41:..." 
+  |
+feed reloads AUTOMATICALLY. No restart. No code changes.
+Cordis's promise, kept across process boundaries.</div>
+<h2>The Bridge: Protocol Evolution</h2>
+
+<p>Your rule 15: plugins must work forever, even when the wire format changes. Because only the skeleton touches the wire, the bridge is one translation table:</p>
+
+<div class="diagram">
+OLD PLUGIN (jsonrpc 1.0)          NEW PLUGIN (msgpack)
+        |                                |
+   [ SKELETON CODEC BRIDGE ]  - normalizes both to the
+        |                       one internal object model
+   { id, method, result, error }  (skeleton fields only)
+        |
+payloads pass through OPAQUE - never inspected, never
+validated, never interpreted (rule 15b)</div>
+
+<p>Manifests declare <code>"protocol": "msgpack"</code>; omitted means JSON. Adding a format = adding an adapter row in the bridge, never migrating a plugin.</p>
+
+<h2>Recursion: Sub-Plugins Are Nested Contexts</h2>
+
+<p>Your session-2 insight (recursive modularity) is already visible in your repo: <code>youtube/plugins/yt-auth</code>. Here is how it scales forever:</p>
+
+<div class="diagram">
+ROOT CONTEXT (skeleton)
+ +-- fiber: youtube  (subprocess)
+      +-- ITS OWN mini-context inside that process
+           +-- sub-fiber: yt-auth    provides "yt.session"
+           +-- sub-fiber: yt-search  inject ["yt.session"]
+           +-- sub-fiber: yt-feed    inject ["yt.session"]
+ +-- fiber: peertube (subprocess)
+      +-- its own children...
+
+Same rules at every depth:
+  - declare, don't call by name
+  - epochs gate lifecycles
+  - parent owns child's cleanup</div>
+
+<p>A big plugin never becomes an unmaintainable monolith &mdash; it becomes a context with small children, each replaceable in any language.</p>
+
+<h2>Cordis to Flux Mapping Table</h2>
+
+<table>
+  <thead>
+    <tr><th>Cordis concept</th><th>Flux implementation</th><th>Where it lives</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Context proxy</td><td>Manifest <code>inject</code> + capability handles from handshake</td><td>plugin.json + skeleton</td></tr>
+    <tr><td>Fiber state machine</td><td>Per-process supervisor states</td><td>Skeleton supervisor module</td></tr>
+    <tr><td>epoch string</td><td>Hash of provider fiber UIDs, recomputed on every provide/remove</td><td>Skeleton reflect-store</td></tr>
+    <tr><td>effect / disposer</td><td>dispose handshake, SIGTERM, SIGKILL ladder</td><td>Skeleton cleanup</td></tr>
+    <tr><td>Service base class</td><td><code>provides</code> array returned at init</td><td>Plugin main + manifest</td></tr>
+    <tr><td>Events, 5 modes</td><td>Router-implemented dispatch over pipes</td><td>Skeleton router</td></tr>
+    <tr><td>Registry / Runtime</td><td>Directory scan + parsed manifests</td><td>core-manifest</td></tr>
+    <tr><td>extend / isolate</td><td>Permission scopes per subtree (grants)</td><td>Skeleton spawn options</td></tr>
+  </tbody>
+</table>
+<h2>What We Deliberately Do NOT Copy</h2>
+
+<p>Being honest about what to leave behind is as important as what to transplant:</p>
+
+<ul>
+  <li><strong>Proxy auto-tracking.</strong> Beautiful in JS, impossible across languages. The manifest's <code>inject</code> array is the explicit, portable equivalent. Trade-off: you must declare dependencies instead of having them discovered. Gain: every language gets identical treatment.</li>
+  <li><strong>In-process event performance.</strong> Cordis fires millions of events per second in-memory. Flux pays a pipe round-trip per event. Fine for UI-scale events; never ship video frames through the router &mdash; streams go peer-to-process or direct URLs, control goes through the skeleton.</li>
+  <li><strong>Synchronous service access.</strong> <code>ctx.tools</code> returns instantly in Cordis. Across a process it cannot. Flux capability calls are async RPC, so plugin code looks like normal async code in whatever language it uses.</li>
+</ul>
+
+<h2>Honest Open Questions</h2>
+
+<ol>
+  <li><strong>Restart cost.</strong> A Cordis fiber reloads in microseconds; a Flux subprocess reload costs process spawn + handshake (tens of ms). Mitigation later: suspend/resume instead of kill, or keep runtimes warm.</li>
+  <li><strong>Who computes epochs?</strong> The skeleton (Rust) must. That means the reflect-store and epoch logic are real Rust code &mdash; small (~200 lines), but they ARE the smartest part of the host. Watch this boundary: if it grows logic, promote that logic into a Layer-2 plugin.</li>
+  <li><strong>Security model.</strong> Grants at handshake are the seed; sandboxing subprocesses (seccomp/landlock on Linux) is future work.</li>
+  <li><strong>Waterfall latency.</strong> A 5-subscriber waterfall over pipes is 5 sequential round-trips. Acceptable for control events; measure before using waterfalls in hot paths.</li>
+</ol>
+
+<h2>Quiz</h2>
+
+<div class="quiz">
+  <h3>Quiz 4.1</h3>
+  <p>A new provider "vimeo" appears while feed is ACTIVE with inject: ["feed.sources"]. What happens?</p>
+  <label><input type="radio" name="q1" value="a"> Nothing - feed only reloads on app restart</label>
+  <label><input type="radio" name="q1" value="b"> Feed unloads to PENDING, then reloads when vimeo registers</label>
+  <label><input type="radio" name="q1" value="c"> The skeleton crashes because two providers conflict</label>
+  <div class="answer" style="display:none">
+    <p><strong>Answer: b</strong> - Wait: vimeo provides a NEW source, so feed.sources epoch changes from ":7" to ":7:41". Epoch changed = unload then reload. Feed restarts once and now aggregates both providers.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <h3>Quiz 4.2</h3>
+  <p>Why does Flux not need JavaScript's Proxy for dependency tracking?</p>
+  <label><input type="radio" name="q2" value="a"> Because Rust has better Proxies</label>
+  <label><input type="radio" name="q2" value="b"> Because the manifest declares inject explicitly as data - works in any language</label>
+  <label><input type="radio" name="q2" value="c"> Because plugins track their own dependencies at runtime</label>
+  <div class="answer" style="display:none">
+    <p><strong>Answer: b</strong> - Proxy was Cordis's DX sugar inside one JS runtime. Cross-language, the portable equivalent is declarative data: the inject array. Same epoch machinery, zero magic.</p>
+  </div>
+</div>
+
+<div class="quiz">
+  <h3>Quiz 4.3</h3>
+  <p>The skeleton's codec bridge receives a msgpack message from a new plugin addressed to an old JSON-RPC plugin. What does it do with the payload?</p>
+  <label><input type="radio" name="q3" value="a"> Parses it deeply to translate field names</label>
+  <label><input type="radio" name="q3" value="b"> Translates only the skeleton envelope (id/method/result/error), passes payload opaquely</label>
+  <label><input type="radio" name="q3" value="c"> Rejects it - mixed protocols are unsupported</label>
+  <div class="answer" style="display:none">
+    <p><strong>Answer: b</strong> - Rule 15b: payloads are opaque. The bridge translates shape between declared protocols; meaning belongs to the plugins.</p>
+  </div>
+</div>
+
+<div class="callout">
+  <h3>Ask your teacher</h3>
+  <ul>
+    <li>"Walk me through writing the skeleton supervisor state machine in Rust"</li>
+    <li>"Design the init handshake message format field by field"</li>
+    <li>"How would suspend/resume replace the kill ladder?"</li>
+    <li>"Show me how grants/isolation would sandbox a malicious plugin"</li>
+    <li>"What would a meta-plugin's manifest look like?"</li>
+  </ul>
+</div>
+
+<p class="footer">Next: your choice - deep-dive the skeleton supervisor, or return to Cordis internals (Inject and Epoch)</p>
+
+</body>
+</html>

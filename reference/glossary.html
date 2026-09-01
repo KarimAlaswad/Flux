@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Glossary</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+<style>
+dt { font-weight: 600; font-family: var(--sans); margin-top: 1em; }
+dd { margin-left: 0; margin-bottom: 0.5em; }
+.concept { color: var(--accent); font-style: normal; }
+.example { font-size: 0.9em; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>System Design Glossary</h1>
+<p class="lesson-meta">Reference document · Last updated: Lesson 3</p>
+
+<p>The core vocabulary of system design — terms used consistently across all lessons in this workspace. Each term includes a concise definition and how it maps to Flux.</p>
+
+<dl>
+
+<dt>Modularity</dt>
+<dd>Dividing a system into distinct, replaceable parts that each own a specific responsibility. <span class="example">→ Flux's plugins (yt-feed, yt-auth, peertube) are modules, each owning one data source.</span></dd>
+
+<dt>Interface (contract)</dt>
+<dd>The shared boundary between two modules — what one exposes and the other consumes. A good interface hides implementation details. <span class="example">→ The JSON-RPC protocol between Flux's Rust host and plugin subprocesses: <code>{"id":1,"method":"action","params":{}}</code>.</span></dd>
+
+<dt>Coupling</dt>
+<dd>How much one module depends on the internal details of another. Low coupling = good (modules can change independently). High coupling = bad (changing one breaks the other). <span class="example">→ Flux's plugins are <em>loosely coupled</em> via subprocess + JSON-RPC; they don't share memory.</span></dd>
+
+<dt>Cohesion</dt>
+<dd>How closely the responsibilities within a single module belong together. High cohesion = good (everything in a module serves a unified purpose). Low cohesion = bad (a module does many unrelated things). <span class="example">→ yt-auth handles only auth; yt-feed handles only feed fetching. That's high cohesion.</span></dd>
+
+<dt>Separation of Concerns</dt>
+<dd>Each module should address a distinct, separable concern. Overlapping concerns create coupling. <span class="example">→ Flux separates auth (yt-auth) from data fetching (yt-feed) from UI (feed-widget).</span></dd>
+
+<dt>Information Hiding</dt>
+<dd>A module should conceal its internal workings from the outside, exposing only what other modules need. <span class="example">→ Flux plugins don't expose their internal state; they only respond to method calls.</span></dd>
+
+<dt>Abstraction Layer</dt>
+<dd>A simplified interface that hides messy underlying complexity. <span class="example">→ The <code>callHook</code> / <code>resolveHook</code> Tauri commands are abstraction layers over the plugin discovery and routing system.</span></dd>
+
+<dt>Leaky Abstraction</dt>
+<dd>An abstraction that forces the consumer to understand the underlying complexity anyway. <span class="example">→ If a Flux plugin consumer needs to know about subprocess spawning to use a plugin, the plugin abstraction leaks.</span></dd>
+
+<dt>Architecture</dt>
+<dd>The high-level structure of a system: its modules, their relationships, and the principles governing their design and evolution over time. <span class="example">→ Flux's architecture: Tauri shell → Rust host (timeout-routed IPC) → subprocess plugins → React/Web Component frontend.</span></dd>
+
+<dt>Trade-off</dt>
+<dd>A design decision where improving one quality (e.g., flexibility) comes at the cost of another (e.g., simplicity). There are no perfect designs — only trade-offs. <span class="example">→ Flux chose subprocess plugins for isolation (good) at the cost of IPC serialization overhead (the trade-off).</span></dd>
+
+<dt>Tactical Programming</dt>
+<dd>Focusing on getting today's feature working without regard for the system's long-term structure. Necessary in small doses; pathological as the default mode. <span class="example">→ Adding one more field to the JSON-RPC response without thinking about the protocol structure.</span></dd>
+
+<dt>Strategic Programming</dt>
+<dd>Investing extra effort now to leave the system better than you found it, paying down design debt so future changes stay cheap. <span class="example">→ Stabilizing the plugin RPC schema before adding more plugin types.</span></dd>
+
+<dt>Registry</dt>
+<dd>A directory that maps <em>capabilities</em> to <em>providers</em>. Plugins register "I can do X" with the registry. Consumers ask "Who does X?" and get back an address. A registry decouples <em>what</em> is needed from <em>who</em> provides it. <span class="example">→ Flux's <code>resolve_hook</code> command is a registry query — it searches the plugin list by hook name and returns the provider. Currently embedded in the Rust host; could be a separate swappable piece.</span></dd>
+
+<dt>Capability</dt>
+<dd>A named, addressable unit of functionality that a plugin provides or consumes. Named by convention (e.g., <code>feed.video</code>, <code>video.player</code>). The registry maps capability names to providers. <span class="example">→ Flux's hooks <em>are</em> capabilities: <code>hooks: ["feed.video", "yt-auth"]</code> declares what the plugin provides to the system.</span></dd>
+
+<dt>Discovery</dt>
+<dd>The process of finding <em>which</em> provider offers a particular capability at runtime, rather than hardcoding it at compile time. Discovery is the opposite of hardcoding. <span class="example">→ Calling <code>resolveHook("feed.video")</code> is discovery. Calling <code>__pluginRpc("yt-feed.feed", {})</code> is <em>not</em> discovery — it hardcodes the provider name.</span></dd>
+
+<dt>Service Locator</dt>
+<dd>A pattern where a central object (the locator) knows how to provide dependencies on demand. A more powerful version of a registry — it can lazily create services if they aren't running yet. Often debated as an anti-pattern because it hides dependencies. <span class="example">→ Flux's <code>call_hook</code> is a service locator: it resolves the hook <em>and</em> calls the method in one step.</span></dd>
+
+<dt>Microkernel (Plugin Architecture)</dt>
+<dd>An architecture with a minimal core that handles only plugin lifecycle and inter-plugin communication. Everything else — features, data sources, UI — lives in plugins. The core must be so small that rewriting it is cheap. <span class="example">→ Flux's goal: a core that just starts the Registry and spawns plugins. The current ~317-line lib.rs is close but still too big.</span></dd>
+
+<dt>Extension Point</dt>
+<dd>A place in the system where plugins can hook in to add functionality. Defined by a contract (interface, message format, hook name). The core defines the extension point; plugins implement it. <span class="example">→ Flux's hook system (<code>hooks: ["feed.video"]</code>) are extension points. Any plugin can implement a hook.</span></dd>
+
+<dt>Process Supervisor</dt>
+<dd>A program that watches over other programs and restarts them if they crash. The supervisor's one job is <em>keeping things running</em>. It doesn't care <em>what</em> the programs do. <span class="example">→ s6 (from the research) is a supervisor: if a plugin crashes, s6 detects it (via SIGCHLD) and re-runs the <code>./run</code> script. No code change, no manual restart.</span></dd>
+
+<dt>Share Scope</dt>
+<dd>A runtime registry of shared dependencies in Module Federation. Maps <code>(packageName, shareKey, shareScope)</code> to a module factory instance. Participants register their shared deps when their <code>remoteEntry.js</code> loads; the scope negotiates which version wins based on <code>singleton</code>, <code>requiredVersion</code>, and <code>shareStrategy</code>. <span class="example">→ Host registers react@18.2.0, remote registers react@^18 — Share Scope matches them and provides one React instance to both.</span></dd>
+
+<dt>Host (Consumer)</dt>
+<dd>In Module Federation, the application that loads and consumes modules from remotes. Declares which remotes it depends on via the <code>remotes</code> config. <span class="example">→ Flux's App.tsx would be the host if it loaded plugin widgets via MF: <code>import('feed-widget/Card')</code>.</span></dd>
+
+<dt>Remote (Producer)</dt>
+<dd>In Module Federation, the application that exposes modules for consumption. Declares what it offers via the <code>exposes</code> config. Produces a <code>remoteEntry.js</code> (or <code>mf-manifest.json</code>) as its manifest. <span class="example">→ A plugin like <code>yt-video-card</code> would be a remote, exposing <code>"./Card": "./src/Card.tsx"</code>.</span></dd>
+
+<dt>remoteEntry.js</dt>
+<dd>A bootstrap manifest generated by a Module Federation producer. When loaded, it registers the producer in the Share Scope, exposes module factory functions, and declares shared dependency requirements. Not the application code — the registry metadata. <span class="example">→ MF runtime fetches <code>http://cdn/my-app/remoteEntry.js</code> to discover what the remote offers and needs.</span></dd>
+
+<dt>Bridge</dt>
+<dd>Module Federation's cross-framework application sharing mechanism. Uses a <code>render/destroy</code> lifecycle contract on a DOM node — any framework (React, Vue) exports a provider with these two methods, and any host can load it, regardless of its own framework. <span class="example">→ A React host loads a Vue remote via <code>createRemoteAppComponent({ loader: () =&gt; import('vue-app/export-app') })</code> — the internal framework is invisible to the host.</span></dd>
+
+<dt>Version Negotiation</dt>
+<dd>The process by which Module Federation's Share Scope decides which version of a shared dependency to use when multiple participants offer different versions. Checks: is the package already registered? Is <code>singleton: true</code>? Do version ranges overlap? Result: reuse the loaded instance, load a separate copy, or error on incompatible singletons. <span class="example">→ Host has react@18.2.0, remote needs react@^18 — compatible, reuse. Host has react@18, remote needs react@^19 — incompatible singletons, error.</span></dd>
+
+</dl>
+
+<hr>
+
+<h2>Further reading</h2>
+<ul>
+<li>Lesson <a href="../lessons/0001-what-is-system-design.html">0001: What Is System Design?</a> — introduces these terms in context</li>
+<li>Ousterhout, <em>A Philosophy of Software Design</em> — the primary source for modularity, information hiding, tactical vs strategic</li>
+</ul>
+
+</body>
+</html>

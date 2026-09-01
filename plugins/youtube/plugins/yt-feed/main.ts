@@ -1,7 +1,15 @@
 import { startStdin } from "#shared/stdin.ts";
-import { Innertube, UniversalCache } from "youtubei.js";
+import { Innertube, Platform, UniversalCache } from "youtubei.js";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
+
+// Provide Bun-compatible JS evaluator for YouTube's decipher functions.
+// YouTube.js v17 extracts decipher functions from YouTube's player script and
+// needs to evaluate them at runtime (signature + nsig transformation). On Node
+// this uses the `vm` module, but Bun doesn't have it — so we provide a simple
+// eval via `new Function`.
+const _origEval = Platform.shim.eval
+Platform.shim.eval = (data: any, _env: any) => new Function(data.output)()
 
 let cookieStr: string | null = null;
 const cookieFile = join(import.meta.dir, "..", "..", ".youtube-cookie");
@@ -109,11 +117,8 @@ startStdin(async ({ method, params, id }, send) => {
           cache: new UniversalCache(true),
         })
       }
-      const info = await tube.getInfo(videoId)
-      const stream = info.streaming_data?.formats?.find(
-        (f: any) => f.mimeType?.includes("mp4")
-      )
-      send(id, { url: stream?.url || url })
+      const format = await tube.getStreamingData(videoId, { type: 'video+audio', format: 'mp4', quality: 'best' })
+      send(id, { url: format?.url || url })
     } else {
       send(id, null, "Method not found: " + method)
     }

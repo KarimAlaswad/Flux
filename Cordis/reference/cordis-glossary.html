@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cordis Glossary</title>
+  <link rel="stylesheet" href="../assets/cordis-style.css">
+</head>
+<body>
+
+<h1>Cordis Glossary</h1>
+
+<p class="footer">Reference &middot; Living document &middot; Updated as lessons progress</p>
+
+<p>Canonical terms used throughout this teaching workspace. All lessons adhere to these definitions.</p>
+
+<h2>Core Concepts</h2>
+
+<dl>
+
+<dt><strong>Spatiotemporal Composability</strong></dt>
+<dd>The ability to dynamically compose (load, unload, reload) components at runtime with two guarantees: (1) all side effects are fully reverted on removal (<em>temporal</em>), and (2) inter-component dependencies are reactively managed (<em>spatial</em>).
+<em>See also:</em> <a href="https://github.com/cordiverse/paper/blob/main/paper.pdf">Paper, Section 2</a></dd>
+
+<dt><strong>Temporal Composability</strong></dt>
+<dd>The "time" dimension. When a component is removed, can all of its side effects be completely reverted? A system with temporal composability guarantees no leaked listeners, timers, or state after unloading a plugin.</dd>
+
+<dt><strong>Spatial Composability</strong></dt>
+<dd>The "space" dimension. Can components declare what they depend on, and have the runtime reactively manage those dependencies? A system with spatial composability derives load order from declarations, not manual boot scripts.</dd>
+
+<dt><strong>Confluence</strong></dt>
+<dd>The property that the final system state depends only on which plugins are enabled, not the order they were loaded or unloaded. Loading A then B then removing A then re-adding A converges to the same state as loading A and B directly.</dd>
+
+</dl>
+
+<h2>Cordis Runtime</h2>
+
+<dl>
+
+<dt><strong>Context (ctx)</strong></dt>
+<dd>The central Cordis object. Every plugin receives a <code>ctx</code> through its <code>apply(ctx)</code> function. It is simultaneously: (1) a dependency container (services live here), (2) a capability handle (plugins act through it), and (3) a lifecycle manager (effects and fibers are tracked here). Created via <code>new Context()</code> or extended via <code>ctx.extend()</code>.</dd>
+
+<dt><strong>Fiber</strong></dt>
+<dd>The runtime instance of one loaded plugin. Tracks lifecycle state (PENDING &rarr; LOADING &rarr; ACTIVE &rarr; UNLOADING &rarr; DISPOSED), validated config, and all registered effects. Each plugin gets its own fiber. Fibers are children of the root fiber.</dd>
+
+<dt><strong>Service</strong></dt>
+<dd>A capability exposed on <code>ctx</code>. Services are registered under a string key (e.g., <code>'tools'</code>, <code>'llm'</code>) and resolved via the context proxy. A plugin that extends <code>Service</code> and is loaded as a class plugin automatically registers itself as <code>ctx.&lt;name&gt;</code>.</dd>
+
+<dt><strong>Registry</strong></dt>
+<dd>The plugin registry. Manages loading, unloading, and reloading of plugin fibers. Plugins can be registered as functions, constructors, or objects with an <code>apply()</code> method.</dd>
+
+<dt><strong>Effect</strong></dt>
+<dd>A side effect registered via <code>ctx.effect()</code>. The callback runs immediately and returns a disposer (the "inverse"). Disposers run in reverse registration order when the fiber unloads. Effects are the primitive that makes temporal composability work.</dd>
+
+<dt><strong>Disposable / Disposer</strong></dt>
+<dd>A function returned by an effect that releases its resources when called. Called in reverse registration order during unload. May be async.</dd>
+
+<dt><strong>Reactive Coeffect</strong></dt>
+<dd>A dependency declared via <code>inject</code> on a plugin. The runtime holds the plugin PENDING until all declared coeffects are satisfied. If a coeffect disappears mid-flight, the plugin unloads. When it returns, the plugin reloads.</dd>
+
+<dt><strong>Event</strong></dt>
+<dd>A named signal dispatched through the context's event bus. Supports five dispatch modes: emit, waterfall, parallel, serial, and bail. Events are the primary communication mechanism between plugins.</dd>
+
+</dl>
+
+<h2>Fiber Lifecycle States</h2>
+
+<dl>
+
+<dt><strong>PENDING</strong></dt>
+<dd>Plugin declared but required dependencies (coeffects) not yet ready. The plugin's <code>apply()</code> has not been called.</dd>
+
+<dt><strong>LOADING</strong></dt>
+<dd>Dependencies are ready and <code>apply()</code> is executing. The plugin is initializing.</dd>
+
+<dt><strong>ACTIVE</strong></dt>
+<dd>The plugin is running. All effects are registered and active.</dd>
+
+<dt><strong>FAILED</strong></dt>
+<dd><code>apply()</code> threw an error, or config validation failed. The plugin is in an error state.</dd>
+
+<dt><strong>UNLOADING</strong></dt>
+<dd>The plugin is being removed. Disposers are running in reverse order.</dd>
+
+<dt><strong>DISPOSED</strong></dt>
+<dd>The plugin is fully unloaded. All effects have been reversed.</dd>
+
+</dl>
+
+<h2>Context Methods</h2>
+
+<dl>
+
+<dt><strong>ctx.extend(meta?)</strong></dt>
+<dd>Create a child context with extra metadata. The child prototypally inherits from the parent. Used for scoping.</dd>
+
+<dt><strong>ctx.isolate(name, label?)</strong></dt>
+<dd>Create a child context with an independent service scope for a specific service name. Different implementations can coexist in separate isolation scopes.</dd>
+
+<dt><strong>ctx.effect(execute, label?)</strong></dt>
+<dd>Register a cleanup-aware effect on the current fiber. Returns a disposer.</dd>
+
+<dt><strong>ctx.provide(name, value)</strong></dt>
+<dd>Register a service implementation owned by the current fiber. Returns a disposer that unregisters it.</dd>
+
+<dt><strong>ctx.on(event, handler)</strong></dt>
+<dd>Register an event listener. Automatically cleaned up when the fiber unloads.</dd>
+
+<dt><strong>ctx.plugin(spec)</strong></dt>
+<dd>Load a child plugin. Creates a new fiber as a child of the current one.</dd>
+
+</dl>
+
+<h2>Event Dispatch Modes</h2>
+
+<table>
+  <thead>
+    <tr><th>Mode</th><th>Awaited?</th><th>Order</th><th>Returns?</th><th>Use Case</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>emit</code></td><td>No</td><td>Registration</td><td>No</td><td>Fire-and-forget broadcast</td></tr>
+    <tr><td><code>waterfall</code></td><td>No</td><td>Registration</td><td>Yes</td><td>Around-middleware, policy (short-circuitable)</td></tr>
+    <tr><td><code>parallel</code></td><td>Yes</td><td>All at once</td><td>No</td><td>Fan-out, concurrent work</td></tr>
+    <tr><td><code>serial</code></td><td>Yes</td><td>Registration</td><td>Yes</td><td>Sequential with early bail</td></tr>
+    <tr><td><code>bail</code></td><td>No</td><td>Registration</td><td>Yes</td><td>First-return-wins</td></tr>
+  </tbody>
+</table>
+
+<h2>Glossary Rules</h2>
+
+<ul>
+  <li>Terms are added only when the user understands them (not on first exposure)</li>
+  <li>Definitions are one or two sentences: what the term IS, not what it does</li>
+  <li>Glossary terms are preferred in all lessons and learning records</li>
+  <li>Ambiguous terms get explicit resolution in this workspace</li>
+</ul>
+
+<footer class="footer">
+  Cordis Learning Workspace &middot; Based on <a href="https://github.com/cordiverse/paper">A Programming Paradigm for Spatiotemporal Composability</a>
+</footer>
+
+</body>
+</html>

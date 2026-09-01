@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 001: What is Spatiotemporal Composability?</title>
+  <link rel="stylesheet" href="../assets/cordis-style.css">
+</head>
+<body>
+
+<h1>Lesson 001: What is Spatiotemporal Composability?</h1>
+
+<p class="footer">Cordis Learning Workspace &middot; Lesson 1 of ? &middot; <a href="../MISSION.md">Mission</a></p>
+
+<h2>The Problem</h2>
+
+<p>You have a system made of plugins. At runtime, you need to:</p>
+<ol>
+  <li><strong>Load</strong> a plugin &mdash; it starts doing things (opening connections, registering handlers, starting timers)</li>
+  <li><strong>Unload</strong> a plugin &mdash; it stops doing things</li>
+  <li><strong>Reload</strong> a plugin &mdash; maybe the code changed, maybe the config changed</li>
+</ol>
+
+<p>This sounds simple. It is not. Two things go wrong.</p>
+
+<h2>Dimension 1: Time (Temporal Composability)</h2>
+
+<p>When a plugin loads, it creates <strong>side effects</strong> &mdash; things that persist after the plugin's <code>apply()</code> function returns:</p>
+
+<ul>
+  <li>An event listener on <code>ctx.on('message', handler)</code></li>
+  <li>A timer via <code>setInterval()</code></li>
+  <li>An open database connection</li>
+  <li>A registered tool or command</li>
+</ul>
+
+<p>When the plugin unloads, <em>all of these must be undone</em>. Not most of them. All of them.</p>
+
+<div class="callout callout-danger">
+  <span class="callout-label">The Problem</span>
+  Most plugin systems can remove a plugin's code. They cannot guarantee its side effects are fully removed. After repeated load/unload cycles, you accumulate leaked listeners, orphaned timers, and stale connections. The system slowly degrades.
+</div>
+
+<p><strong>Temporal composability</strong> asks: <em>when a component is removed, can all of its side effects be completely reverted?</em></p>
+
+<p>The word "temporal" refers to <strong>time</strong> &mdash; the effects happen over time (load, run, unload), and we need to undo them in time.</p>
+
+<h3>What Flux does today</h3>
+
+<p>In your Flux system, plugins are spawned as subprocesses. When you kill a process, the OS reclaims its memory and file handles. But what about:</p>
+<ul>
+  <li>Event listeners the plugin registered on the host's event bus?</li>
+  <li>Hooks the plugin declared in the registry?</li>
+  <li>State the plugin wrote to shared memory?</li>
+</ul>
+
+<p>Flux doesn't track these. When a plugin dies, its traces remain until the host restarts.</p>
+
+<h2>Dimension 2: Space (Spatial Composability)</h2>
+
+<p>Plugins depend on each other. A "greet" plugin needs the "tools" registry to exist before it can register itself. A "logger" plugin needs the "database" to be available before it can write logs.</p>
+
+<p><strong>Spatial composability</strong> asks: <em>can components declare what they depend on, and have the runtime reactively manage those dependencies?</em></p>
+
+<p>The word "spatial" refers to <strong>relationships</strong> &mdash; where plugins sit relative to each other in the dependency graph.</p>
+
+<div class="callout callout-danger">
+  <span class="callout-label">The Problem</span>
+  Most plugin systems use manual boot ordering &mdash; you list plugins in the right order in a config file, and if you get it wrong, things crash or silently fail. When a dependency disappears at runtime (a provider crashes, a config changes), dependent plugins either crash too or keep running with stale references.
+</div>
+
+<h3>What Flux does today</h3>
+
+<p>In Flux, plugin load order is determined by the order they appear in the config. The <code>resolve_hook</code> command checks if a hook exists at call time &mdash; but if it doesn't exist, the caller gets an error. There's no "wait until it exists" mechanism.</p>
+
+<p>If a plugin that provides hooks dies, every plugin that depends on those hooks breaks silently.</p>
+
+<h2>The Two Dimensions Together</h2>
+
+<p>These dimensions are <strong>orthogonal</strong> &mdash; they're independent problems that can be solved separately. But Cordis solves both simultaneously with two primitives:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>Question</th>
+      <th>Cordis Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Temporal</strong></td>
+      <td>Can we undo all side effects?</td>
+      <td><strong>Revertible effects</strong> &mdash; every <code>ctx.effect()</code> registers a disposer (undo function). Unloading runs disposers in reverse order.</td>
+    </tr>
+    <tr>
+      <td><strong>Spatial</strong></td>
+      <td>Can we declare and manage dependencies?</td>
+      <td><strong>Reactive coeffects</strong> &mdash; <code>inject: ['tools']</code> holds the plugin PENDING until <code>ctx.tools</code> exists. If it disappears, the plugin unloads. When it returns, the plugin reloads.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Why "Spatiotemporal"?</h2>
+
+<p>The paper's insight is that these two dimensions unify into a single concept. The same <code>ctx</code> object is:</p>
+<ul>
+  <li><strong>Where you act</strong> &mdash; you call <code>ctx.effect()</code> to register side effects (temporal)</li>
+  <li><strong>What you declare</strong> &mdash; you set <code>inject</code> to say what you need (spatial)</li>
+</ul>
+
+<p>This unification is what makes "install," "dependency changed," and "remove" the same underlying operation. The runtime handles all three cases with the same machinery.</p>
+
+<div class="diagram">
++-----------------------------------------------+
+|                 Context (ctx)                  |
+|                                                |
+|  +--------------------+  +------------------+ |
+|  |  Where you act     |  | What you declare | |
+|  |  (effects)         |  | (coeffects)      | |
+|  |                    |  |                  | |
+|  | ctx.effect(...)    |  | inject: ['tools']| |
+|  | ctx.on(...)        |  | inject: ['llm']  | |
+|  | ctx.provide(...)   |  |                  | |
+|  +--------------------+  +------------------+ |
+|                                                |
+|  Both directions go through the same object.   |
+|  The runtime manages both automatically.       |
++-----------------------------------------------+</div>
+
+<h2>A Concrete Example</h2>
+
+<p>Here's a Cordis plugin that declares a dependency and registers a side effect:</p>
+
+<pre><code>export const name = 'reminders'
+export const inject = ['database', 'logger']  // coeffect: I need these
+
+export function apply(ctx: Context) {
+  // effect: a timer that checks for due reminders
+  const timer = setInterval(() => {
+    ctx.logger.info('checking reminders...')
+  }, 60_000)
+
+  // revertible effect -- this runs when the plugin unloads
+  ctx.effect(() => () => clearInterval(timer))
+
+  // event listener -- also tracked as an effect
+  ctx.on('message', async (session) => {
+    const due = await ctx.database.get('reminders', {
+      channelId: session.channelId
+    })
+    if (due.length) {
+      await session.send(`You have ${due.length} reminder(s).`)
+    }
+  })
+}</code></pre>
+
+<p>What happens when this plugin unloads:</p>
+<ol>
+  <li>The event listener on <code>'message'</code> is removed</li>
+  <li>The <code>clearInterval</code> disposer runs &mdash; the timer stops</li>
+  <li>The plugin's fiber transitions to DISPOSED</li>
+</ol>
+
+<p>No leaks. No stale references. The system is exactly as if the plugin never existed.</p>
+
+<h2>The Guarantee</h2>
+
+<p>Cordis proves (mathematically) that spatiotemporal composability <strong>carries from a single component to a whole system</strong>. This means:</p>
+
+<ul>
+  <li>If every plugin individually cleans up properly, the whole system cleans up properly</li>
+  <li>Loading plugin A, then B, then unloading A, then reloading A &mdash; converges to the same state as loading A and B directly</li>
+  <li>Hot-reloading a plugin is safe: the old instance is fully unwound before the new one starts</li>
+</ul>
+
+<p>This property is called <strong>confluence</strong> &mdash; however you reached a configuration, the final state is the same.</p>
+
+<h2>Check Your Understanding</h2>
+
+<div class="quiz" id="quiz1">
+  <div class="quiz-question">A plugin registers a timer and an event listener. When the plugin is unloaded, what order are they cleaned up?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">In the order they were registered</li>
+    <li class="quiz-option" data-correct="true">In reverse order (most recent first)</li>
+    <li class="quiz-option" data-correct="false">In random order</li>
+    <li class="quiz-option" data-correct="false">The runtime doesn't track this</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback1"></div>
+</div>
+
+<div class="quiz" id="quiz2">
+  <div class="quiz-question">What happens to a plugin that declares <code>inject: ['tools']</code> when <code>ctx.tools</code> disappears?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">It crashes with an error</li>
+    <li class="quiz-option" data-correct="false">It keeps running with a stale reference</li>
+    <li class="quiz-option" data-correct="true">It automatically unloads (all effects are reversed)</li>
+    <li class="quiz-option" data-correct="false">Nothing happens until the next call</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback2"></div>
+</div>
+
+<div class="quiz" id="quiz3">
+  <div class="quiz-question">What is "confluence" in the context of Cordis?</div>
+  <ul class="quiz-options">
+    <li class="quiz-option" data-correct="false">Plugins run in parallel</li>
+    <li class="quiz-option" data-correct="false">Dependencies form a directed acyclic graph</li>
+    <li class="quiz-option" data-correct="true">The final state depends only on which plugins are enabled, not the order they were loaded/unloaded</li>
+    <li class="quiz-option" data-correct="false">The runtime merges conflicting configurations</li>
+  </ul>
+  <div class="quiz-feedback" id="feedback3"></div>
+</div>
+
+<script>
+document.querySelectorAll('.quiz').forEach(quiz => {
+  const feedback = quiz.querySelector('.quiz-feedback');
+  quiz.querySelectorAll('.quiz-option').forEach(option => {
+    option.addEventListener('click', () => {
+      if (quiz.dataset.answered) return;
+      quiz.dataset.answered = 'true';
+      const isCorrect = option.dataset.correct === 'true';
+      option.classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (isCorrect) {
+        feedback.textContent = 'Correct. ' + getExplanation(quiz.id);
+      } else {
+        feedback.textContent = 'Not quite. ' + getExplanation(quiz.id);
+        quiz.querySelector('[data-correct="true"]').classList.add('correct');
+      }
+      feedback.classList.add('show');
+    });
+  });
+});
+
+function getExplanation(quizId) {
+  const explanations = {
+    quiz1: 'Disposers run in reverse registration order (LIFO). This ensures that resources acquired later are released before resources acquired earlier, preventing use-after-free issues.',
+    quiz2: 'The reactive coeffect system watches for dependency changes. When a required service disappears, the plugin unloads automatically &mdash; all its effects are reversed. When the service returns, the plugin reloads.',
+    quiz3: 'Confluence means the system is path-independent. Whether you loaded A then B then removed A then re-added A, or just loaded A and B directly, you end up in the same state. This makes hot-reloading safe.'
+  };
+  return explanations[quizId] || '';
+}
+</script>
+
+<h2>Primary Source</h2>
+
+<p>Read <strong>Sections 1-2</strong> of <a href="https://github.com/cordiverse/paper/blob/main/paper.pdf">the Cordis paper</a> for the formal problem statement. Section 2 defines temporal and spatial composability precisely and explains why they're orthogonal.</p>
+
+<h2>What's Next</h2>
+
+<p>In the next lesson, we'll dive into the <strong>Context</strong> object &mdash; the single <code>ctx</code> that does double duty as both a capability handle and a dependency declaration surface. We'll see how prototypal inheritance, isolation, and interception work.</p>
+
+<div class="callout">
+  <span class="callout-label">Ask your teacher</span>
+  Anything unclear? The agent is your teacher &mdash; ask follow-up questions about anything in this lesson. Especially if the distinction between "effects" and "coeffects" feels fuzzy, or if you want to discuss how Flux's subprocess model compares.
+</div>
+
+<nav class="nav">
+  <a href="../MISSION.md">&larr; Mission</a>
+  <a href="0002-the-context.html">Next: The Context &rarr;</a>
+</nav>
+
+<footer class="footer">
+  Cordis Learning Workspace &middot; Based on <a href="https://github.com/cordiverse/paper">A Programming Paradigm for Spatiotemporal Composability</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 1: What Is System Design?</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+
+<h1>What Is System Design?</h1>
+<p class="lesson-meta">Lesson 1 · ~10 minutes</p>
+
+<h2>The problem</h2>
+
+<p>Software gets complicated fast. A 10,000-line program has too much going on for any one person to hold all of it in their head at once (humans can keep roughly 7 things in working memory). Add another zero and the problem squares: interactions between parts multiply faster than the parts themselves.</p>
+
+<p>This is the <strong>complexity problem</strong>. System design is the art of fighting it.</p>
+
+<h2>The solution: modularity</h2>
+
+<p><strong>Modularity</strong> means dividing a system into pieces — <em>modules</em> — each of which you <em>can</em> understand on its own, without knowing what's happening inside the others.</p>
+
+<p>Imagine a kitchen. You don't need to know how the fridge works to use it. You open the door, food is cold. The fridge abstracts away its compressor, coolant, and thermostat. That abstraction is the point: <strong>you only need to understand one module at a time</strong>.</p>
+
+<p>In software, modules can be classes, packages, services, processes — anything that groups related code behind a boundary.</p>
+
+<h2>The quality metric: coupling and cohesion</h2>
+
+<p>Not all modularity is good modularity. Two properties tell you whether your modules help or hurt:</p>
+
+<p><strong>Coupling</strong> is how much one module depends on the internals of another. Low coupling is good — you can change module A without touching module B. High coupling is bad — a change in one ripples through the rest.</p>
+
+<p>Signs of high coupling:</p>
+<ul>
+  <li>Changing module A forces you to also change module B</li>
+  <li>To use module A, you need to understand module B's internals</li>
+  <li>Tests for A need to set up B</li>
+</ul>
+
+<p><strong>Cohesion</strong> is how tightly the things <em>inside</em> a module belong together. High cohesion is good — everything in a module serves one clear purpose. Low cohesion is bad — the module is a grab-bag of unrelated stuff.</p>
+
+<p>Signs of low cohesion:</p>
+<ul>
+  <li>A module with "and" or "utils" in its name</li>
+  <li>A class that does I/O, formatting, and business logic</li>
+  <li>Half the module's exports are used by other modules, not internally</li>
+</ul>
+
+<p>These two are the primary diagnostic tools in system design. When you look at a system, you ask: <em>is this coupled? is this cohesive?</em></p>
+
+<h2>The mechanism: interfaces (contracts)</h2>
+
+<p>If modules are the pieces, <strong>interfaces</strong> are the joints. An interface is the agreement between two modules: what one exposes and the other consumes. A good interface is:</p>
+<ul>
+  <li><strong>Stable</strong> — it doesn't change capriciously</li>
+  <li><strong>Minimal</strong> — it exposes as little as possible</li>
+  <li><strong>Abstract</strong> — it hides implementation details</li>
+</ul>
+
+<p>A bad interface is a <strong>leaky abstraction</strong>: it forces the consumer to know about the implementation anyway. For example, if using a "database" module requires you to know whether it's SQLite or PostgreSQL under the hood, the abstraction leaks.</p>
+
+<h2>The mindset: tactical vs strategic</h2>
+
+<p><strong>Tactical programming</strong> means focusing on shipping the current feature, letting design quality slide. It's fast now, but the system degrades over time — each tactical shortcut makes the next change harder.</p>
+
+<p><strong>Strategic programming</strong> means investing extra effort to improve the design as you go: extracting a module, stabilizing an interface, cleaning up a boundary. It's slower now, but keeps the system healthy.</p>
+
+<p>Neither is wrong. The skill is knowing <em>when</em> to be tactical (prototypes, experiments) and <em>when</em> to be strategic (core interfaces, shared infrastructure).</p>
+
+<h2>Quiz</h2>
+
+<p>Practice retrieval before moving to the exercise. Answer each one, then click to check.</p>
+
+<div class="quiz">
+  <p class="quiz-question">Q1: The main reason we modularize software is:</p>
+  <ol class="quiz-options" type="A">
+    <li>To make it run faster</li>
+    <li>To let one person understand the system one piece at a time</li>
+    <li>To reduce the number of files</li>
+    <li>To make it object-oriented</li>
+  </ol>
+  <details><summary>Show answer</summary><p class="quiz-answer revealed"><strong>B.</strong> The primary goal of modularity is managing complexity — letting you understand one module without understanding everything else.</p></details>
+</div>
+
+<div class="quiz">
+  <p class="quiz-question">Q2: Low coupling means:</p>
+  <ol class="quiz-options" type="A">
+    <li>Modules share many dependencies</li>
+    <li>Changing one module does not require changing others</li>
+    <li>The system has few modules</li>
+    <li>Modules are small</li>
+  </ol>
+  <details><summary>Show answer</summary><p class="quiz-answer revealed"><strong>B.</strong> Low coupling means independence — modules can change without rippling to their neighbors.</p></details>
+</div>
+
+<div class="quiz">
+  <p class="quiz-question">Q3: A "leaky abstraction" is an interface that:</p>
+  <ol class="quiz-options" type="A">
+    <li>Has a bug</li>
+    <li>Forces the user to understand the implementation it was meant to hide</li>
+    <li>Is documented poorly</li>
+    <li>Changes frequently</li>
+  </ol>
+  <details><summary>Show answer</summary><p class="quiz-answer revealed"><strong>B.</strong> The abstraction "leaks" when the hidden complexity still shows through. The user still has to think about what's underneath.</p></details>
+</div>
+
+<h2>Exercise: Spot the design</h2>
+
+<p>Now apply the concepts. Open <code>plugins/peertube/plugin.json</code> and the corresponding <code>plugins/peertube/main.ts</code> in your editor.</p>
+
+<div class="exercise">
+<h3>Step 1 — Identify the module</h3>
+<p>What is the module's responsibility? Write it in one sentence.</p>
+<details><summary>Hint</summary>
+<p>Look at the <code>methods</code> in plugin.json — what can this plugin do? That's its interface.</p>
+</details>
+</div>
+
+<div class="exercise">
+<h3>Step 2 — Evaluate cohesion</h3>
+<p>Does everything in <code>main.ts</code> serve that single responsibility, or does it do unrelated things?</p>
+</div>
+
+<div class="exercise">
+<h3>Step 3 — Evaluate coupling</h3>
+<p>What does this plugin depend on? Does it import or call anything outside its own directory? What would break if the JSON-RPC protocol format changed?</p>
+</div>
+
+<div class="exercise">
+<h3>Step 4 — Check the abstraction</h3>
+<p>The plugin exposes methods via JSON-RPC. Do those method signatures reveal implementation details (e.g., auth tokens, URLs, internal IDs) or do they hide them?</p>
+</div>
+
+<p>You don't need to write anything down — just think through each step. If you get stuck, ask me.</p>
+
+<h2>Primary source</h2>
+
+<p>Read the first two chapters of <a href="https://web.stanford.edu/~ouster/cgi-bin/book.php"><em>A Philosophy of Software Design</em></a> by John Ousterhout (~30 pages). It introduces the same concepts — modularity, interfaces, tactical vs strategic — more thoroughly than I can in 10 minutes.</p>
+
+<h2>What's next?</h2>
+
+<p>Lesson 2 will dive deeper into <strong>interfaces</strong>: what makes a good one, what makes a bad one, and how to design the JSON-RPC protocol between Flux's host and plugins.</p>
+
+<hr>
+
+<p><strong>Questions?</strong> If any concept was unclear, or you want to go deeper on coupling vs cohesion, just ask.</p>
+
+<p>Reference: <a href="../reference/glossary.html">System Design Glossary</a></p>
+
+</body>
+</html>
