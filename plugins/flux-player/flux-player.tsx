@@ -1,10 +1,10 @@
-import "movi-player";
-import { Logger, LogLevel } from "movi-player";
-import { useEffect, useRef } from "react";
+import "movi-player"
+import { Logger, LogLevel } from "movi-player"
+import { useEffect, useRef } from "react"
 
 // movi-player's Logger routes through globalThis.__movilog
-globalThis.__movilog = console;
-Logger.setLevel(LogLevel.INFO);
+globalThis.__movilog = console
+Logger.setLevel(LogLevel.INFO)
 
 export default function MoviPlayer({ item }: { item: any }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -12,32 +12,9 @@ export default function MoviPlayer({ item }: { item: any }) {
   useEffect(() => {
     let currentEl: HTMLElement | null = null;
 
-    const onLoad = async (e: any) => {
+    const onLoad = async(e: any) => {
       const { url, title, source } = e.detail || {};
       if (!url) return;
-
-      if (typeof window.AudioContext !== "undefined") {
-        const actx = new (
-          window.AudioContext || (window as any).webkitAudioContext
-        )();
-        actx.resume().then(() => actx.close());
-      }
-
-      if (currentEl) {
-        currentEl.remove();
-      }
-
-      const playerEl = document.createElement("movi-player");
-      playerEl.style.width = "100%";
-      playerEl.style.height = "100%";
-      playerEl.setAttribute("autoplay", "");
-      playerEl.setAttribute("controls", "");
-      playerEl.setAttribute("fallback", "native");
-      if (title) playerEl.setAttribute("title", title);
-
-      currentEl = playerEl;
-      containerRef.current?.appendChild(playerEl);
-      window.dispatchEvent(new CustomEvent("video.modal.show"));
 
       const resolvePromise = source
         ? window.__pluginRpc(source + ".resolve", { url })
@@ -46,9 +23,21 @@ export default function MoviPlayer({ item }: { item: any }) {
       const result = await resolvePromise.catch(() => ({ url }));
       const streamUrl = result?.url || url;
 
-      if (currentEl === playerEl) {
-        playerEl.setAttribute("src", streamUrl);
+      if (currentEl) {
+        currentEl.remove();
       }
+
+      currentEl = document.createElement("movi-player");
+      currentEl.style.width = "100%";
+      currentEl.style.height = "100%";
+      currentEl.setAttribute("src", streamUrl);
+      currentEl.setAttribute("autoplay", "");
+      currentEl.setAttribute("controls", "");
+      currentEl.setAttribute("fallback", "native");
+      if (title) currentEl.setAttribute("title", title);
+
+      containerRef.current?.appendChild(currentEl);
+      window.dispatchEvent(new CustomEvent("video.modal.show"));
     };
 
     const onHide = () => {
@@ -62,10 +51,10 @@ export default function MoviPlayer({ item }: { item: any }) {
     window.addEventListener("video.player.load", onLoad);
     window.addEventListener("video.player.hide", onHide);
     return () => {
-      window.removeEventListener("video.player.load", onLoad);
+      window.removeEventListener("video.player.load", onLoad)
       window.removeEventListener("video.player.hide", onHide);
       if (currentEl) currentEl.remove();
-    };
+    }
   }, []);
 
   return (
