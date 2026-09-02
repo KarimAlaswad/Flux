@@ -104,3 +104,19 @@ I had an important realization, I don't have to spent all the time on the philos
 *** Problem: If I want a system without single developer maintaining any substantial part of this system mostly by making the API dynamic/community-driven instead of a static/developer-maintained, this could lead to huge problems, is this even achievable? 
 
 Today, I have found the more important discovery throughout this whole proejct ([Cordis](https://github.com/cordiverse/cordis)), the paper.pdf is in this repo at the top level. Whatever changes this programming paradigm causes to this system, I'm down for it. FOR AGENTS: The current app is not at all a concrete or a statement of what this system/application should be, this system could be completely overhauled if it's beneficial for the future of this.
+
+
+Session 4:
+1. Today I realized I can just work on both at the same time. I don't have to wait until the system is done. I can start working on the logic of the plugins aside from how differently they might plugin into each other in the future.
+
+random app principles:
+- Tab persistance: when you switch between tab they should show the data it already loaded as a default behavior. Maybe it could be toggled off as an option.
+*** TODO: Tab persistance between restarts.
+*** TODO: Default tab option.
+*** TODO: empty feeds should show "Install sources to see *media here" button and directs to the marketplace.
+
+- if there is a single feed there should be a plus button to add new feeds and if they add a new feed with no sources, the install new sources button should show
+*** TODO: feed tab bar should auto-hide and show on hover to save space. Togglable.
+
+*** FOR AGENTS: this app is in a prototype stage. Keep things simple. Don't over complicate features and designs. For proof of concepts first then it will be revised and changed in the future.
+
