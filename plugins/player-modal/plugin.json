@@ -4,5 +4,5 @@
   "description": "Backdrop overlay for video players",
   "author": "Me",
   "hooks": ["video.modal"],
-  "ui": "player-modal"
+  "components": ["player-modal"]
 }

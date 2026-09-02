@@ -4,6 +4,5 @@
   "description": "Video player wrapping movi-player",
   "author": "Me",
   "hooks": ["video.player"],
-  "components": ["flux-player"],
-  "slots": ["video.player"]
+  "components": ["flux-player"]
 }

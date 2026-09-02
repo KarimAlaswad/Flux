@@ -104,17 +104,16 @@ function findPluginDirs(dir) {
 const buildDir = join(process.cwd(), "build", "plugins");
 if (!existsSync(buildDir)) mkdirSync(buildDir, { recursive: true });
 
-const isWatch = process.argv.includes("--watch")
-const watchers: any[] = []
+const isWatch = process.argv.includes("--watch");
+const watchers: any[] = [];
 
 const pluginDirs = findPluginDirs("plugins");
 for (const dir of pluginDirs) {
   const manifest = JSON.parse(await Bun.file(join(dir, "plugin.json")).text());
   const tags = new Set();
-  if (manifest.ui) tags.add(manifest.ui)
-  if (manifest.components) manifest.components.forEach(t => tags.add(t))
+  if (manifest.components) manifest.components.forEach((t) => tags.add(t));
   if (manifest.feeds)
-    for (const f of manifest.feeds) if (f.card) tags.add(f.card)
+    for (const f of manifest.feeds) if (f.card) tags.add(f.card);
 
   for (const tag of tags) {
     let file = null;
@@ -133,7 +132,7 @@ for (const dir of pluginDirs) {
     }
 
     const output = join(buildDir, tag + ".js");
-    if (!isWatch && !needsRebuild(file,output)) {
+    if (!isWatch && !needsRebuild(file, output)) {
       console.log(`  skip ${tag}`);
       continue;
     }
@@ -155,10 +154,7 @@ for (const dir of pluginDirs) {
     const cssFile = join(dir, "style.css");
     const entryFile = join(dir, "entry.tsx");
 
-    writeFileSync(
-      cssFile,
-      "@import \"tailwindcss\"\n",
-    );
+    writeFileSync(cssFile, '@import "tailwindcss"\n');
     if (fw.entry) writeFileSync(entryFile, fw.entry(tag, tag + "." + ext));
 
     const libEntry = fw.entry ? '"entry.tsx"' : '"index.js"';
@@ -184,31 +180,33 @@ for (const dir of pluginDirs) {
 
     if (isWatch) {
       console.log(`[watch] ${tag} => ${output}`);
-      watchers.push(Bun.spawn(["bun", "vite", "build", "--config", configFile, "--watch"], {
-        stdio: ["inherit", "inherit", "inherit"],
-      }));
+      watchers.push(
+        Bun.spawn(["bun", "vite", "build", "--config", configFile, "--watch"], {
+          stdio: ["inherit", "inherit", "inherit"],
+        }),
+      );
     } else {
-      await $`bunx vite build --config ${configFile}`
-      unlinkSync(configFile)
-      if (fw.entry) unlinkSync(entryFile)
-        unlinkSync(cssFile)
+      await $`bunx vite build --config ${configFile}`;
+      unlinkSync(configFile);
+      if (fw.entry) unlinkSync(entryFile);
+      unlinkSync(cssFile);
     }
   }
 }
 
 if (isWatch) {
-  console.log(`[watch] watching ${watchers.length} build(s), Ctrl+C to stop`)
+  console.log(`[watch] watching ${watchers.length} build(s), Ctrl+C to stop`);
   process.on("SIGINT", () => {
-    watchers.forEach(w => w.kill())
+    watchers.forEach((w) => w.kill());
     for (const d of pluginDirs) {
       for (const f of [".vite.config.mjs", "entry.tsx", "style.css"]) {
-        const p = join(d, f)
-        if (existsSync(p)) unlinkSync(p)
+        const p = join(d, f);
+        if (existsSync(p)) unlinkSync(p);
       }
     }
-    process.exit(0)
-  })
-  await Promise.all(watchers.map(w => w.exited))
+    process.exit(0);
+  });
+  await Promise.all(watchers.map((w) => w.exited));
 } else {
-  console.log("done")
+  console.log("done");
 }

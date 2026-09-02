@@ -1,37 +1,40 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react";
 
 export default function PlayerModal({ manifests = [] }: { manifests?: any[] }) {
-  const [visible, setVisible] = useState(false)
-  const slotRef = useRef<HTMLDivElement>(null)
-  const playerCreated = useRef(false)
+  const [visible, setVisible] = useState(false);
+  const slotRef = useRef<HTMLDivElement>(null);
+  const playerCreated = useRef(false);
 
   useEffect(() => {
-    const show = () => setVisible(true)
-    const hide = () => setVisible(false)
-    window.addEventListener("video.modal.show", show)
-    window.addEventListener("video.modal.hide", hide)
+    const show = () => setVisible(true);
+    const hide = () => setVisible(false);
+    window.addEventListener("video.modal.show", show);
+    window.addEventListener("video.modal.hide", hide);
     return () => {
-      window.removeEventListener("video.modal.show", show)
-      window.removeEventListener("video.modal.hide", hide)
-    }
-  }, [])
+      window.removeEventListener("video.modal.show", show);
+      window.removeEventListener("video.modal.hide", hide);
+    };
+  }, []);
 
   const close = () => {
-    window.dispatchEvent(new CustomEvent("video.player.hide"))
-  }
+    window.dispatchEvent(new CustomEvent("video.player.hide"));
+  };
 
   useEffect(() => {
-    if (playerCreated.current) return
-    const provider = manifests.find((m: any) => m.slots?.includes("video.player"))
-    if (!provider?.components?.[0] || !slotRef.current) return
-    const tag = provider.components[0]
+    if (playerCreated.current) return;
+    // Resolve the player via hook: find which plugin provides "video.player"
+    const provider = manifests.find((m: any) =>
+      m.hooks?.includes("video.player"),
+    );
+    if (!provider?.components?.[0] || !slotRef.current) return;
+    const tag = provider.components[0];
     customElements.whenDefined(tag).then(() => {
-      if (!slotRef.current?.isConnected) return
-      const el = document.createElement(tag)
-      slotRef.current.appendChild(el)
-      playerCreated.current = true
-    })
-  }, [])
+      if (!slotRef.current?.isConnected) return;
+      const el = document.createElement(tag);
+      slotRef.current.appendChild(el);
+      playerCreated.current = true;
+    });
+  }, []);
 
   return (
     <div className={`fixed inset-0 z-50 ${visible ? "" : "hidden"}`}>
@@ -47,5 +50,5 @@ export default function PlayerModal({ manifests = [] }: { manifests?: any[] }) {
         className="absolute inset-0 flex items-center justify-center"
       />
     </div>
-  )
+  );
 }

@@ -30,11 +30,9 @@ struct PluginManifest {
     author: Option<String>,
     run: Option<String>,
     methods: Option<Vec<String>>,
-    ui: Option<String>,
     components: Option<Vec<String>>,
     feeds: Option<Vec<FeedContrib>>,
     hooks: Option<Vec<String>>,
-    slots: Option<Vec<String>>,
 }
 
 // -- Plugin process handle --

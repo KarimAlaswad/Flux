@@ -1,0 +1,8 @@
+{
+  "name": "feed-widget",
+  "description": "Renders a feed list from any plugin manifests",
+  "author": "Me",
+  "version": "1.0.0",
+  "hooks": ["feed.widget"],
+  "components": ["feed-widget"]
+}

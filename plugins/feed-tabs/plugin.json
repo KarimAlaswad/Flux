@@ -1,0 +1,8 @@
+{
+  "name": "feed-tabs",
+  "description": "Tab bar for switching between feed types",
+  "author": "Me",
+  "version": "1.0.0",
+  "hooks": ["feed.tabs"],
+  "components": ["feed-tabs"]
+}

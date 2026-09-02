@@ -4,55 +4,53 @@
 
 The atomic unit of functionality in Flux. A **Plugin** is any directory under `plugins/` that contains a `plugin.json`, discovered via recursive scan. Nothing in Flux happens outside a plugin. Any functionality that could be extracted as its own plugin should be.
 
-A plugin's identity is its **name** field (unique, used for RPC routing). Its capabilities are declared through optional manifest fields: `run`, `methods`, `hooks`, `ui`, `components`, `slots`, `feeds`. Which fields are filled determines what kind of plugin it is:
+A plugin's identity is its **name** field (unique, used for RPC routing). Its capabilities are declared through optional manifest fields: `run`, `methods`, `hooks`, `components`, `feeds`. Which fields are filled determines what kind of plugin it is:
 
 - Backend script (`run` present) — e.g. `yt-feed`, `yt-auth`, `core-manifest`
-- Frontend component (`ui` or `feeds[].card`) — e.g. `feed`, `yt-feed` (card)
+- Frontend component (`components` with a hook, or `feeds[].card`) — e.g. `feed-widget`, `feed-tabs`, `yt-feed` (card)
 - Fullstack (both `run` and a frontend field) — e.g. `peertube`
 - Meta-plugin (none of the above; groups sub-plugins) — e.g. `youtube`
 - Core plugin (shipped with Flux) — e.g. `core-manifest`, `core-static`
 - Sub-plugin (nested under another plugin's directory) — e.g. `yt-feed` under `youtube`
 - Service plugin — wraps an internet service (YouTube, PeerTube, TikTok). Handles its own authentication, URL resolution, data format, and peculiarities. No shared abstraction attempts to paper over differences between services.
 
-The meta-plugin and sub-plugin categories describe *nesting and grouping*, not a distinct capability set — they are still Plugins, just arranged in a tree.
+The meta-plugin and sub-plugin categories describe _nesting and grouping_, not a distinct capability set — they are still Plugins, just arranged in a tree.
 
 ## Manifest
 
-The `plugin.json` file at the root of a plugin directory. A Manifest is the serialised metadata of a Plugin — it declares the plugin's identity (name) and capabilities (run, methods, hooks, ui, components, slots, feeds). The `PluginManifest` type in code is the parsed shape of this file. Not a separate domain concept; Manifest is the Plugin's self-description.
+The `plugin.json` file at the root of a plugin directory. A Manifest is the serialised metadata of a Plugin — it declares the plugin's identity (name) and capabilities (run, methods, hooks, components, feeds). The `PluginManifest` type in code is the parsed shape of this file. Not a separate domain concept; Manifest is the Plugin's self-description.
 
-_Avoid_: Confusing the manifest with the plugin itself. The Plugin *is* the directory (its code, assets, runtime); the Manifest is just its declaration file.
+_Avoid_: Confusing the manifest with the plugin itself. The Plugin _is_ the directory (its code, assets, runtime); the Manifest is just its declaration file.
 
 ## Hook
 
-An abstract capability label that decouples *what* from *who*. A plugin declares "I provide this capability" via `hooks` in `plugin.json` (e.g. `hooks: ["feed.video", "yt.auth"]`). The Rust backend resolves it at runtime: `resolve_hook(hook)` returns the provider's name and methods; `call_hook(hook, method?, params?)` resolves and calls in one step (defaults to `methods[0]`).
+An abstract capability label that decouples _what_ from _who_. A plugin declares "I provide this capability" via `hooks` in `plugin.json` (e.g. `hooks: ["feed.video", "yt.auth"]`). The Rust backend resolves it at runtime: `resolve_hook(hook)` returns the provider's name and methods; `call_hook(hook, method?, params?)` resolves and calls in one step (defaults to `methods[0]`).
 
-A hook name defines an implicit contract — providers and consumers agree by convention on what methods the hook supports. Multiple plugins can declare the same hook; the first match wins at runtime. In the future this will be made explicit: some hooks will allow only one provider, others will allow multiple.
+Frontend plugins resolve hooks the same way: scan `.manifests` for a plugin whose `hooks` includes the desired label, read its `components[0]` tag, create the WC element. This is how feed-tabs finds the feed renderer, and how player-modal finds the video player.
+
+A hook name defines an implicit contract — providers and consumers agree by convention on what methods or capabilities the hook supports. Multiple plugins can declare the same hook; the first match wins at runtime. In the future this will be made explicit: some hooks will allow only one provider, others will allow multiple.
 
 Hooks are the canonical capability-resolution path. The older pattern of calling `__pluginRpc` with an explicit plugin name (used by the feed widget) is a legacy prototype approach that will be refactored to use hooks.
 
-_Avoid_: Direct RPC calls with hardcoded plugin names
+_Avoid_: Direct RPC calls with hardcoded plugin names. Avoid: separate `slots` or `ui` fields — use `hooks` for all capability resolution.
 
 CustomEvent names follow the hook-method convention: `"<hook>.<method>"` (e.g. `"video.player.load"`, `"video.modal.show"`). This keeps event names and hook resolution consistent — anyone reading the event name knows which hook+method it maps to.
 
 ## Component
 
-A WC tag that is built and script-loaded but not auto-mounted. Declared via `components[]` in `plugin.json`. The consumer (e.g. a modal that accepts a slot) creates the WC element imperatively and mounts it. Unlike `ui` (which App.tsx auto-mounts), Components are created by slot resolution at runtime.
+A WC tag that is built and script-loaded but not auto-mounted by App.tsx. Declared via `components[]` in `plugin.json`. The tag is resolved at runtime by hooks: a consumer plugin scans manifests for a provider whose `hooks` includes a matching name, reads `components[0]` to get the tag, and creates the WC element imperatively.
 
-## Slot
-
-A named placeholder that a plugin fills in another plugin's DOM. Declared via `slots[]` in `plugin.json`. Resolved at runtime: the container plugin scans `.manifests` for a plugin whose `slots` includes a matching name, reads its `components[0]` tag, creates the WC element, and appends it to itself. Slots are to frontend DOM what Hooks are to backend capability.
-
-_Avoid_: Hardcoding a player tag name in the modal. The slot resolves it.
+_Avoid_: `ui` and `slots` fields — use `hooks` for capability discovery and `components` for the tag name.
 
 ## Player
 
-A plugin that plays media content. Declares `hooks: ["video.player"]` with methods `["load", "hide"]`. The backend (`run`) resolves or validates the media URL. The frontend WC renders video inside a modal's slot.
+A plugin that plays media content. Declares `hooks: ["video.player"]` with `components: ["flux-player"]`. The backend (`run`) resolves or validates the media URL. The frontend WC renders video inside a modal. Resolved at runtime by the modal via hook.
 
 _Avoid_: Video player, audio player — just Player.
 
 ## Modal
 
-A plugin that wraps content in an overlay shell. Declares `hooks: ["video.modal"]` with methods `["show", "hide"]`. Frontend-only (`ui`). Contains a `<slot>` for the player element; does not manage any media state itself.
+A plugin that wraps content in an overlay shell. Declares `hooks: ["video.modal"]` with `components: ["player-modal"]`. Resolved at runtime by App.tsx via hook. Contains a container for the player element; does not manage any media state itself.
 
 _Avoid_: Overlay, wrapper, dialog
 
@@ -64,7 +62,11 @@ _Avoid_: Organizing content by service name (e.g. "YouTube section"). A single S
 
 ## Feed Widget
 
-A plugin that renders a unified feed for a specific Media Type. Owns the feed's state machine (loading, empty, partial, loaded, error). Aggregates items from all service plugins that produce that media type. Not a single widget — each media type may have its own feed widget plugin (e.g. shorts feed widget, long video feed widget).
+A plugin that renders a feed list from any plugin manifests. Declares `hooks: ["feed.widget"]` and `components: ["feed-widget"]`. Owns the feed's state machine (loading, empty, partial, loaded, error). Aggregates items from all service plugins that produce feeds. Completely media-type agnostic — receives filtered manifests and renders whatever cards it's given. Resolved at runtime by feed-tabs via hook.
+
+## Feed Tabs
+
+A plugin that provides a tab bar for switching between feed types. Declares `hooks: ["feed.tabs"]` and `components: ["feed-tabs"]`. Resolved at runtime by App.tsx via hook. Discovers feed types from manifests, creates a separate `<feed-widget>` instance per type, toggles visibility based on active tab. All instances stay mounted — no refetching when switching.
 
 ## Skeleton
 
@@ -83,7 +85,8 @@ An internet service that provides content to Flux (YouTube, PeerTube, TikTok, Re
 ## Feed
 
 A multi-source view of items aggregated from plugins that declare `feeds[]` in their manifest. Each feed contribution has:
+
 - **method** — the RPC method to call for items (defaults to plugin's first method)
 - **card** — the Web Component tag used to render each item (e.g. `"yt-video-card"`)
 
-_Avoid_: Confusing "a feed" (the view) with "the feed" (a single plugin's data). Each plugin provides contributions *to* a feed.
+_Avoid_: Confusing "a feed" (the view) with "the feed" (a single plugin's data). Each plugin provides contributions _to_ a feed.
