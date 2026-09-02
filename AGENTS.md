@@ -121,3 +121,4 @@ random app principles:
 
 *** FOR AGENTS: this app is in a prototype stage. Keep things simple. Don't over complicate features and designs. For proof of concepts first then it will be revised and changed in the future.
 
+*** TODO: Hot-Module Reload
