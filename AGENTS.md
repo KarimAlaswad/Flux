@@ -124,3 +124,5 @@ random app principles:
 \*\*\* FOR AGENTS: this app is in a prototype stage. Keep things simple. Don't over complicate features and designs. For proof of concepts first then it will be revised and changed in the future.
 
 \*\*\* TODO: Hot-Module Reload
+
+- when working with APIs or scrapers or any server of any kind, All data should be fetched even if it don't all get used. It could be used eventually.

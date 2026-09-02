@@ -20,6 +20,7 @@ This directory provides durable Open Knowledge Format (OKF) context for AI agent
 | **Playbooks**   | [`playbooks/`](./playbooks/)     | Step-by-step guides for common tasks                      |
 | **Constraints** | [`constraints/`](./constraints/) | Safety rules and operational boundaries                   |
 | **Workflows**   | [`workflows/`](./workflows/)     | Multi-step processes and automation                       |
+| **Research**    | [`research/`](./research/)       | Papers and external research (Cordis paradigm)            |
 
 ## Reading Order for New Agents
 
