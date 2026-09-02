@@ -107,7 +107,8 @@ Today, I have found the more important discovery throughout this whole proejct (
 
 
 Session 4:
-1. Today I realized I can just work on both at the same time. I don't have to wait until the system is done. I can start working on the logic of the plugins aside from how differently they might plugin into each other in the future.
+- huge change in the tooling, the Linux webkit2gtk is notoriously buggy and is unusable. I had to make a decision so i found a library called "WebUi" that opens the app in the user's browser without embedding a browser and node process in the app like electron does. It's amazing so far.
+- Today I realized I can just work on both at the same time. I don't have to wait until the system is done. I can start working on the logic of the plugins aside from how differently they might plug into each other in the future.
 
 random app principles:
 - Tab persistance: when you switch between tab they should show the data it already loaded as a default behavior. Maybe it could be toggled off as an option.
