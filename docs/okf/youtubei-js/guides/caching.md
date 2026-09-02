@@ -16,7 +16,9 @@ sources:
 Stores transformed player/session data. Uses `node:fs`, `Deno.writeFile`, or `indexedDB` depending on runtime. Temp dir by default.
 
 ```ts
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { Innertube, UniversalCache } from "youtubei.js";
 const innertube = await Innertube.create({ cache: new UniversalCache(false) }); // non-persistent
-const innertube2 = await Innertube.create({ cache: new UniversalCache(true, './.cache') }); // persistent
+const innertube2 = await Innertube.create({
+  cache: new UniversalCache(true, "./.cache"),
+}); // persistent
 ```

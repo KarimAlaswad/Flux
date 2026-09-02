@@ -20,6 +20,6 @@ const yt = await Innertube.create({
   fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
     // modify request, send via your transport, return Response
     return new Response(/* ... */);
-  }
+  },
 });
 ```

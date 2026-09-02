@@ -20,10 +20,12 @@ YouTube Shorts (referred to internally as "Reels") are handled through a distinc
 # Key Endpoints
 
 ### `/reel/reel_watch_sequence`
+
 This endpoint is used to fetch a sequence of shorts. It requires a `sequenceParams` protobuf-encoded string.
 In `youtubei.js`, this is used by `getShortsVideoInfo`.
 
 ### `/browse` with Shorts params
+
 While `youtubei.js` doesn't expose a direct `getShortsFeed()` method, the shorts tab is essentially a browse request with specific parameters.
 
 # Data Structures

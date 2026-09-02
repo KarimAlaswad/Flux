@@ -16,26 +16,37 @@ sources:
 Use `yt.actions.execute` for arbitrary endpoints:
 
 ```ts
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { Innertube, UniversalCache } from "youtubei.js";
 const yt = await Innertube.create({ cache: new UniversalCache(true) });
-const videoInfo = await yt.actions.execute('/player', { videoId, client: 'YTMUSIC', parse: true });
+const videoInfo = await yt.actions.execute("/player", {
+  videoId,
+  client: "YTMUSIC",
+  parse: true,
+});
 ```
 
 Call a `NavigationEndpoint` from parsed nodes:
 
 ```ts
-import { YTNodes } from 'youtubei.js';
+import { YTNodes } from "youtubei.js";
 const page = await button.endpoint.call(yt.actions, { parse: true });
 ```
 
 # Using the Parser
 
 ```ts
-import { Parser, YTNodes } from 'youtubei.js';
-import { readFileSync } from 'fs';
-const page = Parser.parseResponse(JSON.parse(readFileSync('./artist.json', 'utf-8')));
-const header = page.header?.item().as(YTNodes.MusicImmersiveHeader, YTNodes.MusicVisualHeader);
-const tab = page.contents?.item().as(YTNodes.SingleColumnBrowseResults).tabs.firstOfType(YTNodes.Tab);
+import { Parser, YTNodes } from "youtubei.js";
+import { readFileSync } from "fs";
+const page = Parser.parseResponse(
+  JSON.parse(readFileSync("./artist.json", "utf-8")),
+);
+const header = page.header
+  ?.item()
+  .as(YTNodes.MusicImmersiveHeader, YTNodes.MusicVisualHeader);
+const tab = page.contents
+  ?.item()
+  .as(YTNodes.SingleColumnBrowseResults)
+  .tabs.firstOfType(YTNodes.Tab);
 ```
 
 See `src/parser` for full documentation.

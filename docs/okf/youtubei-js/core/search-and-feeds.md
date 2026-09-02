@@ -17,8 +17,12 @@ sources:
 # Search
 
 ```ts
-const results = await innertube.search('query', { type: 'video', duration: 'short', upload_date: 'today' });
-const suggestions = await innertube.getSearchSuggestions('query');
+const results = await innertube.search("query", {
+  type: "video",
+  duration: "short",
+  upload_date: "today",
+});
+const suggestions = await innertube.getSearchSuggestions("query");
 ```
 
 # Feeds
@@ -31,7 +35,7 @@ const suggestions = await innertube.getSearchSuggestions('query');
 # Hashtag
 
 ```ts
-const feed = await innertube.getHashtag('shorts');
+const feed = await innertube.getHashtag("shorts");
 const videos = feed.videos; // ObservedArray<Video | ShortsLockupView | ...>
 ```
 

@@ -21,6 +21,7 @@ Accessed via `yt.getHomeFeed()`. The returned object is a `HomeFeed` class that 
 # Content Structure
 
 The feed is organized into `RichSection` and `RichItem` nodes.
+
 - **RichItem**: Usually contains a `LockupView` with `content_type: VIDEO`.
 - **RichSection**: Can contain a `RichShelf` (a row of videos) or a `ReelShelf` (a row of shorts).
 

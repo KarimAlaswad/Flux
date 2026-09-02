@@ -25,9 +25,11 @@ Created by `Innertube.create(options)` via `SessionOptions`.
 # OAuth Events
 
 ```ts
-innertube.session.on('auth-pending', (data) => { /* verification_url, user_code */ });
-innertube.session.on('auth', ({ credentials }) => {});
-innertube.session.on('update-credentials', ({ credentials }) => {});
+innertube.session.on("auth-pending", (data) => {
+  /* verification_url, user_code */
+});
+innertube.session.on("auth", ({ credentials }) => {});
+innertube.session.on("update-credentials", ({ credentials }) => {});
 await innertube.session.signIn(credentials);
 await innertube.session.oauth.cacheCredentials();
 await innertube.session.signOut();

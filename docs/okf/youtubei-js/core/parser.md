@@ -16,11 +16,18 @@ sources:
 Converts raw InnerTube JSON into typed `YTNode` objects with proxy-based arrays (`firstOfType`, `as`).
 
 ```ts
-import { Parser, YTNodes } from 'youtubei.js';
+import { Parser, YTNodes } from "youtubei.js";
 const page = Parser.parseResponse(JSON.parse(data));
-const header = page.header?.item().as(YTNodes.MusicImmersiveHeader, YTNodes.MusicVisualHeader);
-const tab = page.contents?.item().as(YTNodes.SingleColumnBrowseResults).tabs.firstOfType(YTNodes.Tab);
-const sections = tab.content?.as(YTNodes.SectionList).contents.as(YTNodes.MusicCarouselShelf, YTNodes.MusicDescriptionShelf);
+const header = page.header
+  ?.item()
+  .as(YTNodes.MusicImmersiveHeader, YTNodes.MusicVisualHeader);
+const tab = page.contents
+  ?.item()
+  .as(YTNodes.SingleColumnBrowseResults)
+  .tabs.firstOfType(YTNodes.Tab);
+const sections = tab.content
+  ?.as(YTNodes.SectionList)
+  .contents.as(YTNodes.MusicCarouselShelf, YTNodes.MusicDescriptionShelf);
 ```
 
 Detailed parser structure is documented in `src/parser` on GitHub.

@@ -16,12 +16,12 @@ sources:
 Browser usage requires proxying InnerTube requests through your own server.
 
 ```ts
-import { Innertube } from 'youtubei.js/web';
+import { Innertube } from "youtubei.js/web";
 await Innertube.create({
   fetch: async (input, init) => {
     // forward to proxy, return Response
     return fetch(input, init);
-  }
+  },
 });
 ```
 
@@ -32,12 +32,12 @@ Proxy example: `examples/browser/proxy/deno.ts`.
 Convert `VideoInfo` to MPEG-DASH manifest and play with dash.js:
 
 ```ts
-import dashjs from 'dashjs';
-const videoInfo = await innertube.getInfo('videoId', { client: 'TV' });
-const manifest = await videoInfo.toDash(url => url);
+import dashjs from "dashjs";
+const videoInfo = await innertube.getInfo("videoId", { client: "TV" });
+const manifest = await videoInfo.toDash((url) => url);
 const uri = "data:application/dash+xml;charset=utf-8;base64," + btoa(manifest);
 const player = dashjs.MediaPlayer().create();
-player.initialize(document.getElementById('video_player'), uri, true);
+player.initialize(document.getElementById("video_player"), uri, true);
 ```
 
 Up-to-date examples: [kira](https://github.com/LuanRT/kira), [sabr-shaka-example](https://github.com/LuanRT/googlevideo/tree/main/examples/sabr-shaka-example).

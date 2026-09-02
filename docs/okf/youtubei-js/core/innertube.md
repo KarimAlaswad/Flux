@@ -16,7 +16,7 @@ sources:
 The main class providing access to YouTube services.
 
 ```ts
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { Innertube, UniversalCache } from "youtubei.js";
 const innertube = await Innertube.create({ cache: new UniversalCache(true) });
 ```
 

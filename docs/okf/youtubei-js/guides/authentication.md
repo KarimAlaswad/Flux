@@ -16,7 +16,7 @@ sources:
 Recommended for most WEB clients:
 
 ```js
-const innertube = await Innertube.create({ cookie: '...' });
+const innertube = await Innertube.create({ cookie: "..." });
 ```
 
 Acquire by copying `Cookie` header from an incognito window after login.
@@ -26,8 +26,12 @@ Acquire by copying `Cookie` header from an incognito window after login.
 Limited to TV client after Google changes. Uses device-code flow:
 
 ```ts
-innertube.session.on('auth-pending', (data) => { /* verification_url, user_code */ });
-innertube.session.on('auth', ({ credentials }) => { /* save */ });
+innertube.session.on("auth-pending", (data) => {
+  /* verification_url, user_code */
+});
+innertube.session.on("auth", ({ credentials }) => {
+  /* save */
+});
 await innertube.session.signIn(credentials);
 ```
 

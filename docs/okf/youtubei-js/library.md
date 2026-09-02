@@ -21,6 +21,7 @@ YouTubei.js is a client-side wrapper for YouTube's internal "InnerTube" API. Unl
 # Architecture
 
 The library is built around several core modules:
+
 - **Actions**: Handles raw endpoint execution (`actions.execute`).
 - **Parser**: Dynamically parses InnerTube's polymorphic JSON responses into typed `YTNode` objects.
 - **Session**: Manages authentication (cookies/OAuth) and request signing.

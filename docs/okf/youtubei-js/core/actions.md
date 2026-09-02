@@ -19,7 +19,11 @@ Internal class used by `Innertube` to dispatch requests.
 
 - `execute(endpoint, args)` — executes an API call. Supports `{ parse: true|false, protobuf, serialized_data, skip_auth_check }`.
   ```ts
-  const info = await yt.actions.execute('/player', { videoId, client: 'YTMUSIC', parse: true });
+  const info = await yt.actions.execute("/player", {
+    videoId,
+    client: "YTMUSIC",
+    parse: true,
+  });
   ```
 - `stats(url, client, params)` — playback tracking API.
 

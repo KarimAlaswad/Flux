@@ -14,6 +14,6 @@ sources:
 # Changing Log Levels
 
 ```ts
-import { Log } from 'youtubei.js';
+import { Log } from "youtubei.js";
 Log.setLevel(Log.Level.NONE); // NONE | ERROR | WARNING | INFO | DEBUG
 ```

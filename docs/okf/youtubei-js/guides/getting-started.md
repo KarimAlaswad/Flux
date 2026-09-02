@@ -24,7 +24,7 @@ npm install youtubei.js@latest
 # Basic Usage
 
 ```ts
-import { Innertube } from 'youtubei.js';
+import { Innertube } from "youtubei.js";
 const innertube = await Innertube.create(/* options */);
 ```
 
@@ -39,6 +39,7 @@ const innertube = await Innertube.create(/* options */);
 # Custom JS Interpreter
 
 ```ts
-import { Innertube, Platform, Types } from 'youtubei.js/web';
-Platform.shim.eval = async (data: Types.BuildScriptResult) => new Function(data.output)();
+import { Innertube, Platform, Types } from "youtubei.js/web";
+Platform.shim.eval = async (data: Types.BuildScriptResult) =>
+  new Function(data.output)();
 ```
