@@ -20,6 +20,7 @@ Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs
 
 ## Agent behavior rules
 
+- Before acting, read `okf/index.md`. Use `okf/log.md` for unknowns. Follow `okf/constraints/agent-safety-rules.md`.
 - **Fresh Read Rule:** Read `AGENTS.md` fresh every session. Never assume the previous agent kept it accurate. If something looks wrong, say so.
 - **Verify before claiming:** Check the actual codebase, not the `.bak` or old docs. Speculative claims waste time — trace execution before proposing fixes.
 - **Diffs, not full files:** When suggesting code changes, give targeted diffs or edited snippets, not entire file rewrites.
