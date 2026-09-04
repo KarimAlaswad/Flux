@@ -1,0 +1,11 @@
+{
+  "name": "shorts-feed",
+  "version": "1.0.0",
+  "hooks": ["shorts.feed"],
+  "components": ["shorts-feed"],
+  "feeds": [
+    {
+      "type": "short"
+    }
+  ]
+}

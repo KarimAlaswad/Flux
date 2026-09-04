@@ -1,0 +1,123 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - button "Video" [ref=e7]
+    - button "Short" [ref=e8]
+  - generic [ref=e12]:
+    - generic [ref=e14]:
+      - generic [ref=e75]:
+        - 'img "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts" [ref=e76]'
+        - generic:
+          - generic: "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts"
+          - generic: Domi Kids Shorts • 1,290,868,617 views
+        - generic:
+          - status [ref=e77]
+          - button "Play/Pause" [ref=e78] [cursor=pointer]
+          - generic [ref=e81]:
+            - generic:
+              - slider "Seek":
+                - generic [ref=e82] [cursor=pointer]
+            - generic:
+              - generic:
+                - button "Play/Pause" [ref=e83] [cursor=pointer]
+                - generic [ref=e86]:
+                  - button "Mute/Unmute" [ref=e87] [cursor=pointer]
+                  - generic:
+                    - slider "Volume": "1"
+                - generic [ref=e91]:
+                  - generic [ref=e92] [cursor=pointer]: 00:12
+                  - generic [ref=e93] [cursor=pointer]: /
+                  - generic [ref=e94] [cursor=pointer]: 00:12
+              - generic [ref=e95]:
+                - button "Settings" [ref=e97] [cursor=pointer]
+                - button "More Settings" [ref=e101] [cursor=pointer]
+                - button "Fullscreen" [ref=e104] [cursor=pointer]
+          - generic "360° look around":
+            - generic:
+              - generic: ▲
+              - generic: ▼
+              - generic: ◀
+              - generic: ▶
+      - generic [ref=e16]:
+        - button "Previous" [ref=e17]: ↑
+        - button "Next" [ref=e18]: ↓
+    - generic [ref=e20]:
+      - generic [ref=e108]:
+        - 'img "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=e109]'
+        - generic:
+          - generic: "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 643,057,726 views
+      - generic [ref=e22]:
+        - button "Previous" [ref=e23]: ↑
+        - button "Next" [ref=e24]: ↓
+    - generic [ref=e26]:
+      - generic [ref=e111]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=e112]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 307,643,109 views
+      - generic [ref=e28]:
+        - button "Previous" [ref=e29]: ↑
+        - button "Next" [ref=e30]: ↓
+    - generic [ref=e32]:
+      - generic [ref=e114]:
+        - 'img "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart" [ref=e115]'
+        - generic:
+          - generic: "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart"
+          - generic: Goodland Short • 965,798,996 views
+      - generic [ref=e34]:
+        - button "Previous" [ref=e35]: ↑
+        - button "Next" [ref=e36]: ↓
+    - generic [ref=e38]:
+      - generic [ref=e117]:
+        - 'img "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts" [ref=e118]'
+        - generic:
+          - generic: "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts"
+          - generic: SANDHU IS LIVE YT • 2,067,315 views
+      - generic [ref=e40]:
+        - button "Previous" [ref=e41]: ↑
+        - button "Next" [ref=e42]: ↓
+    - generic [ref=e44]:
+      - generic [ref=e120]:
+        - 'img "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire" [ref=e121]'
+        - generic:
+          - generic: "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire"
+          - generic: Senior Bhai • 1,696,402 views
+      - generic [ref=e46]:
+        - button "Previous" [ref=e47]: ↑
+        - button "Next" [ref=e48]: ↓
+    - generic [ref=e50]:
+      - generic [ref=e123]:
+        - 'img "🔴GTA 5 LIVE 🔥#shortsfeed #shortslive #gta #shorts #live #gta5" [ref=e124]'
+        - generic:
+          - generic: "🔴GTA 5 LIVE 🔥#shortsfeed #shortslive #gta #shorts #live #gta5"
+          - generic: ADITYAISLIVE • 1,287,711 views
+      - generic [ref=e52]:
+        - button "Previous" [ref=e53]: ↑
+        - button "Next" [ref=e54]: ↓
+    - generic [ref=e56]:
+      - generic [ref=e126]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts" [ref=e127]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 85,027,405 views
+      - generic [ref=e58]:
+        - button "Previous" [ref=e59]: ↑
+        - button "Next" [ref=e60]: ↓
+    - generic [ref=e62]:
+      - generic [ref=e129]:
+        - 'img "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts" [ref=e130]'
+        - generic:
+          - generic: "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts"
+          - generic: Netflix Jr. • 1,272,966,235 views
+      - generic [ref=e64]:
+        - button "Previous" [ref=e65]: ↑
+        - button "Next" [ref=e66]: ↓
+    - generic [ref=e68]:
+      - generic [ref=e132]:
+        - 'img "Which color is your favorite ? #shorts #art #color #colour #art" [ref=e133]'
+        - generic:
+          - generic: "Which color is your favorite ? #shorts #art #color #colour #art"
+          - generic: World Art World • 113,104,759 views
+      - generic [ref=e70]:
+        - button "Previous" [ref=e71]: ↑
+        - button "Next" [ref=e72]: ↓

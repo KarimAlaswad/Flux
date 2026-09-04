@@ -1,5 +1,5 @@
 {
-  "name": "yt-feed",
+  "name": "yt-video",
   "version": "1.0.0",
   "run": "bun ./main.ts",
   "hooks": ["feed.video"],

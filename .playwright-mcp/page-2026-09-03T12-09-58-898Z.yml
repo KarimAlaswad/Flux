@@ -1,0 +1,9 @@
+- generic [ref=f2e5]:
+  - generic [ref=f2e6]:
+    - button "Video" [ref=f2e7]
+    - button "Short" [ref=f2e8]
+  - generic [ref=f2e12]:
+    - generic [ref=f2e13]:
+      - paragraph [ref=f2e14]: 0 items
+      - button "Refresh" [ref=f2e15]
+    - generic [ref=f2e16]: No items to display

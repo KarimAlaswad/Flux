@@ -46,20 +46,15 @@ export default function FeedTabs({ manifests }: { manifests: any }) {
     }
   }, [feedTypes]);
 
-  // ---- Create feed-widget instances and toggle visibility ----
-  // This effect runs whenever the active tab, manifests, or feed types change.
+  // ---- Create feed instances and toggle visibility ----
+  // video -> <feed-widget> (generic cards), short -> <shorts-feed> (vertical snap inline feed)
+  // Discovered via feeds[].type: "short" surfaces as a tab automatically (no host changes)
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // For each feed type, create a wrapper div and a <feed-widget> inside it
     for (const type of feedTypes) {
-      // Skip if we already created this wrapper (keep existing instances alive)
-      // This is how tab persistence works — we never destroy, just hide.
       if (wrappersRef.current[type]) continue;
 
-      // Filter manifests: keep only the feeds that match this type.
-      // e.g. for type "video", keep manifests where feeds[].type === "video"
-      // This means each feed-widget only sees its own type's sources.
       const filtered = manifests
         .map((m: any) => ({
           ...m,
@@ -67,35 +62,35 @@ export default function FeedTabs({ manifests }: { manifests: any }) {
         }))
         .filter((m: any) => m.feeds.length > 0);
 
-      // Create a wrapper div — this is what we show/hide.
-      // Starting hidden so it doesn't flash on screen.
       const wrapper = document.createElement("div");
       wrapper.style.display = "none";
+      wrapper.style.height = "100%";
 
-      // Resolve the feed widget dynamically via hook.
-      // feed-widget declares hooks: ["feed.widget"] — we find its tag
-      // from components[0], so we never hardcode a tag name.
-      // Someone can replace feed-widget with a different widget
-      // by providing a plugin that also declares hooks: ["feed.widget"].
-      const renderer = manifests.find((m: any) =>
-        m.hooks?.includes("feed.widget"),
-      );
-      const rendererTag = renderer?.components?.[0];
-      if (rendererTag) {
-        customElements.whenDefined(rendererTag).then(() => {
-          const el = document.createElement(rendererTag);
-          el.manifests = filtered;
+      // For shorts, use the vertical shorts-feed (scroll-snap, inline player)
+      // Otherwise use the generic feed-widget.
+      const isShort = type === "short";
+      const hookName = isShort ? "shorts.feed" : "feed.widget";
+      const provider = manifests.find((m: any) => m.hooks?.includes(hookName));
+      const fallback = !isShort
+        ? manifests.find((m: any) => m.hooks?.includes("feed.widget"))
+        : null;
+      const target = provider ?? fallback;
+      const tag = target?.components?.[0];
+
+      if (tag) {
+        customElements.whenDefined(tag).then(() => {
+          const el = document.createElement(tag);
+          // shorts-feed expects full manifests to resolve feed.short via callHook
+          // feed-widget expects filtered per-type (existing contract)
+          el.manifests = isShort ? manifests : filtered;
           wrapper.appendChild(el);
         });
       }
 
-      // Append wrapper to the container and remember it in our ref map
       containerRef.current!.appendChild(wrapper);
       wrappersRef.current[type] = wrapper;
     }
 
-    // Toggle visibility: show the active tab, hide all others.
-    // All instances stay mounted — no refetching when switching back.
     for (const type of feedTypes) {
       if (wrappersRef.current[type]) {
         wrappersRef.current[type].style.display =
@@ -113,10 +108,13 @@ export default function FeedTabs({ manifests }: { manifests: any }) {
   }
 
   // Multiple types: render a tab bar on top, then the content container.
+  // Root is a fixed-height flex column so the tab bar + content never exceed
+  // the viewport — this removes the outer body scrollbar (the feed scrolls
+  // internally instead).
   return (
-    <div>
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Tab bar — horizontal scroll, each button sets the active type */}
-      <div className="flex overflow-x-auto border-b border-white/10">
+      <div className="flex overflow-x-auto border-b border-white/10 shrink-0">
         {feedTypes.map((type) => (
           <button
             key={type}
@@ -133,7 +131,7 @@ export default function FeedTabs({ manifests }: { manifests: any }) {
         ))}
       </div>
       {/* Content area — feed-widget wrapper divs are appended here */}
-      <div ref={containerRef} />
+      <div ref={containerRef} className="flex-1 min-h-0" />
     </div>
   );
 }

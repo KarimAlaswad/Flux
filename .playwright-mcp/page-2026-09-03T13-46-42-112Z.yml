@@ -1,0 +1,140 @@
+- generic [ref=f10e5]:
+  - generic [ref=f10e6]:
+    - button "Video" [ref=f10e7]
+    - button "Short" [ref=f10e8]
+  - generic [ref=f10e198]:
+    - generic [ref=f10e200]:
+      - generic [ref=f10e203]:
+        - 'img "Belly Button Song Dance! Learn about the Body! CoComelon #Shorts" [ref=f10e204]'
+        - generic:
+          - generic: "Belly Button Song Dance! Learn about the Body! CoComelon #Shorts"
+          - generic: Cocomelon - Nursery Rhymes • 1,297,291,625 views
+        - generic:
+          - status [ref=f10e205]
+          - button "Play/Pause" [ref=f10e335]
+          - generic [ref=f10e206]:
+            - generic:
+              - slider "Seek"
+            - generic:
+              - generic:
+                - button "Play/Pause" [ref=f10e208]
+                - generic [ref=f10e211]:
+                  - button "Mute/Unmute" [ref=f10e212]
+                  - generic:
+                    - slider "Volume": "1"
+                - generic [ref=f10e216]:
+                  - generic [ref=f10e217]: 00:14
+                  - generic [ref=f10e218]: /
+                  - generic [ref=f10e219]: 00:14
+              - generic [ref=f10e220]:
+                - button "Settings" [ref=f10e222]
+                - button "More Settings" [ref=f10e226]
+                - button "Fullscreen" [ref=f10e229]
+          - generic "360° look around":
+            - generic:
+              - generic: ▲
+              - generic: ▼
+              - generic: ◀
+              - generic: ▶
+      - generic [ref=f10e232]:
+        - button "Previous" [ref=f10e233]: ↑
+        - button "Next" [ref=f10e234]: ↓
+    - generic [ref=f10e236]:
+      - generic [ref=f10e239]:
+        - 'img "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts" [ref=f10e240]'
+        - generic:
+          - generic: "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts"
+          - generic: Domi Kids Shorts • 1,290,871,489 views
+      - generic [ref=f10e241]:
+        - button "Previous" [ref=f10e242]: ↑
+        - button "Next" [ref=f10e243]: ↓
+    - generic [ref=f10e245]:
+      - generic [ref=f10e248]:
+        - 'img "Belly Button Song | Cocomelon | Learning #shorts | Kids Videos" [ref=f10e249]'
+        - generic:
+          - generic: "Belly Button Song | Cocomelon | Learning #shorts | Kids Videos"
+          - generic: Moonbug Kids - Learning Shorts • 104,772,776 views
+      - generic [ref=f10e250]:
+        - button "Previous" [ref=f10e251]: ↑
+        - button "Next" [ref=f10e252]: ↓
+    - generic [ref=f10e254]:
+      - generic [ref=f10e257]:
+        - 'img "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=f10e258]'
+        - generic:
+          - generic: "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 643,199,894 views
+      - generic [ref=f10e259]:
+        - button "Previous" [ref=f10e260]: ↑
+        - button "Next" [ref=f10e261]: ↓
+    - generic [ref=f10e263]:
+      - generic [ref=f10e266]:
+        - 'img "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart" [ref=f10e267]'
+        - generic:
+          - generic: "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart"
+          - generic: Goodland Short • 965,843,627 views
+      - generic [ref=f10e268]:
+        - button "Previous" [ref=f10e269]: ↑
+        - button "Next" [ref=f10e270]: ↓
+    - generic [ref=f10e272]:
+      - generic [ref=f10e275]:
+        - 'img "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts" [ref=f10e276]'
+        - generic:
+          - generic: "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts"
+          - generic: SANDHU IS LIVE YT • 2,067,315 views
+      - generic [ref=f10e277]:
+        - button "Previous" [ref=f10e278]: ↑
+        - button "Next" [ref=f10e279]: ↓
+    - generic [ref=f10e281]:
+      - generic [ref=f10e284]:
+        - 'img "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire" [ref=f10e285]'
+        - generic:
+          - generic: "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire"
+          - generic: Senior Bhai • 1,696,402 views
+      - generic [ref=f10e286]:
+        - button "Previous" [ref=f10e287]: ↑
+        - button "Next" [ref=f10e288]: ↓
+    - generic [ref=f10e290]:
+      - generic [ref=f10e293]:
+        - 'img "LIVE WWE 2K25 Gameplay #shorts #shortsfeed" [ref=f10e294]'
+        - generic:
+          - generic: "LIVE WWE 2K25 Gameplay #shorts #shortsfeed"
+          - generic: Urms gaming • 144,000 views
+      - generic [ref=f10e295]:
+        - button "Previous" [ref=f10e296]: ↑
+        - button "Next" [ref=f10e297]: ↓
+    - generic [ref=f10e299]:
+      - generic [ref=f10e302]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=f10e303]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 307,721,852 views
+      - generic [ref=f10e304]:
+        - button "Previous" [ref=f10e305]: ↑
+        - button "Next" [ref=f10e306]: ↓
+    - generic [ref=f10e308]:
+      - generic [ref=f10e311]:
+        - 'img "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts" [ref=f10e312]'
+        - generic:
+          - generic: "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts"
+          - generic: Netflix Jr. • 1,273,035,273 views
+      - generic [ref=f10e313]:
+        - button "Previous" [ref=f10e314]: ↑
+        - button "Next" [ref=f10e315]: ↓
+    - generic [ref=f10e317]:
+      - generic [ref=f10e320]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts" [ref=f10e321]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 85,116,717 views
+      - generic [ref=f10e322]:
+        - button "Previous" [ref=f10e323]: ↑
+        - button "Next" [ref=f10e324]: ↓
+    - generic [ref=f10e326]:
+      - generic [ref=f10e329]:
+        - 'img "Which color is your favorite ? #shorts #art #color #colour #art" [ref=f10e330]'
+        - generic:
+          - generic: "Which color is your favorite ? #shorts #art #color #colour #art"
+          - generic: World Art World • 113,195,511 views
+      - generic [ref=f10e331]:
+        - button "Previous" [ref=f10e332]: ↑
+        - button "Next" [ref=f10e333]: ↓

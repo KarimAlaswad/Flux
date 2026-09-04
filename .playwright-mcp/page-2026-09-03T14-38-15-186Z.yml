@@ -1,0 +1,158 @@
+- generic [ref=f16e5]:
+  - generic [ref=f16e6]:
+    - button "Video" [ref=f16e7]
+    - button "Short" [ref=f16e8]
+  - generic [ref=f16e12]:
+    - generic [ref=f16e13]:
+      - paragraph [ref=f16e14]: 15 items
+      - button "Refresh" [ref=f16e15]
+    - generic [ref=f16e18] [cursor=pointer]:
+      - img "Glass Half" [ref=f16e19]
+      - generic [ref=f16e20]:
+        - paragraph [ref=f16e21]: Glass Half
+        - paragraph [ref=f16e22]: root . 17596 views . 3:13
+        - generic [ref=f16e23]:
+          - generic [ref=f16e24]: Films
+          - generic [ref=f16e25]: Attribution
+          - generic [ref=f16e26]: English
+        - paragraph [ref=f16e27]: 2017-10-19T12:45:20.876Z
+    - generic [ref=f16e30] [cursor=pointer]:
+      - 'img "PeerTube : préparer l''alternative à Youtube - HS - Monsieur Bidouille" [ref=f16e31]'
+      - generic [ref=f16e32]:
+        - paragraph [ref=f16e33]: "PeerTube : préparer l'alternative à Youtube - HS - Monsieur Bidouille"
+        - paragraph [ref=f16e34]: chocobozzz . 7642 views . 8:12
+        - generic [ref=f16e35]:
+          - generic [ref=f16e36]: Science & Technology
+          - generic [ref=f16e37]: Attribution
+          - generic [ref=f16e38]: French
+        - paragraph [ref=f16e39]: 2018-01-17T17:09:08.500Z
+    - generic [ref=f16e42] [cursor=pointer]:
+      - img "Old PeerTube demonstration" [ref=f16e43]
+      - generic [ref=f16e44]:
+        - paragraph [ref=f16e45]: Old PeerTube demonstration
+        - paragraph [ref=f16e46]: root . 15057 views . 2:28
+        - generic [ref=f16e47]:
+          - generic [ref=f16e48]: Science & Technology
+          - generic [ref=f16e49]: Attribution
+          - generic [ref=f16e50]: Unknown
+        - paragraph [ref=f16e51]: 2017-10-18T13:05:51.467Z
+    - generic [ref=f16e54] [cursor=pointer]:
+      - img "The PeerTube Kodi addon in action" [ref=f16e55]
+      - generic [ref=f16e56]:
+        - paragraph [ref=f16e57]: The PeerTube Kodi addon in action
+        - paragraph [ref=f16e58]: stcyr . 4590 views . 4:34
+        - generic [ref=f16e59]:
+          - generic [ref=f16e60]: Science & Technology
+          - generic [ref=f16e61]: Attribution - Non Commercial
+          - generic [ref=f16e62]: Unknown
+        - paragraph [ref=f16e63]: 2018-08-02T13:55:13.338Z
+    - generic [ref=f16e66] [cursor=pointer]:
+      - img "Let's de-Google-ify the Internet (Bruxelles, FOSDEM 2017)" [ref=f16e67]
+      - generic [ref=f16e68]:
+        - paragraph [ref=f16e69]: Let's de-Google-ify the Internet (Bruxelles, FOSDEM 2017)
+        - paragraph [ref=f16e70]: spf . 8076 views . 24:53
+        - generic [ref=f16e71]:
+          - generic [ref=f16e72]: Activism
+          - generic [ref=f16e73]: Public Domain Dedication
+          - generic [ref=f16e74]: English
+        - paragraph [ref=f16e75]: 2017-10-20T09:11:13.113Z
+    - generic [ref=f16e78] [cursor=pointer]:
+      - img "« Contributopia », Dégoogliser ne suffit pas (Toulouse, novembre 2017)" [ref=f16e79]
+      - generic [ref=f16e80]:
+        - paragraph [ref=f16e81]: « Contributopia », Dégoogliser ne suffit pas (Toulouse, novembre 2017)
+        - paragraph [ref=f16e82]: chocobozzz . 2884 views . 113:46
+        - generic [ref=f16e83]:
+          - generic [ref=f16e84]: Science & Technology
+          - generic [ref=f16e85]: Attribution - Share Alike
+          - generic [ref=f16e86]: French
+        - paragraph [ref=f16e87]: 2018-03-09T10:57:11.966Z
+    - generic [ref=f16e90] [cursor=pointer]:
+      - img "PeerTube demo with Mastodon" [ref=f16e91]
+      - generic [ref=f16e92]:
+        - paragraph [ref=f16e93]: PeerTube demo with Mastodon
+        - paragraph [ref=f16e94]: chocobozzz . 19903 views . 1:20
+        - generic [ref=f16e95]:
+          - generic [ref=f16e96]: Science & Technology
+          - generic [ref=f16e97]: Public Domain Dedication
+          - generic [ref=f16e98]: Unknown
+        - paragraph [ref=f16e99]: 2018-01-05T14:07:54.967Z
+    - generic [ref=f16e102] [cursor=pointer]:
+      - img "Morning Storm" [ref=f16e103]
+      - generic [ref=f16e104]:
+        - paragraph [ref=f16e105]: Morning Storm
+        - paragraph [ref=f16e106]: chocobozzz . 3176 views . 0:30
+        - generic [ref=f16e107]:
+          - generic [ref=f16e108]: Art
+          - generic [ref=f16e109]: Unknown
+          - generic [ref=f16e110]: Unknown
+        - paragraph [ref=f16e111]: 2018-01-12T15:12:50.379Z
+    - generic [ref=f16e114] [cursor=pointer]:
+      - img "Nothing to Hide (VOSTFR)" [ref=f16e115]
+      - generic [ref=f16e116]:
+        - paragraph [ref=f16e117]: Nothing to Hide (VOSTFR)
+        - paragraph [ref=f16e118]: chocobozzz . 15118 views . 86:00
+        - generic [ref=f16e119]:
+          - generic [ref=f16e120]: Films
+          - generic [ref=f16e121]: Attribution - Non Commercial
+          - generic [ref=f16e122]: English
+        - paragraph [ref=f16e123]: 2017-10-23T07:54:38.155Z
+    - generic [ref=f16e126] [cursor=pointer]:
+      - img "Big Buck Bunny" [ref=f16e127]
+      - generic [ref=f16e128]:
+        - paragraph [ref=f16e129]: Big Buck Bunny
+        - paragraph [ref=f16e130]: olivier . 8152 views . 9:56
+        - generic [ref=f16e131]:
+          - generic [ref=f16e132]: Films
+          - generic [ref=f16e133]: Attribution
+          - generic [ref=f16e134]: English
+        - paragraph [ref=f16e135]: 2017-12-05T14:30:31.761Z
+    - generic [ref=f16e138] [cursor=pointer]:
+      - img "Framasoft, Degooglisons, CHATONS, questions éthiques pour les ingénieurs par Frédéric Urbain" [ref=f16e139]
+      - generic [ref=f16e140]:
+        - paragraph [ref=f16e141]: Framasoft, Degooglisons, CHATONS, questions éthiques pour les ingénieurs par Frédéric Urbain
+        - paragraph [ref=f16e142]: spf . 2904 views . 43:50
+        - generic [ref=f16e143]:
+          - generic [ref=f16e144]: Activism
+          - generic [ref=f16e145]: Attribution - Share Alike
+          - generic [ref=f16e146]: French
+        - paragraph [ref=f16e147]: 2017-12-11T15:24:44.167Z
+    - generic [ref=f16e150] [cursor=pointer]:
+      - img "The Internet's Own Boy" [ref=f16e151]
+      - generic [ref=f16e152]:
+        - paragraph [ref=f16e153]: The Internet's Own Boy
+        - paragraph [ref=f16e154]: Tester42 . 15708 views . 104:59
+        - generic [ref=f16e155]:
+          - generic [ref=f16e156]: Films
+          - generic [ref=f16e157]: Attribution - Non Commercial - Share Alike
+          - generic [ref=f16e158]: English
+        - paragraph [ref=f16e159]: 2017-10-17T14:04:23.288Z
+    - generic [ref=f16e162] [cursor=pointer]:
+      - img "Quelle infrastructure pour dégoogliser Internet ? (Nantes, JRES 2017)" [ref=f16e163]
+      - generic [ref=f16e164]:
+        - paragraph [ref=f16e165]: Quelle infrastructure pour dégoogliser Internet ? (Nantes, JRES 2017)
+        - paragraph [ref=f16e166]: root . 7132 views . 46:41
+        - generic [ref=f16e167]:
+          - generic [ref=f16e168]: Science & Technology
+          - generic [ref=f16e169]: Public Domain Dedication
+          - generic [ref=f16e170]: French
+        - paragraph [ref=f16e171]: 2017-11-18T21:52:37.894Z
+    - generic [ref=f16e174] [cursor=pointer]:
+      - img "Sintel trailer" [ref=f16e175]
+      - generic [ref=f16e176]:
+        - paragraph [ref=f16e177]: Sintel trailer
+        - paragraph [ref=f16e178]: root . 6349 views . 0:52
+        - generic [ref=f16e179]:
+          - generic [ref=f16e180]: Films
+          - generic [ref=f16e181]: Attribution
+          - generic [ref=f16e182]: English
+        - paragraph [ref=f16e183]: 2017-10-17T13:48:25.357Z
+    - generic [ref=f16e186] [cursor=pointer]:
+      - img "Créer le site de votre association avec les pages Framasite" [ref=f16e187]
+      - generic [ref=f16e188]:
+        - paragraph [ref=f16e189]: Créer le site de votre association avec les pages Framasite
+        - paragraph [ref=f16e190]: tcit . 2591 views . 7:28
+        - generic [ref=f16e191]:
+          - generic [ref=f16e192]: How To
+          - generic [ref=f16e193]: Attribution - Share Alike
+          - generic [ref=f16e194]: French
+        - paragraph [ref=f16e195]: 2018-02-13T15:57:15.666Z

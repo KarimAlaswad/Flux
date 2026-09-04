@@ -1,0 +1,139 @@
+- generic [ref=f12e5]:
+  - generic [ref=f12e6]:
+    - button "Video" [ref=f12e7]
+    - button "Short" [ref=f12e8]
+  - generic [ref=f12e12]:
+    - generic [ref=f12e14]:
+      - generic [ref=f12e17]:
+        - 'img "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts" [ref=f12e18]'
+        - generic:
+          - generic: "Sharing Is Caring with Domi and Ariel #domikids #kidssongs #shorts"
+          - generic: Domi Kids Shorts • 1,290,871,999 views
+        - generic:
+          - status [ref=f12e122]
+          - generic [ref=f12e123]:
+            - generic:
+              - slider "Seek"
+            - generic:
+              - generic:
+                - button "Play/Pause" [ref=f12e125]
+                - generic [ref=f12e128]:
+                  - button "Mute/Unmute" [ref=f12e129]
+                  - generic:
+                    - slider "Volume": "1"
+                - generic [ref=f12e133]:
+                  - generic [ref=f12e134]: 0:00
+                  - generic [ref=f12e135]: /
+                  - generic [ref=f12e136]: 0:00
+              - generic [ref=f12e137]:
+                - button "Settings" [ref=f12e139]
+                - button "More Settings" [ref=f12e143]
+                - button "Fullscreen" [ref=f12e146]
+          - generic "360° look around":
+            - generic:
+              - generic: ▲
+              - generic: ▼
+              - generic: ◀
+              - generic: ▶
+      - generic [ref=f12e19]:
+        - button "Previous" [ref=f12e20]: ↑
+        - button "Next" [ref=f12e21]: ↓
+    - generic [ref=f12e23]:
+      - generic [ref=f12e26]:
+        - 'img "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=f12e27]'
+        - generic:
+          - generic: "Tom 🍓 Jerry (Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 643,226,649 views
+      - generic [ref=f12e28]:
+        - button "Previous" [ref=f12e29]: ↑
+        - button "Next" [ref=f12e30]: ↓
+    - generic [ref=f12e32]:
+      - generic [ref=f12e35]:
+        - 'img "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire" [ref=f12e36]'
+        - generic:
+          - generic: "🔴 LIVE | Top 1 Grandmaster Push 🔥 | Free Fire Shorts Live #shorts #shortslive #freefire"
+          - generic: Senior Bhai • 516 watching
+      - generic [ref=f12e37]:
+        - button "Previous" [ref=f12e38]: ↑
+        - button "Next" [ref=f12e39]: ↓
+    - generic [ref=f12e41]:
+      - generic [ref=f12e44]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts" [ref=f12e45]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist 😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 307,735,551 views
+      - generic [ref=f12e46]:
+        - button "Previous" [ref=f12e47]: ↑
+        - button "Next" [ref=f12e48]: ↓
+    - generic [ref=f12e50]:
+      - generic [ref=f12e53]:
+        - 'img "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts" [ref=f12e54]'
+        - generic:
+          - generic: "Keyboard Escape Roblox Live Stream #roblox #keyboardescape #shorts"
+          - generic: SANDHU IS LIVE YT • 2,067,315 views
+      - generic [ref=f12e55]:
+        - button "Previous" [ref=f12e56]: ↑
+        - button "Next" [ref=f12e57]: ↓
+    - generic [ref=f12e59]:
+      - generic [ref=f12e62]:
+        - 'img "LIVE WWE 2K25 Gameplay #shorts #shortsfeed" [ref=f12e63]'
+        - generic:
+          - generic: "LIVE WWE 2K25 Gameplay #shorts #shortsfeed"
+          - generic: Urms gaming • 1,692,580 views
+      - generic [ref=f12e64]:
+        - button "Previous" [ref=f12e65]: ↑
+        - button "Next" [ref=f12e66]: ↓
+    - generic [ref=f12e68]:
+      - generic [ref=f12e71]:
+        - 'img "LIVE WWE 2K25 Gameplay #shorts #shortsfeed" [ref=f12e72]'
+        - generic:
+          - generic: "LIVE WWE 2K25 Gameplay #shorts #shortsfeed"
+          - generic: Urms gaming • 144,000 views
+      - generic [ref=f12e73]:
+        - button "Previous" [ref=f12e74]: ↑
+        - button "Next" [ref=f12e75]: ↓
+    - generic [ref=f12e77]:
+      - generic [ref=f12e80]:
+        - 'img "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart" [ref=f12e81]'
+        - generic:
+          - generic: "Goodland | Mango babies 😋 #goodland #shorts #doodles #doodlesart"
+          - generic: Goodland Short • 965,853,916 views
+      - generic [ref=f12e82]:
+        - button "Previous" [ref=f12e83]: ↑
+        - button "Next" [ref=f12e84]: ↓
+    - generic [ref=f12e86]:
+      - generic [ref=f12e89]:
+        - 'img "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts" [ref=f12e90]'
+        - generic:
+          - generic: "Tom 🍓Jerry(Rithvi&Kavi)Real End Twist😂🎈 #shorts"
+          - generic: KL BRO Biju Rithvik • 85,131,639 views
+      - generic [ref=f12e91]:
+        - button "Previous" [ref=f12e92]: ↑
+        - button "Next" [ref=f12e93]: ↓
+    - generic [ref=f12e95]:
+      - generic [ref=f12e98]:
+        - 'img "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts" [ref=f12e99]'
+        - generic:
+          - generic: "Sharing Snacks! 🍡 Mighty Little Bheem | Netflix Jr #shorts"
+          - generic: Netflix Jr. • 1,273,050,384 views
+      - generic [ref=f12e100]:
+        - button "Previous" [ref=f12e101]: ↑
+        - button "Next" [ref=f12e102]: ↓
+    - generic [ref=f12e104]:
+      - generic [ref=f12e107]:
+        - 'img "Which color is your favorite ? #shorts #art #color #colour #art" [ref=f12e108]'
+        - generic:
+          - generic: "Which color is your favorite ? #shorts #art #color #colour #art"
+          - generic: World Art World • 113,212,688 views
+      - generic [ref=f12e109]:
+        - button "Previous" [ref=f12e110]: ↑
+        - button "Next" [ref=f12e111]: ↓
+    - generic [ref=f12e113]:
+      - generic [ref=f12e116]:
+        - 'img "Car 🚘 Didi ki hai Rudra ko kya mila #shorts #viral #funny #prank" [ref=f12e117]'
+        - generic:
+          - generic: "Car 🚘 Didi ki hai Rudra ko kya mila #shorts #viral #funny #prank"
+          - generic: Ranwa Family • 330,769,649 views
+      - generic [ref=f12e118]:
+        - button "Previous" [ref=f12e119]: ↑
+        - button "Next" [ref=f12e120]: ↓

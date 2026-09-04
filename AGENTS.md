@@ -1,9 +1,3 @@
-AI agents: do NOT make any code changes directly. The user will review your suggestions and apply them manually. You may read, explore, and suggest, but never write or edit code files.
-
-Exception: **Markdown files** (`.md`) are editable by the agent — AGENTS.md, CONTEXT.md, docs/adr/_.md, .scratch/\*\*/_. These are docs, not code.
-
-When suggesting code changes, explain everything new you're adding in detail — the user is a beginner learning to program. Include what each piece does, why it's needed, and how it fits together.
-
 ## Agent skills
 
 ### Issue tracker

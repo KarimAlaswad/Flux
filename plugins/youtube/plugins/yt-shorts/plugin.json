@@ -1,0 +1,12 @@
+{
+  "name": "yt-shorts",
+  "version": "1.0.0",
+  "run": "bun ./main.ts",
+  "hooks": ["feed.short"],
+  "methods": ["feed", "resolve"],
+  "feeds": [
+    {
+      "type": "short"
+    }
+  ]
+}

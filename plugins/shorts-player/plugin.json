@@ -1,0 +1,6 @@
+{
+  "name": "shorts-player",
+  "version": "1.0.0",
+  "hooks": ["video.shorts.player"],
+  "components": ["shorts-player"]
+}

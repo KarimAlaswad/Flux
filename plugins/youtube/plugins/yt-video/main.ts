@@ -8,12 +8,12 @@ import { existsSync, readFileSync } from "fs";
 // needs to evaluate them at runtime (signature + nsig transformation). On Node
 // this uses the `vm` module, but Bun doesn't have it — so we provide a simple
 // eval via `new Function`.
-const _origEval = Platform.shim.eval
-Platform.shim.eval = (data: any, _env: any) => new Function(data.output)()
+const _origEval = Platform.shim.eval;
+Platform.shim.eval = (data: any, _env: any) => new Function(data.output)();
 
 let cookieStr: string | null = null;
 const cookieFile = join(import.meta.dir, "..", "..", ".youtube-cookie");
-let tube: any = null
+let tube: any = null;
 
 function loadCookie(): string | null {
   try {
@@ -50,8 +50,8 @@ startStdin(async ({ method, params, id }, send) => {
         tube = await Innertube.create({
           cookie: cookieStr,
           cache: new UniversalCache(true),
-        })
-      };
+        });
+      }
 
       const home = await Promise.race([
         tube.getHomeFeed(),
@@ -107,20 +107,75 @@ startStdin(async ({ method, params, id }, send) => {
       }
       send(id, videos.slice(0, params.limit || 30));
     } else if (method === "resolve") {
-      const url = params?.url
-      if (!url) { send(id, null, "Missing url"); return }
-      const videoId = new URL(url).searchParams.get("v")
-      if (!videoId) { send(id, null, "Invalid Youtube URL"); return }
+      const url = params?.url;
+      if (!url) {
+        send(id, null, "Missing url");
+        return;
+      }
+      const videoId = new URL(url).searchParams.get("v");
+      if (!videoId) {
+        send(id, null, "Invalid Youtube URL");
+        return;
+      }
       if (!tube) {
         tube = await Innertube.create({
           cookie: cookieStr,
           cache: new UniversalCache(true),
-        })
+        });
       }
-      const format = await tube.getStreamingData(videoId, { type: 'video+audio', format: 'mp4', quality: 'best' })
-      send(id, { url: format?.url || url })
+      // Direct progressive URLs first (ANDROID client still serves them, no SABR/UMP).
+      // SABR URLs ignore Range requests, which fetch-based players (movi) require.
+      let streamUrl: string | null = null;
+      try {
+        const basic: any = await tube.getBasicInfo(videoId, {
+          client: "ANDROID",
+        });
+        const fmts: any[] = basic.streaming_data?.formats || [];
+        const direct =
+          fmts.find((f: any) => f.url && f.mime_type?.includes("mp4")) ||
+          fmts.find((f: any) => f.url);
+        if (direct?.url) streamUrl = direct.url;
+      } catch {}
+      if (streamUrl) {
+        send(id, { url: streamUrl, client: "ANDROID", sabr: false });
+        return;
+      }
+      try {
+        const info: any = await tube.getInfo(videoId);
+        const sd: any = info.streaming_data;
+        const sabr: string | null =
+          sd?.server_abr_streaming_url || sd?.serverAbrStreamingUrl || null;
+        if (sabr && typeof sabr === "string" && sabr.startsWith("http"))
+          streamUrl = sabr;
+        if (!streamUrl) {
+          const chosen: any = info.chooseFormat({
+            type: "video+audio",
+            format: "mp4",
+            quality: "best",
+          });
+          streamUrl =
+            chosen?.url ||
+            (chosen?.decipher
+              ? await chosen.decipher(tube.session.player)
+              : null);
+        }
+      } catch {}
+      if (!streamUrl) {
+        const format = await tube.getStreamingData(videoId, {
+          type: "video+audio",
+          format: "mp4",
+          quality: "best",
+        });
+        streamUrl =
+          format?.url ||
+          (format?.decipher
+            ? await format.decipher(tube.session.player)
+            : null) ||
+          url;
+      }
+      send(id, { url: streamUrl || url });
     } else {
-      send(id, null, "Method not found: " + method)
+      send(id, null, "Method not found: " + method);
     }
   } catch (e: any) {
     send(id, null, e.message || String(e));
