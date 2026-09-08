@@ -10,7 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-build/plugins
+build/
 *.local
 
 # Plugins
@@ -31,3 +31,4 @@ opencode.json
 
 prompt.txt
 docs/learning/domains.md
+.playwright-mcp/
