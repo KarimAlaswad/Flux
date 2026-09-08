@@ -1,9 +1,0 @@
-{
-  "name": "core-stream",
-  "version": "1.0.0",
-  "description": "Core plugin: same-origin proxy for media streams (adds CORS headers + forwards Range)",
-  "author": "Me",
-  "run": "bun ./main.ts",
-  "hooks": ["stream.proxy"],
-  "methods": ["getUrl"]
-}
