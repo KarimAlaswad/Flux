@@ -1,36 +1,95 @@
 import { useEffect, useState, useRef } from "react";
 
-// Inline vertical shorts feed — not a modal
-// - Centered column with gutters for arrows/info (like TikTok/Reels)
-// - scroll-snap-type y mandatory, each item 100dvh snap-start
-// - fetch only via Option A getHashtag("shorts"), infinite scroll via continuation
+// DESCRIPTION: Shorts feed React component.
+// This file renders a vertical, scroll-snap feed of short-form video cards.
+// The comments below explain the intent of each declaration and major
+// operation so you can follow the data flow and lifecycle in-place.
 
+// Component signature: optional `manifests` array (not used by the core
+// implementation here, but provided for compatibility with the plugin host).
 export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
+  // `items`: the canonical list of normalized short items displayed in the UI.
   const [items, setItems] = useState<any[]>([]);
+  // `continuation`: pagination token from providers for loading more items.
   const [continuation, setContinuation] = useState<string | null>(null);
+  // `loading`: UI flag while a load is in progress.
   const [loading, setLoading] = useState(false);
+  // `feedError`: string shown to the user when a load fails.
   const [feedError, setFeedError] = useState("");
+  // `activeIdx`: index of the currently centered/active short for counters.
   const [activeIdx, setActiveIdx] = useState(0);
+  // `loadingRef`: imperative ref used to avoid duplicate concurrent loads
+  // in async callbacks (IntersectionObserver handlers, etc.).
   const loadingRef = useRef(false);
+  // `contRef`: imperative holder for continuation to avoid stale closure issues.
   const contRef = useRef<string | null>(null);
+  // `sentinelRef`: DOM node observed for infinite scroll (end-of-list sentinel).
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // `containerRef`: the scrolling container element for the vertical feed.
   const containerRef = useRef<HTMLDivElement>(null);
+  // `itemRefs`: DOM refs to each short item wrapper (used for scrollIntoView).
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // `load(cont)` — fetch a page of items from each configured provider.
+  // - `cont` is an optional continuation token used for pagination.
+  // Implementation notes:
+  //  - We use `loadingRef` to avoid duplicate concurrent loads (common when IO
+  //    triggers call `load` multiple times via IO observers).
+  //  - We query both the YouTube and TikTok providers in parallel using
+  //    `Promise.allSettled` so one failing provider doesn't block the other.
   const load = async (cont?: string | null) => {
-    // Ref guard: `loading` state is stale inside observer callbacks
+    // guard against reentrancy from observer callbacks
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLoading(true);
     setFeedError("");
     try {
+      // provider params: limit and optional continuation token
       const params: any = { limit: 20 };
       if (cont) params.continuation = cont;
-      // Hook dispatch: feed.short (yt-shorts) via skeleton routing
-      const res: any = await (window as any).callHook?.("feed.short", params);
-      const nextItems: any[] = res?.items ?? (Array.isArray(res) ? res : []);
-      const nextCont: string | null = res?.continuation ?? null;
-      // Dedupe by videoId — continuation pages repeat items (baseline showed 3x dupes)
+
+      // Query both providers concurrently. We call each plugin's `feed`
+      // method directly via `__pluginRpc` (pluginName.method). Using the raw
+      // plugin RPC lets us bypass the host's single-provider `call_hook`
+      // resolution which would otherwise return only one provider.
+      const [ytRes, ttRes] = await Promise.allSettled([
+        (window as any).__pluginRpc?.("yt-shorts.feed", params),
+        (window as any).__pluginRpc?.("tiktok-shorts.feed", params),
+      ]);
+
+      // Extract arrays, gracefully handling failures.
+      const ytItems: any[] =
+        ytRes.status === "fulfilled" ? (ytRes.value?.items ?? []) : [];
+      const ttItems: any[] =
+        ttRes.status === "fulfilled" ? (ttRes.value?.items ?? []) : [];
+
+      // Normalize and annotate each incoming item with `source` and
+      // `provider` fields so downstream UI and the player can choose the
+      // correct provider for resolution/playback.
+      const nextItems = [...ytItems, ...ttItems].map((item: any) => ({
+        ...item,
+        source:
+          item.source ||
+          (item.url?.includes("tiktok.com") ? "tiktok" : "youtube"),
+        provider:
+          item.provider ||
+          (item.url?.includes("tiktok.com") ? "tiktok-shorts" : "yt-shorts"),
+      }));
+
+      // Choose a continuation token. This simple strategy prefers YouTube's
+      // continuation when both providers return tokens, otherwise falls back
+      // to whichever provider succeeded.
+      const nextCont =
+        ytRes.status === "fulfilled" && ttRes.status === "fulfilled"
+          ? (ytRes.value?.continuation ?? ttRes.value?.continuation ?? null)
+          : ytRes.status === "fulfilled"
+            ? (ytRes.value?.continuation ?? null)
+            : ttRes.status === "fulfilled"
+              ? (ttRes.value?.continuation ?? null)
+              : null;
+
+      // Dedupe heuristically by `videoId` to prevent duplicate cards when
+      // pagination or overlap across sources returns the same item.
       setItems((prev) => {
         const seen = new Set(prev.map((i) => i.videoId).filter(Boolean));
         const fresh = nextItems.filter((i) => {
@@ -44,6 +103,7 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
       setContinuation(nextCont);
       contRef.current = nextCont;
     } catch (e: any) {
+      // Surface errors to the UI while keeping the app running
       console.error("[shorts-feed] load failed", e);
       setFeedError(e?.message || String(e));
     } finally {
@@ -114,20 +174,22 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-sm text-white/60">
-        <div>
-          {feedError
-            ? "Feed failed to load"
-            : "No shorts — add yt-shorts source"}
+      <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-sm">
+        <div style={{ color: "var(--text-muted)" }}>
+          {feedError ? "Feed failed to load" : "No shorts — install a source"}
         </div>
         {feedError && (
-          <div className="text-xs opacity-70 max-w-[300px] break-words">
+          <div
+            className="text-xs max-w-[300px] break-words"
+            style={{ color: "var(--text-muted)", opacity: 0.7 }}
+          >
             {feedError}
           </div>
         )}
         <button
           onClick={reload}
-          className="px-4 py-2 rounded bg-white/15 text-white hover:bg-white/25"
+          className="px-4 py-2 rounded-md text-sm transition-colors"
+          style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
         >
           ↻ Retry
         </button>
@@ -172,18 +234,28 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
               className="h-full w-full flex items-center justify-center"
             />
             {/* Up/down arrows - jump to exact item, disabled at ends */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
               <button
                 onClick={() => scrollToIdx(Math.max(idx - 1, 0))}
                 disabled={idx === 0}
-                className="h-10 w-10 rounded-full bg-white/15 text-white backdrop-blur hover:bg-white/25 disabled:opacity-30 disabled:pointer-events-none"
+                className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors disabled:opacity-20 disabled:pointer-events-none"
+                style={{
+                  background: "var(--surface)",
+                  color: "var(--text-muted)",
+                  border: "1px solid var(--border)",
+                }}
                 aria-label="Previous"
               >
                 ↑
               </button>
               <button
                 onClick={() => scrollToIdx(idx + 1)}
-                className="h-10 w-10 rounded-full bg-white/15 text-white backdrop-blur hover:bg-white/25"
+                className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors"
+                style={{
+                  background: "var(--surface)",
+                  color: "var(--text-muted)",
+                  border: "1px solid var(--border)",
+                }}
                 aria-label="Next"
               >
                 ↓
@@ -194,24 +266,44 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
       ))}
       <div ref={sentinelRef} className="h-1 w-full" />
       {loading && (
-        <div className="py-4 text-center text-xs text-white/60">
-          <span className="inline-block h-4 w-4 mr-2 align-middle rounded-full border-2 border-white/30 border-t-white animate-spin" />
+        <div
+          className="py-4 text-center text-xs"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <span
+            className="inline-block h-4 w-4 mr-2 align-middle rounded-full border-2 animate-spin"
+            style={{
+              borderColor: "var(--border)",
+              borderTopColor: "var(--accent)",
+            }}
+          />
           Loading more…
         </div>
       )}
       {feedError && items.length > 0 && (
-        <div className="py-3 text-center text-xs text-red-300/80">
+        <div className="py-3 text-center text-xs" style={{ color: "#EF4444" }}>
           Load failed: {feedError}{" "}
-          <button onClick={() => load(contRef.current)} className="underline">
+          <button
+            onClick={() => load(contRef.current)}
+            className="underline"
+            style={{ color: "var(--accent)" }}
+          >
             retry
           </button>
         </div>
       )}
       {/* Position counter */}
       {items.length > 0 && (
-        <div className="absolute top-3 left-3 px-2 py-1 rounded bg-black/50 text-white text-xs pointer-events-none">
+        <div
+          className="absolute top-3 left-3 px-2 py-1 rounded-md text-xs pointer-events-none"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            color: "var(--text-muted)",
+          }}
+        >
           {activeIdx + 1} / {items.length}
-          {!continuation && " • end"}
+          {!continuation && " · end"}
         </div>
       )}
     </div>

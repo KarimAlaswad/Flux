@@ -3,49 +3,49 @@ import type { PluginManifest } from "./shared/types";
 import { invoke } from "@tauri-apps/api/core";
 
 // WebUi (Experimental)
-declare global {
-  interface Window {
-    webui: {
-      call: (name: string, ...args: any[]) => Promise<any>;
-    };
-  }
-}
+// declare global {
+//   interface Window {
+//     webui: {
+//       call: (name: string, ...args: any[]) => Promise<any>;
+//     };
+//   }
+// }
 
 // -- Globals --
 window.__pluginRpc = async (method: string, params: any) => {
-  // return await invoke("plugin_request", { method, params })
+  return await invoke("plugin_request", { method, params })
   // Webui
-  const result = await webui.call(
-    "plugin_request",
-    method,
-    JSON.stringify(params),
-  );
-  try {
-    return typeof result === "string" ? JSON.parse(result) : result;
-  } catch {
-    return result;
-  }
+  // const result = await webui.call(
+  //   "plugin_request",
+  //   method,
+  //   JSON.stringify(params),
+  // );
+  // try {
+  //   return typeof result === "string" ? JSON.parse(result) : result;
+  // } catch {
+  //   return result;
+  // }
 };
 
 window.resolveHook = async (hook: string) => {
-  // return await invoke("resolve_hook", { hook })
+  return await invoke("resolve_hook", { hook })
   // Webui
-  const result = await webui.call("resolve_hook", hook);
-  return typeof result === "string" ? JSON.parse(result) : result;
+  // const result = await webui.call("resolve_hook", hook);
+  // return typeof result === "string" ? JSON.parse(result) : result;
 };
 
 window.callHook = async (hook: string, methodOrArgs: any, args?: any) => {
   const method = args !== undefined ? methodOrArgs : undefined;
   const params = args !== undefined ? args : methodOrArgs;
-  // return await invoke("call_hook", { hook, method, params })
+  return await invoke("call_hook", { hook, method, params })
   // Webui
-  const result = await webui.call(
-    "call_hook",
-    hook,
-    method || "",
-    JSON.stringify(params),
-  );
-  return typeof result === "string" ? JSON.parse(result) : result;
+  // const result = await webui.call(
+  //   "call_hook",
+  //   hook,
+  //   method || "",
+  //   JSON.stringify(params),
+  // );
+  // return typeof result === "string" ? JSON.parse(result) : result;
 };
 
 const loaded = new Set<string>();
@@ -53,45 +53,45 @@ const loaded = new Set<string>();
 export default function App() {
   const [manifests, setManifests] = useState<PluginManifest[]>([]);
   // Tauri
-  // useEffect(() => {
-  //   init().catch(e => {
-  //     console.error("[app] init() failed:", e)
-  //     const c = document.getElementById("feed-container")
-  //     if (c) c.innerHTML = `<p style="color:red;padding:20px;font-family:monospace">Init error: ${e.message}</p>`
-  //   })
-  // }, [])
+  useEffect(() => {
+    init().catch(e => {
+      console.error("[app] init() failed:", e)
+      const c = document.getElementById("feed-container")
+      if (c) c.innerHTML = `<p style="color:red;padding:20px;font-family:monospace">Init error: ${e.message}</p>`
+    })
+  }, [])
 
   // Webui
-  useEffect(() => {
-    let cancelled = false;
+  // useEffect(() => {
+  //   let cancelled = false;
 
-    async function tryInit(retries = 30) {
-      try {
-        await init();
-      } catch (e: any) {
-        if (
-          !cancelled &&
-          retries > 0 &&
-          e.message?.includes("WebSocket is not connected")
-        ) {
-          await new Promise((r) => setTimeout(r, 200));
-          return tryInit(retries - 1);
-        }
-        throw e;
-      }
-    }
+  //   async function tryInit(retries = 30) {
+  //     try {
+  //       await init();
+  //     } catch (e: any) {
+  //       if (
+  //         !cancelled &&
+  //         retries > 0 &&
+  //         e.message?.includes("WebSocket is not connected")
+  //       ) {
+  //         await new Promise((r) => setTimeout(r, 200));
+  //         return tryInit(retries - 1);
+  //       }
+  //       throw e;
+  //     }
+  //   }
 
-    tryInit().catch((e) => {
-      console.error("[app] init() failed:", e);
-      const c = document.getElementById("feed-container");
-      if (c)
-        c.innerHTML = `<p style="color:red;padding:20px;font-family:monospace">Init error: ${e.message}</p>`;
-    });
+  //   tryInit().catch((e) => {
+  //     console.error("[app] init() failed:", e);
+  //     const c = document.getElementById("feed-container");
+  //     if (c)
+  //       c.innerHTML = `<p style="color:red;padding:20px;font-family:monospace">Init error: ${e.message}</p>`;
+  //   });
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, []);
 
   async function init() {
     console.log("[app] init: fetching manifests...");

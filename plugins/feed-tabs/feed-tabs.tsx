@@ -113,23 +113,31 @@ export default function FeedTabs({ manifests }: { manifests: any }) {
   // internally instead).
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden">
-      {/* Tab bar — horizontal scroll, each button sets the active type */}
-      <div className="flex overflow-x-auto border-b border-white/10 shrink-0">
-        {feedTypes.map((type) => (
-          <button
-            key={type}
-            onClick={() => setActive(type)}
-            className={`px-4 py-2 text-sm whitespace-nowrap transition-colors ${
-              active === type
-                ? "text-white border-b-2 border-white"
-                : "text-white/50 hover:text-white/70"
-            }`}
-          >
-            {/* Capitalize first letter: "video" → "Video" */}
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </button>
-        ))}
-      </div>
+      {/* Tab bar — accent underline on active tab */}
+      <nav className="flex shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
+        {feedTypes.map((type) => {
+          const isActive = type === active;
+          return (
+            <button
+              key={type}
+              onClick={() => setActive(type)}
+              className="relative px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors"
+              style={{
+                color: isActive ? "var(--text)" : "var(--text-muted)",
+              }}
+            >
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+              {/* Accent underline */}
+              <span
+                className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full transition-all"
+                style={{
+                  background: isActive ? "var(--accent)" : "transparent",
+                }}
+              />
+            </button>
+          );
+        })}
+      </nav>
       {/* Content area — feed-widget wrapper divs are appended here */}
       <div ref={containerRef} className="flex-1 min-h-0" />
     </div>

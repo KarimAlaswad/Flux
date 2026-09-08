@@ -38,12 +38,21 @@ export default function PlayerModal({ manifests = [] }: { manifests?: any[] }) {
 
   return (
     <div className={`fixed inset-0 z-50 ${visible ? "" : "hidden"}`}>
-      <div className="absolute inset-0 bg-black/80" />
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(12, 12, 15, 0.92)" }}
+      />
       <button
         onClick={close}
-        className="absolute top-4 right-4 z-10 px-4 py-2 bg-black/50 text-white text-sm rounded hover:bg-black/70"
+        className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center rounded-full text-sm font-medium transition-colors"
+        style={{
+          background: "var(--surface)",
+          color: "var(--text-muted)",
+          border: "1px solid var(--border)",
+        }}
+        aria-label="Close"
       >
-        Close
+        ✕
       </button>
       <div
         ref={slotRef}

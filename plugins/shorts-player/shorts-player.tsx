@@ -1,21 +1,31 @@
-// Shorts use movi-player (same as flux-player): WASM pipeline renders to
-// canvas; the core-stream proxy handles CORS for googlevideo URLs.
-// Mute preference is shared across all shorts items (module state +
-// localStorage) so unmuting once applies to every following video.
-import "movi-player";
+/**
+ * Shorts player component
+ *
+ * Detailed line-level explanation is embedded inline below. High-level:
+ * - Uses `movi-player` web component (WASM renderer) for playback.
+ * - Player instances are created only when the card is highly visible
+ *   (IntersectionObserver threshold 0.85) to limit decoding to one active
+ *   instance at a time.
+ * - Shared mute preference is stored in localStorage under `MUTE_KEY`.
+ */
+import "movi-player"; // custom element (WASM canvas player)
 import { useEffect, useRef, useState } from "react";
 
-// Shared mute state across every shorts-player instance on the page.
-// Default: sound ON (no `muted` attr) — movi-player attempts autoplay with
-// sound and falls back to muted + its own unmute pill only if blocked.
+// localStorage key used to persist the user's short-mute preference.
 const MUTE_KEY = "flux.shorts.muted";
+
+// module-scoped cached mute value (all ShortsPlayer instances read/write this)
 let shortsMuted: boolean = (() => {
   try {
+    // returns true if stored value is "1"
     return localStorage.getItem(MUTE_KEY) === "1";
   } catch {
+    // accessing localStorage may fail in some environments — default false
     return false;
   }
 })();
+
+// helper to update the shared mute preference (module + persistent storage)
 function setShortsMuted(m: boolean) {
   shortsMuted = m;
   try {
@@ -23,24 +33,30 @@ function setShortsMuted(m: boolean) {
   } catch {}
 }
 
-// Separate from flux-player: per-item, strict on-screen playback
-// - No preload with rootMargin, only when threshold 0.85 intersecting
-// - Fetch + play with sound only when scrolled into view
-// - Pause + unmount when off-screen (1 active decoder)
-
+// Component: renders a single short item and manages creating / destroying
+// the `movi-player` instance when the item enters/exits the viewport.
 export default function ShortsPlayer({ item }: { item: any }) {
+  // `ref` is the container element where the webcomponent will be attached.
   const ref = useRef<HTMLDivElement>(null);
+  // `needsTap`: UI state used when autoplay fails and user must tap to play.
   const [needsTap, setNeedsTap] = useState(false);
+  // `loaded`: whether the movi-player instance has finished initial setup.
   const [loaded, setLoaded] = useState(false);
+  // `muted`: UI binding for current mute state (starts from shared state)
   const [muted, setMuted] = useState(shortsMuted);
+  // `paused`: whether the player is paused
   const [paused, setPaused] = useState(false);
+  // `retry`: counter to trigger a reload attempt via effect dependency
   const [retry, setRetry] = useState(0);
+  // `status`: small enum to drive loading spinner / errors
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(
     "idle",
   );
+  // `errorMsg`: display-friendly error text
   const [errorMsg, setErrorMsg] = useState("");
-  // keep refs to created element for cleanup
+  // `elRef`: stores the created movi-player element for cleanup and control
   const elRef = useRef<any>(null);
+  // `videoRef`: optional pointer to the inner <video> fallback for direct control
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -67,10 +83,14 @@ export default function ShortsPlayer({ item }: { item: any }) {
             console.log("[shorts-player] resolving", src);
             // Resolve via yt-shorts (yt-shorts.resolve expects url) — must be deciphered googlevideo.com URL
             let streamUrl = src;
+            const provider =
+              item?.source === "tiktok" || item?.url?.includes("tiktok.com")
+                ? "tiktok-shorts"
+                : "yt-shorts";
             try {
               const result: any = await (window as any).__pluginRpc?.(
-                "yt-shorts.resolve",
-                { url: src },
+                `${provider}.resolve`,
+                { url: src, videoId: item?.videoId },
               );
               console.log(
                 "[shorts-player] resolve result",
@@ -120,9 +140,16 @@ export default function ShortsPlayer({ item }: { item: any }) {
             el.style.display = "block";
             el.style.width = "100%";
             el.style.height = "100%";
+            el.style.background = "black";
             el.setAttribute("src", finalUrl);
             el.setAttribute("autoplay", "");
+            // Restore native controls; keep looping but disable the more aggressive
+            // HDR/ambient rendering that causes the color shift on restart.
             el.setAttribute("controls", "");
+            el.setAttribute("loop", "");
+            el.setAttribute("playsinline", "");
+            el.setAttribute("hdr", "false");
+            el.setAttribute("ambientmode", "false");
             el.setAttribute("fallback", "native");
             el.setAttribute("preload", "metadata");
             // Sound on by default — only set muted when user muted before.
@@ -286,18 +313,35 @@ export default function ShortsPlayer({ item }: { item: any }) {
       )}
       {/* Loading spinner while resolving/streaming */}
       {(status === "loading" || status === "idle") && !loaded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 text-white pointer-events-none">
-          <div className="h-8 w-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-          <span className="text-xs opacity-80">
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none"
+          style={{ background: "rgba(12, 12, 15, 0.5)" }}
+        >
+          <div
+            className="h-7 w-7 rounded-full border-2 animate-spin"
+            style={{
+              borderColor: "var(--border)",
+              borderTopColor: "var(--accent)",
+            }}
+          />
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
             {status === "loading" ? "Loading video…" : "Scroll to play"}
           </span>
         </div>
       )}
       {/* Error state with retry */}
       {status === "error" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 text-white p-4 text-center">
-          <div className="text-2xl">⚠️</div>
-          <div className="text-sm max-w-[260px] break-words">
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center"
+          style={{ background: "rgba(12, 12, 15, 0.8)" }}
+        >
+          <div className="text-xl" style={{ color: "var(--text-muted)" }}>
+            ⚠
+          </div>
+          <div
+            className="text-sm max-w-[260px] break-words"
+            style={{ color: "var(--text-muted)" }}
+          >
             {errorMsg || "Couldn't load this video"}
           </div>
           <button
@@ -305,17 +349,25 @@ export default function ShortsPlayer({ item }: { item: any }) {
               e.stopPropagation();
               onRetry();
             }}
-            className="px-4 py-2 rounded bg-white/20 hover:bg-white/30 text-sm pointer-events-auto"
+            className="px-4 py-1.5 rounded-md text-sm font-medium pointer-events-auto transition-colors"
+            style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
           >
             Retry
           </button>
         </div>
-      )}{" "}
+      )}
       {/* Info overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent text-white pointer-events-none">
+      <div
+        className="absolute bottom-0 left-0 right-0 p-3 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(12,12,15,0.85) 0%, transparent 100%)",
+          color: "var(--text)",
+        }}
+      >
         <div className="text-sm font-medium line-clamp-2">{item?.title}</div>
-        <div className="text-xs opacity-80">
-          {item?.author} • {item?.viewCount}
+        <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+          {item?.author} · {item?.viewCount}
         </div>
       </div>
     </div>

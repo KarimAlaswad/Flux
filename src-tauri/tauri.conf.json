@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.flux.app",
   "build": {
-    "beforeDevCommand": "bun run build:plugins && bunx vite --port 1420",
+    "beforeDevCommand": "bunx vite",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"

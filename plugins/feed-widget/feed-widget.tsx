@@ -206,12 +206,12 @@ export default function Feed({ manifests }: FeedProps) {
   // State 1: System error
   if (systemError) {
     return (
-      <div className="bg-red-100 border border-red-400 rounded-lg p-4">
-        <p className="text-red-700 font-medium">Failed to load feed</p>
-        <p className="text-red-600 text-sm mt-1">{systemError}</p>
+      <div className="m-4 p-4 rounded-lg border border-red-500/30 bg-red-500/10">
+        <p className="text-red-400 font-medium text-sm">Failed to load feed</p>
+        <p className="text-red-400/70 text-xs mt-1">{systemError}</p>
         <button
           onClick={loadFeed}
-          className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="mt-3 px-4 py-1.5 bg-red-500/20 text-red-300 text-xs rounded-md hover:bg-red-500/30 transition-colors"
         >
           Retry
         </button>
@@ -223,8 +223,16 @@ export default function Feed({ manifests }: FeedProps) {
   if (loading && items.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin h-8 w-8 border-4 border-white rounded-full border-t-transparent" />
-        <p className="ml-3 text-white text-lg">Loading feed...</p>
+        <div
+          className="h-6 w-6 rounded-full border-2 animate-spin"
+          style={{
+            borderColor: "var(--border)",
+            borderTopColor: "var(--accent)",
+          }}
+        />
+        <p className="ml-3 text-sm" style={{ color: "var(--text-muted)" }}>
+          Loading feed…
+        </p>
       </div>
     );
   }
@@ -232,9 +240,13 @@ export default function Feed({ manifests }: FeedProps) {
   // State 3: Empty (no sources, not loading)
   if (!loading && sources.length === 0) {
     return (
-      <div className="text-center py-12 text-white">
-        <p className="text-2xl mb-2">No feed sources</p>
-        <p className="text-white/70">Install plugins to populate your feed.</p>
+      <div className="text-center py-12">
+        <p className="text-lg font-medium" style={{ color: "var(--text)" }}>
+          No feed sources
+        </p>
+        <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+          Install plugins to populate your feed.
+        </p>
       </div>
     );
   }
@@ -243,20 +255,28 @@ export default function Feed({ manifests }: FeedProps) {
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
-    <div className="bg-black/40 backdrop-blur-xl rounded-lg m-2 p-3">
+    <div className="h-full overflow-y-auto">
       {/* Toolbar */}
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-white text-sm">
+      <div
+        className="flex justify-between items-center px-4 py-3 border-b"
+        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+      >
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           {items.length} item{items.length !== 1 ? "s" : ""}
           {hasErrors &&
-            ` (${Object.keys(errors).length} source${Object.keys(errors).length !== 1 ? "s" : ""} failed)`}
+            ` · ${Object.keys(errors).length} source${Object.keys(errors).length !== 1 ? "s" : ""} failed`}
         </p>
         <button
           onClick={loadFeed}
           disabled={loading}
-          className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 disabled:opacity-50 transition-colors"
+          className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+          style={{
+            background: "var(--accent-soft)",
+            color: "var(--accent)",
+            opacity: loading ? 0.5 : 1,
+          }}
         >
-          {loading ? "Loading..." : "Refresh"}
+          {loading ? "Loading…" : "Refresh"}
         </button>
       </div>
 
@@ -269,10 +289,18 @@ export default function Feed({ manifests }: FeedProps) {
         return (
           <div
             key={name}
-            className="bg-yellow-100 border border-yellow-400 rounded-lg p-3 mb-3"
+            className="mx-4 mt-3 px-3 py-2.5 rounded-md border text-xs"
+            style={{
+              borderColor: "rgba(234, 179, 8, 0.25)",
+              background: "rgba(234, 179, 8, 0.06)",
+            }}
           >
-            <p className="text-yellow-800 font-medium text-sm">{name}</p>
-            <p className="text-yellow-700 text-xs mt-1">{msg}</p>
+            <p className="font-medium" style={{ color: "#EAB308" }}>
+              {name}
+            </p>
+            <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
+              {msg}
+            </p>
             {authPlugin && (
               <button
                 onClick={async () => {
@@ -283,7 +311,11 @@ export default function Feed({ manifests }: FeedProps) {
                     alert("Sign in failed: " + e.message);
                   }
                 }}
-                className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+                className="mt-2 px-3 py-1 text-xs rounded-md transition-colors"
+                style={{
+                  background: "var(--accent-soft)",
+                  color: "var(--accent)",
+                }}
               >
                 Sign in
               </button>
@@ -294,17 +326,22 @@ export default function Feed({ manifests }: FeedProps) {
 
       {/* Card items */}
       {items.length === 0 ? (
-        <div className="text-center py-12 text-white/70">
+        <div
+          className="text-center py-12"
+          style={{ color: "var(--text-muted)" }}
+        >
           No items to display
         </div>
       ) : (
-        items.map((item, i) => (
-          <CardRenderer
-            key={`${item.plugin.name}-${i}`}
-            plugin={item.plugin}
-            data={item.data}
-          />
-        ))
+        <div className="p-3 flex flex-col gap-2">
+          {items.map((item, i) => (
+            <CardRenderer
+              key={`${item.plugin.name}-${i}`}
+              plugin={item.plugin}
+              data={item.data}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -313,6 +350,16 @@ export default function Feed({ manifests }: FeedProps) {
 // -- Helper component: creates a card WC and passes data to it --
 function CardRenderer({ plugin, data }: { plugin: FeedSource; data: any }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  // Map plugin name to a source color class
+  const sourceClass =
+    plugin.name.includes("youtube") || plugin.name.includes("yt")
+      ? "source-border-yt"
+      : plugin.name.includes("tiktok") || plugin.name.includes("tt")
+        ? "source-border-tt"
+        : plugin.name.includes("peertube") || plugin.name.includes("pt")
+          ? "source-border-pt"
+          : "source-border-unknown";
 
   useEffect(() => {
     if (!ref.current) return;
@@ -334,5 +381,10 @@ function CardRenderer({ plugin, data }: { plugin: FeedSource; data: any }) {
     };
   }, [plugin.card, data]);
 
-  return <div ref={ref} className="mb-2 cursor-pointer" />;
+  return (
+    <div
+      ref={ref}
+      className={`rounded-md cursor-pointer transition-colors hover:bg-[var(--surface-hover)] ${sourceClass}`}
+    />
+  );
 }
