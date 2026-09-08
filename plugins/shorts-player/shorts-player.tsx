@@ -1,37 +1,5 @@
-/**
- * Shorts player component
- *
- * Detailed line-level explanation is embedded inline below. High-level:
- * - Uses `movi-player` web component (WASM renderer) for playback.
- * - Player instances are created only when the card is highly visible
- *   (IntersectionObserver threshold 0.85) to limit decoding to one active
- *   instance at a time.
- * - Shared mute preference is stored in localStorage under `MUTE_KEY`.
- */
-import "movi-player"; // custom element (WASM canvas player)
+import "movi-player";
 import { useEffect, useRef, useState } from "react";
-
-// localStorage key used to persist the user's short-mute preference.
-const MUTE_KEY = "flux.shorts.muted";
-
-// module-scoped cached mute value (all ShortsPlayer instances read/write this)
-let shortsMuted: boolean = (() => {
-  try {
-    // returns true if stored value is "1"
-    return localStorage.getItem(MUTE_KEY) === "1";
-  } catch {
-    // accessing localStorage may fail in some environments — default false
-    return false;
-  }
-})();
-
-// helper to update the shared mute preference (module + persistent storage)
-function setShortsMuted(m: boolean) {
-  shortsMuted = m;
-  try {
-    localStorage.setItem(MUTE_KEY, m ? "1" : "0");
-  } catch {}
-}
 
 // Component: renders a single short item and manages creating / destroying
 // the `movi-player` instance when the item enters/exits the viewport.
@@ -42,8 +10,7 @@ export default function ShortsPlayer({ item }: { item: any }) {
   const [needsTap, setNeedsTap] = useState(false);
   // `loaded`: whether the movi-player instance has finished initial setup.
   const [loaded, setLoaded] = useState(false);
-  // `muted`: UI binding for current mute state (starts from shared state)
-  const [muted, setMuted] = useState(shortsMuted);
+  const [muted, setMuted] = useState(false);
   // `paused`: whether the player is paused
   const [paused, setPaused] = useState(false);
   // `retry`: counter to trigger a reload attempt via effect dependency
@@ -152,9 +119,6 @@ export default function ShortsPlayer({ item }: { item: any }) {
             el.setAttribute("ambientmode", "false");
             el.setAttribute("fallback", "native");
             el.setAttribute("preload", "metadata");
-            // Sound on by default — only set muted when user muted before.
-            // When set, movi-player autoplays muted and shows its unmute pill.
-            if (shortsMuted) el.setAttribute("muted", "");
             if (item?.title) el.setAttribute("title", item.title);
 
             const onState = () => {
@@ -177,7 +141,7 @@ export default function ShortsPlayer({ item }: { item: any }) {
             setLoaded(true);
             setStatus("ready");
             setNeedsTap(false);
-            setMuted(shortsMuted);
+            setMuted(false);
           } catch (e: any) {
             console.error("[shorts-player] load failed", e);
             fail("load failed: " + (e?.message || e));
@@ -221,9 +185,7 @@ export default function ShortsPlayer({ item }: { item: any }) {
 
   const onToggleMute = (e: any) => {
     e.stopPropagation();
-    // Flip the shared preference — applies to this and all following videos
-    const next = !shortsMuted;
-    setShortsMuted(next);
+    const next = !muted;
     setMuted(next);
     setNeedsTap(false);
     const el = elRef.current as any;
@@ -245,8 +207,6 @@ export default function ShortsPlayer({ item }: { item: any }) {
   };
 
   const onTapPlay = () => {
-    // Genuine user gesture — unmute everything going forward
-    setShortsMuted(false);
     setMuted(false);
     setNeedsTap(false);
     const el = elRef.current as any;
