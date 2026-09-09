@@ -1,51 +1,13 @@
-/**
- * Shorts player component
- *
- * Detailed line-level explanation is embedded inline below. High-level:
- * - Uses `movi-player` web component (WASM renderer) for playback.
- * - Player instances are created only when the card is highly visible
- *   (IntersectionObserver threshold 0.85) to limit decoding to one active
- *   instance at a time.
- * - Shared mute preference is stored in localStorage under `MUTE_KEY`.
- */
-import "movi-player"; // custom element (WASM canvas player)
+import "movi-player";
 import { useEffect, useRef, useState } from "react";
-
-// localStorage key used to persist the user's short-mute preference.
-const MUTE_KEY = "flux.shorts.muted";
-
-// module-scoped cached mute value (all ShortsPlayer instances read/write this)
-let shortsMuted: boolean = (() => {
-  try {
-    // returns true if stored value is "1"
-    return localStorage.getItem(MUTE_KEY) === "1";
-  } catch {
-    // accessing localStorage may fail in some environments — default false
-    return false;
-  }
-})();
-
-// helper to update the shared mute preference (module + persistent storage)
-function setShortsMuted(m: boolean) {
-  shortsMuted = m;
-  try {
-    localStorage.setItem(MUTE_KEY, m ? "1" : "0");
-  } catch {}
-}
 
 // Component: renders a single short item and manages creating / destroying
 // the `movi-player` instance when the item enters/exits the viewport.
 export default function ShortsPlayer({ item }: { item: any }) {
   // `ref` is the container element where the webcomponent will be attached.
   const ref = useRef<HTMLDivElement>(null);
-  // `needsTap`: UI state used when autoplay fails and user must tap to play.
-  const [needsTap, setNeedsTap] = useState(false);
   // `loaded`: whether the movi-player instance has finished initial setup.
   const [loaded, setLoaded] = useState(false);
-  // `muted`: UI binding for current mute state (starts from shared state)
-  const [muted, setMuted] = useState(shortsMuted);
-  // `paused`: whether the player is paused
-  const [paused, setPaused] = useState(false);
   // `retry`: counter to trigger a reload attempt via effect dependency
   const [retry, setRetry] = useState(0);
   // `status`: small enum to drive loading spinner / errors
@@ -56,243 +18,150 @@ export default function ShortsPlayer({ item }: { item: any }) {
   const [errorMsg, setErrorMsg] = useState("");
   // `elRef`: stores the created movi-player element for cleanup and control
   const elRef = useRef<any>(null);
-  // `videoRef`: optional pointer to the inner <video> fallback for direct control
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const isActiveRef = useRef(false);
+  const initPromiseRef = useRef<Promise<any> | null>(null);
 
   useEffect(() => {
     if (!ref.current) return;
     let cancelled = false;
+    const myIdx = Number(item?.index ?? 0);
+
     const fail = (msg: string) => {
       if (cancelled) return;
       setErrorMsg(msg);
       setStatus("error");
     };
 
-    const io = new IntersectionObserver(
-      async ([entry]) => {
-        if (cancelled) return;
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.85) {
-          // Strict: only now fetch stream URL and create player
-          if (elRef.current) return; // already loaded
-          try {
-            const src = item?.url as string | undefined;
-            if (!src) {
-              console.warn("[shorts-player] no url on item", item);
-              return;
-            }
-            console.log("[shorts-player] resolving", src);
-            // Resolve via yt-shorts (yt-shorts.resolve expects url) — must be deciphered googlevideo.com URL
-            let streamUrl = src;
-            const provider =
-              item?.source === "tiktok" || item?.url?.includes("tiktok.com")
-                ? "tiktok-shorts"
-                : "yt-shorts";
-            try {
-              const result: any = await (window as any).__pluginRpc?.(
-                `${provider}.resolve`,
-                { url: src, videoId: item?.videoId },
-              );
-              console.log(
-                "[shorts-player] resolve result",
-                JSON.stringify(result)?.slice(0, 800),
-              );
-              const next = result?.url || result?.result?.url || result;
-              if (typeof next === "string" && next.startsWith("http"))
-                streamUrl = next;
-              if (next?.error) {
-                console.warn("[shorts-player] resolve error", next.error);
-                return;
-              }
-            } catch (e) {
-              console.error("[shorts-player] resolve failed", e);
-              return;
-            }
-            console.log("[shorts-player] streamUrl", streamUrl.slice(0, 120));
-            // Guard: if still a youtube watch page, movi will CORS-fail — abort and show error
-            if (streamUrl.includes("youtube.com/watch")) {
-              console.error(
-                "[shorts-player] still watch URL — decipher failed",
-                streamUrl,
-              );
-              return;
-            }
-            // Route googlevideo through same-origin core-stream proxy (adds CORS + forwards Range).
-            // Try live proxy base, fall back to default port 1935 so it works before host restart.
-            let finalUrl = streamUrl;
-            if (streamUrl.includes("googlevideo.com")) {
-              let base: string | null = null;
-              try {
-                const proxy: any = await (window as any).__pluginRpc?.(
-                  "core-stream.getUrl",
-                  {},
-                );
-                base = proxy?.base || proxy?.result?.base || null;
-              } catch {}
-              if (!base) base = "http://127.0.0.1:1935";
-              finalUrl = `${base}/stream?u=${encodeURIComponent(streamUrl)}`;
-              console.log("[shorts-player] proxied", finalUrl.slice(0, 120));
-            }
-            if (cancelled) return;
-            setStatus("loading");
-            // movi-player (same pattern as flux-player): WASM pipeline renders
-            // to canvas. Route googlevideo through core-stream proxy for CORS.
-            const el = document.createElement("movi-player") as any;
-            el.style.display = "block";
-            el.style.width = "100%";
-            el.style.height = "100%";
-            el.style.background = "black";
-            el.setAttribute("src", finalUrl);
-            el.setAttribute("autoplay", "");
-            // Restore native controls; keep looping but disable the more aggressive
-            // HDR/ambient rendering that causes the color shift on restart.
-            el.setAttribute("controls", "");
-            el.setAttribute("loop", "");
-            el.setAttribute("playsinline", "");
-            el.setAttribute("hdr", "false");
-            el.setAttribute("ambientmode", "false");
-            el.setAttribute("fallback", "native");
-            el.setAttribute("preload", "metadata");
-            // Sound on by default — only set muted when user muted before.
-            // When set, movi-player autoplays muted and shows its unmute pill.
-            if (shortsMuted) el.setAttribute("muted", "");
-            if (item?.title) el.setAttribute("title", item.title);
+    // Helper: loads stream URL and creates <movi-player> (starts paused)
+    const initPlayer = async (): Promise<any> => {
+      if (elRef.current) return elRef.current;
+      if (initPromiseRef.current) return await initPromiseRef.current;
 
-            const onState = () => {
-              if (cancelled) return;
-              // Sync React mute icon with the player's actual state
-              setMuted(el.muted ?? el.hasAttribute("muted"));
-              // Sync paused state for overlay indicator
-              const playing = el.player?.getState?.() === "playing";
-              setPaused(!playing);
-            };
-            el.addEventListener("volumechange", onState);
-            el.addEventListener("statechange", onState);
+      const runInit = async () => {
+        const src = item?.url as string | undefined;
+        if (!src) return null;
 
-            ref.current!.appendChild(el);
-            elRef.current = el;
-            videoRef.current =
-              el.shadowRoot?.querySelector("video") ??
-              el.querySelector("video") ??
-              null;
-            setLoaded(true);
-            setStatus("ready");
-            setNeedsTap(false);
-            setMuted(shortsMuted);
-          } catch (e: any) {
-            console.error("[shorts-player] load failed", e);
-            fail("load failed: " + (e?.message || e));
-          }
-        } else {
-          // Off-screen: pause and unmount — no background decoders
-          const el = elRef.current as any;
-          if (el) {
-            try {
-              el.pause?.();
-            } catch {}
-            try {
-              const inner =
-                el.shadowRoot?.querySelector("video") ??
-                el.querySelector?.("video");
-              inner?.pause?.();
-            } catch {}
-            el.remove();
-            elRef.current = null;
-          }
-          videoRef.current = null;
-          setNeedsTap(false);
-          setLoaded(false);
-          setStatus("idle");
+        let streamUrl = src;
+        const provider =
+          item?.source === "tiktok" || item?.url?.includes("tiktok")
+            ? "tiktok-shorts"
+            : "yt-shorts";
+
+        try {
+          const result: any = await (window as any).__pluginRpc?.(
+            `${provider}.resolve`,
+            { url: src, videoId: item?.videoId },
+          );
+          const next = result?.url || result?.result?.url || result;
+          if (typeof next === "string" && next.startsWith("http"))
+            streamUrl = next;
+        } catch (e) {
+          console.error("[shorts-player] resolve failed", e);
+          fail(e?.message || "Could not resolve video stream");
+          return null;
         }
-      },
-      { threshold: 0.85, rootMargin: "0px" },
-    );
 
-    io.observe(ref.current);
+        if (streamUrl.includes("youtube.com/watch")) {
+          fail("Could not find a playable stream for this video");
+          return null;
+        }
+
+        let finalUrl = streamUrl;
+        if (streamUrl.includes("googlevideo.com")) {
+          let base: string | null = null;
+          try {
+            const proxy: any = await (window as any).__pluginRpc?.(
+              "core-stream.getUrl",
+              {},
+            );
+            base = proxy?.base || proxy?.result?.base || null;
+          } catch {}
+          if (!base) base = "http://127.0.0.1:1935";
+          finalUrl = `${base}/stream?u=${encodeURIComponent(streamUrl)}`;
+        }
+
+        if (cancelled || !ref.current) return null;
+
+        setStatus("loading");
+        const el = document.createElement("movi-player") as any;
+        el.style.display = "block";
+        el.style.width = "100%";
+        el.style.height = "100%";
+        el.style.background = "black";
+        el.setAttribute("src", finalUrl);
+        el.setAttribute("controls", "");
+        el.setAttribute("loop", "");
+        el.setAttribute("playsinline", "");
+        el.setAttribute("hdr", "false");
+        el.setAttribute("ambientmode", "false");
+        el.setAttribute("fallback", "native");
+        el.setAttribute("preload", "auto");
+        if (item?.title) el.setAttribute("title", item.title);
+
+        ref.current.appendChild(el);
+        elRef.current = el;
+        setLoaded(true);
+        setStatus("ready");
+        return el;
+      };
+
+      initPromiseRef.current = runInit();
+      const res = await initPromiseRef.current;
+      initPromiseRef.current = null;
+      return res;
+    };
+
+    // Evaluates state against active index
+    const updatePoolState = async (activeIdx: number) => {
+      if (cancelled) return;
+      const safeActive = Number.isFinite(activeIdx) ? activeIdx : 0;
+
+      if (myIdx === safeActive) {
+        // Active: play immediately
+        const player = elRef.current || (await initPlayer());
+        if (player && !cancelled) {
+          player.play?.().catch?.(() => {});
+        }
+      } else if (myIdx === safeActive + 1) {
+        // Next short: preload & pause so it is buffered and ready
+        const player = elRef.current || (await initPlayer());
+        if (player && !cancelled) {
+          player.pause?.();
+        }
+      } else {
+        // All other shorts (including previous ones): keep mounted, stay paused
+        if (elRef.current) {
+          elRef.current.pause?.();
+        }
+      }
+    };
+
+    const onSnap = (e: any) => {
+      const activeIdx = e.detail?.activeIdx ?? 0;
+      updatePoolState(activeIdx);
+    };
+
+    // Initial check on mount
+    const currentActive = (window as any).__fluxActiveShortIdx ?? 0;
+    updatePoolState(currentActive);
+
+    window.addEventListener("flux.shorts.snap", onSnap);
+
     return () => {
       cancelled = true;
-      io.disconnect();
-      if (videoRef.current)
-        try {
-          videoRef.current.pause();
-        } catch {}
-      if (elRef.current) elRef.current.remove();
+      window.removeEventListener("flux.shorts.snap", onSnap);
+      if (elRef.current) {
+        elRef.current.remove();
+        elRef.current = null;
+      }
     };
-  }, [item, retry]);
-
-  const onToggleMute = (e: any) => {
-    e.stopPropagation();
-    // Flip the shared preference — applies to this and all following videos
-    const next = !shortsMuted;
-    setShortsMuted(next);
-    setMuted(next);
-    setNeedsTap(false);
-    const el = elRef.current as any;
-    if (el) {
-      // movi-player exposes muted as attr + property — set both
-      if (next) el.setAttribute("muted", "");
-      else el.removeAttribute("muted");
-      try {
-        el.muted = next;
-      } catch {}
-      // Inner fallback video (if native fallback engaged)
-      const inner =
-        el.shadowRoot?.querySelector("video") ?? el.querySelector("video");
-      if (inner) {
-        inner.muted = next;
-        if (!next && inner.paused) inner.play().catch(() => {});
-      }
-    }
-  };
-
-  const onTapPlay = () => {
-    // Genuine user gesture — unmute everything going forward
-    setShortsMuted(false);
-    setMuted(false);
-    setNeedsTap(false);
-    const el = elRef.current as any;
-    if (el) {
-      el.removeAttribute("muted");
-      try {
-        el.muted = false;
-        el.play?.();
-      } catch {}
-    }
-  };
-
-  const onTogglePlay = () => {
-    const el = elRef.current as any;
-    if (!el) return;
-    try {
-      const state = el.player?.getState?.();
-      if (state === "playing") {
-        el.pause();
-        setPaused(true);
-      } else {
-        el.play?.();
-        setPaused(false);
-      }
-    } catch {
-      // Fallback: inner video element
-      const inner =
-        el.shadowRoot?.querySelector("video") ?? el.querySelector("video");
-      if (inner) {
-        if (inner.paused) {
-          inner.play().catch(() => setNeedsTap(true));
-          setPaused(false);
-        } else {
-          inner.pause();
-          setPaused(true);
-        }
-      }
-    }
-  };
+  }, [item?.videoId, item?.index, retry]);
 
   const onRetry = () => {
     if (elRef.current) {
       elRef.current.remove();
       elRef.current = null;
     }
-    videoRef.current = null;
     setErrorMsg("");
     setStatus("idle");
     setRetry((r) => r + 1);
