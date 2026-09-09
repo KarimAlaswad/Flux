@@ -29,6 +29,8 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   // `itemRefs`: DOM refs to each short item wrapper (used for scrollIntoView).
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // `hasLoadedRef`: gates initial fetch until the tab becomes visible
+  const hasLoadedRef = useRef(false);
 
   // `load(cont)` — fetch a page of items from each configured provider.
   // - `cont` is an optional continuation token used for pagination.
@@ -125,10 +127,6 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  useEffect(() => {
-    load(null);
-  }, []);
-
   // Infinite scroll sentinel — generous rootMargin prefetches before the end
   useEffect(() => {
     if (!sentinelRef.current || !continuation) return;
@@ -142,16 +140,60 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
     return () => io.disconnect();
   }, [continuation, items.length]);
 
-  // Track active item for counter + arrow state
+  // Snap-settle conductor: commits active short only when scroll snap settles
   useEffect(() => {
     const root = containerRef.current;
-    if (!root) return;
-    const onScroll = () => {
-      const idx = Math.round(root.scrollTop / root.clientHeight);
-      setActiveIdx(Math.max(0, Math.min(idx, items.length - 1)));
+    if (!root || items.length === 0) return;
+
+    let debounceTimer: any = null;
+
+    const commitSnap = () => {
+      const h = root.clientHeight;
+      if (!h) return; // Do not commit when tab is hidden (h === 0)
+      const rawIdx = Math.round(root.scrollTop / h)
+      const idx = isNaN(rawIdx)
+        ? 0
+        : Math.max(0, Math.min(rawIdx, items.length - 1));
+      setActiveIdx(idx);
+      (window as any).__fluxActiveShortIdx = idx;
+      window.dispatchEvent(
+        new CustomEvent("flux.shorts.snap", { detail: { activeIdx: idx } }),
+      );
     };
+
+    // Watch for tab visibility change (display: none -> display: block)
+    const ro  = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.height > 0) {
+        if (!hasLoadedRef.current) {
+          hasLoadedRef.current = true;
+          load(null);
+        }
+        commitSnap();
+      }
+    });
+    ro.observe(root);
+
+    const onScroll = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(commitSnap, 120);
+    };
+
+    const onScrollEnd = () => {
+      clearTimeout(debounceTimer);
+      commitSnap();
+    };
+
+    commitSnap();
+
     root.addEventListener("scroll", onScroll, { passive: true });
-    return () => root.removeEventListener("scroll", onScroll);
+    root.addEventListener("scrollend", onScrollEnd, { passive: true });
+
+    return () => {
+      clearTimeout(debounceTimer);
+      ro.disconnect();
+      root.removeEventListener("scroll", onScroll);
+      root.removeEventListener("scrollend", onScrollEnd);
+    };
   }, [items.length]);
 
   // Keyboard nav: arrows move one short, Home jumps to top
@@ -228,7 +270,12 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
                     wc.style.height = "100%";
                     el.appendChild(wc);
                   }
-                  wc.item = item;
+                  // Guard: only update item if video ID or slot changed 
+                  if (wc._currentVideoId !== item.videoId || wc._currentIndex !== idx) {
+                    wc._currentVideoId = item.videoId;
+                    wc._currentIndex = idx;
+                    wc.item = { ...item, index: idx };
+                  }
                 });
               }}
               className="h-full w-full flex items-center justify-center"

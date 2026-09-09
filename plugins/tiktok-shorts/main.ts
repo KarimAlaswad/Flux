@@ -74,7 +74,7 @@ startStdin(async ({ method, params, id }, send) => {
           duration: 15,
           play_addr: {
             url_list: [
-              "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+              "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
             ],
           },
           cover: {
@@ -101,9 +101,9 @@ startStdin(async ({ method, params, id }, send) => {
       // For demo items return a known MP4; otherwise return the provided URL
       const directUrl =
         params?.videoId && params.videoId.startsWith("tiktok-demo")
-          ? "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+          ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
           : url ||
-            "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
 
       send(id, { url: directUrl, source: "tiktok" });
       return;

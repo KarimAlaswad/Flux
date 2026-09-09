@@ -174,11 +174,6 @@ startStdin(async ({ method, params, id }, send) => {
       try {
         const info: any = await tube.getInfo(videoId);
         const sd: any = info.streaming_data;
-        const sabr: string | null =
-          sd?.server_abr_streaming_url || sd?.serverAbrStreamingUrl || null;
-        if (sabr && typeof sabr === "string" && sabr.startsWith("http")) {
-          streamUrl = sabr;
-        }
         // Legacy fallback: direct URLs (if YouTube ever restores them)
         if (!streamUrl) {
           const tries: any[] = [

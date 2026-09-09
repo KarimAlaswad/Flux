@@ -324,6 +324,7 @@ pub fn run() {
             resolve_hook,
             call_hook
         ])
+        .plugin(victauri_plugin::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

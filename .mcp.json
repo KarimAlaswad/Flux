@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "victauri": {
+      "command": "/home/karim/.cargo/bin/victauri",
+      "args": ["bridge", "--app", "com.flux.app"]
+    }
+  }
+}
