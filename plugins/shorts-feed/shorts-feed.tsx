@@ -185,14 +185,32 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
 
     commitSnap();
 
+    let wheelTimer: any = null;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (wheelTimer) return;
+
+      const direction = Math.sign(e.deltaY);
+      const current = (window as any).__fluxActiveShortIdx ?? 0;
+      if (direction > 0 && current > 0) {
+        scrollToIdx(current - 1);
+      }
+
+      wheelTimer = setTimeout(() => {
+        wheelTimer = null;
+      }, 400);
+    };
+
     root.addEventListener("scroll", onScroll, { passive: true });
     root.addEventListener("scrollend", onScrollEnd, { passive: true });
+    root.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
       clearTimeout(debounceTimer);
       ro.disconnect();
       root.removeEventListener("scroll", onScroll);
       root.removeEventListener("scrollend", onScrollEnd);
+      root.removeEventListener("wheel", onWheel);
     };
   }, [items.length]);
 

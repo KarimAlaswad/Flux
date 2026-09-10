@@ -55,7 +55,7 @@ export default function ShortsPlayer({ item }: { item: any }) {
           const next = result?.url || result?.result?.url || result;
           if (typeof next === "string" && next.startsWith("http"))
             streamUrl = next;
-        } catch (e) {
+        } catch (e: any) {
           console.error("[shorts-player] resolve failed", e);
           fail(e?.message || "Could not resolve video stream");
           return null;
