@@ -7,7 +7,7 @@
     "#shared/*": "./plugins/_shared/*"
   },
   "scripts": {
-    "dev": "bun run build:plugins && bunx vite build && cargo run --manifest-path src-tauri-webui/Cargo.toml",
+    "dev": "bun run build:plugins && bun run tauri dev",
     "build": "bun run build:plugins && tauri build",
     "build:plugins": "bun scripts/build-plugins.ts",
     "dev:watch": "bun run build:plugins --watch & bun run dev; kill %1 2>/dev/null",

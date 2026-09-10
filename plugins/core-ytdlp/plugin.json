@@ -1,0 +1,9 @@
+{
+  "name": "core-ytdlp",
+  "version": "1.0.0",
+  "description": "Core plugin: extracts media URLs and quality ladders using yt-dlp",
+  "author": "Me",
+  "run": "bun ./main.ts",
+  "hooks": ["stream.resolver"],
+  "methods": ["resolve"]
+}

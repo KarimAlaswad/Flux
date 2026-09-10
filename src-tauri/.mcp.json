@@ -1,0 +1,7 @@
+{
+  "mcpServers": {    "victauri": {
+      "command": "victauri",
+      "args": ["bridge", "--app", "com.flux.app"]
+    }
+  }
+}

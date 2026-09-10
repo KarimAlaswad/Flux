@@ -145,6 +145,21 @@ startStdin(async ({ method, params, id }, send) => {
           cache: new UniversalCache(true),
         });
       }
+
+      try {
+        const ytdlpRes: any = await (window as any).__pluginRpc?.("core-ytdlp.resolve",
+        { url: `https://www.youtube.com/watch?v=${videoId}` },
+        );
+        if (ytdlpRes?.url || ytdlpRes?.formats?.length) {
+          console.log(`[yt-shorts] resolve ${videoId} -> core-ytdlp OK`);
+          resolveCache.set(videoId, { url: ytdlpRes.url, at: Date.now() });
+          send(id, ytdlpRes);
+          return;
+        }
+      } catch (e) {
+        console.log(`[yt-shorts] core-ytdlp skipped/failed, trying youtubei.js`);
+      }
+
       // Direct progressive URLs first (ANDROID client still serves them, no SABR/UMP).
       // SABR URLs ignore Range requests, which fetch-based players (movi) require.
       let streamUrl: string | null = null;
@@ -174,11 +189,6 @@ startStdin(async ({ method, params, id }, send) => {
       try {
         const info: any = await tube.getInfo(videoId);
         const sd: any = info.streaming_data;
-        const sabr: string | null =
-          sd?.server_abr_streaming_url || sd?.serverAbrStreamingUrl || null;
-        if (sabr && typeof sabr === "string" && sabr.startsWith("http")) {
-          streamUrl = sabr;
-        }
         // Legacy fallback: direct URLs (if YouTube ever restores them)
         if (!streamUrl) {
           const tries: any[] = [

@@ -15,10 +15,14 @@ Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs
 ## Agent behavior rules
 
 - Before acting, read `okf/index.md`. Use `okf/log.md` for unknowns. Follow `okf/constraints/agent-safety-rules.md`.
-- **Fresh Read Rule:** Read `AGENTS.md` fresh every session. Never assume the previous agent kept it accurate. If something looks wrong, say so.
-- **Verify before claiming:** Check the actual codebase, not the `.bak` or old docs. Speculative claims waste time — trace execution before proposing fixes.
-- **Diffs, not full files:** When suggesting code changes, give targeted diffs or edited snippets, not entire file rewrites.
-- **Understand first:** Propose changes only after understanding the root cause. Guessing is unacceptable.
+- When the user asks for code changes, highlight the old lines that needs changing with the lines of new code and not the full file(s), only the lines that need change, don't include any lines that don't need change, and an explanation of what these code changes do exactly as detailed as possible.
+- When planning multiple features, the agent should introduce each feature at a time. Adding the rest of the features to the TODO list.
+- When asked for a feature, use the /research-inline skill to research for the proper and correct way to implement the feature using best code practices and design patterns, and researching similar apps and systems for the same or similar feature or even a better approach for solving the user issue/request, and using /grill-me skill for introducing the recommended way of the detailed implementation regardless of what the user requested until the user reaches a conclusion before giving the user the code changes.
+- After the user says something like "done" or "feature added" or "ok" or after the user asked for "code changes" on the next prompt, check the files that the user changed to make sure the changes got applied correctly without the using asking for that check.
+- After verifying the previous code, give the user the code changes for the next feature that was planned without request from the user
+
+## Testing
+- use the /tdd, /verification-before-completion  skills and the victauri-mcp(main) and tauri-mcp(fallback) for testing.
 
 ## Philosophy
 
