@@ -42,17 +42,19 @@ export default function ShortsPlayer({ item }: { item: any }) {
         if (!src) return null;
 
         let streamUrl = src;
+        let resolveResult: any = null;
         const provider =
-          item?.source === "tiktok" || item?.url?.includes("tiktok")
-            ? "tiktok-shorts"
-            : "yt-shorts";
+          item?.provider ||
+          item?.source ||
+          (item?.url?.includes("tiktok") ? "tiktok-shorts" : "yt-shorts");
 
         try {
-          const result: any = await (window as any).__pluginRpc?.(
+          resolveResult = await (window as any).__pluginRpc?.(
             `${provider}.resolve`,
             { url: src, videoId: item?.videoId },
           );
-          const next = result?.url || result?.result?.url || result;
+          const next =
+            resolveResult?.url || resolveResult?.result?.url || resolveResult;
           if (typeof next === "string" && next.startsWith("http"))
             streamUrl = next;
         } catch (e: any) {
@@ -97,6 +99,34 @@ export default function ShortsPlayer({ item }: { item: any }) {
         el.setAttribute("fallback", "native");
         el.setAttribute("preload", "auto");
         if (item?.title) el.setAttribute("title", item.title);
+
+        const formatList: any[] = resolveResult?.formats || [];
+        if (formatList.length > 0) {
+          for (const fmt of formatList) {
+            let fmtUrl = fmt.url;
+            if (fmtUrl.includes("googlevideo.com")) {
+              let base: string | null = null;
+              try {
+                const proxy: any = await (window as any).__pluginRpc?.(
+                  "core-stream.getUrl",
+                  {},
+                );
+                base = proxy?.base || proxy?.result?.base || null;
+              } catch {}
+              if (!base) base = "http://127.0.0.1:1935";
+              fmtUrl = `${base}/stream?u=${encodeURIComponent(fmtUrl)}`;
+            }
+
+            const sourceEl = document.createElement("source");
+            sourceEl.setAttribute("src", fmtUrl);
+            sourceEl.setAttribute("label", fmt.label || `${fmt.height}p`);
+            sourceEl.setAttribute("res", String(fmt.height || 720));
+            sourceEl.setAttribute("type", fmt.mime || "video/mp4");
+            el.appendChild(sourceEl);
+          }
+        } else {
+          el.setAttribute("src", finalUrl);
+        }
 
         ref.current.appendChild(el);
         elRef.current = el;
