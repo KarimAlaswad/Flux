@@ -37,15 +37,31 @@ startStdin(async ({ method, params, id }, send) => {
       const json = JSON.parse(stdout);
       const rawFormats: any[] = json.formats || [];
 
-      const progressive = rawFormats.filter(
-        (f) => 
+      // Prefer H.264 (avc1) + AAC (mp4a) progressive MP4s for 100% WebCodecs & WASM compatibility
+      let progressive = rawFormats.filter(
+        (f) =>
           f.vcodec &&
           f.vcodec !== "none" &&
+          f.vcodec.startsWith("avc1") &&
           f.acodec &&
           f.acodec !== "none" &&
+          f.acodec.startsWith("mp4a") &&
           f.url &&
           f.height,
       );
+
+      // Fallback: any muxed container if H.264+AAC is not declared
+      if (progressive.length === 0) {
+        progressive = rawFormats.filter(
+          (f) =>
+            f.vcodec &&
+            f.vcodec !== "none" &&
+            f.acodec &&
+            f.acodec !== "none" &&
+            f.url &&
+            f.height,
+        );
+      }
 
       progressive.sort((a, b) => (b.height || 0) - (a.height || 0));
 

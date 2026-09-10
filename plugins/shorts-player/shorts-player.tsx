@@ -90,7 +90,6 @@ export default function ShortsPlayer({ item }: { item: any }) {
         el.style.width = "100%";
         el.style.height = "100%";
         el.style.background = "black";
-        el.setAttribute("src", finalUrl);
         el.setAttribute("controls", "");
         el.setAttribute("loop", "");
         el.setAttribute("playsinline", "");
