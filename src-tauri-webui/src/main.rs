@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use webui::webui::{Window, Event, wait};
+use std::sync::OnceLock;
 
 // -- Types --
 
@@ -72,7 +73,7 @@ impl PluginHandle {
 
 // -- Global state (webui bind() requires plain function pointers) --
 
-static mut PLUGIN_HANDLES: Option<Vec<PluginHandle>> = None;
+static PLUGIN_HANDLES: OnceLock<std::sync::RwLock<Vec<PluginHandle>>> = OnceLock::new();
 
 // -- Filesystem: discover plugins recursively --
 
@@ -191,36 +192,31 @@ fn plugin_request_handler(event: Event) {
     let dot = method.find('.').expect("Method must be 'name.action' format");
     let plugin_name = &method[..dot];
     let action = &method[dot + 1..];
+    let handles = PLUGIN_HANDLES.get().unwrap().read().unwrap();
+    let plugin = handles
+        .iter()
+        .find(|p| p.name == plugin_name)
+        .expect("Plugin not found");
 
-    unsafe {
-        let handles = PLUGIN_HANDLES.as_ref().unwrap();
-        let plugin = handles
-            .iter()
-            .find(|p| p.name == plugin_name)
-            .expect("Plugin not found");
-
-        match plugin.send_request(action, params) {
-            Ok(val) => event.return_string(&val.to_string()),
-            Err(e) => event.return_string(&format!("{{\"error\":\"{}\"}}", e)),
-        }
+    match plugin.send_request(action, params) {
+        Ok(val) => event.return_string(&val.to_string()),
+        Err(e) => event.return_string(&format!("{{\"error\":\"{}\"}}", e)),
     }
 }
 
 fn resolve_hook_handler(event: Event) {
     let hook = event.get_string_at(0);
-    unsafe {
-        let handles = PLUGIN_HANDLES.as_ref().unwrap();
-        let plugin = handles
-            .iter()
-            .find(|p| p.hooks.contains(&hook))
-            .expect("No plugin provides this hook");
+    let handles = PLUGIN_HANDLES.get().unwrap().read().unwrap();
+    let plugin = handles
+        .iter()
+        .find(|p| p.hooks.contains(&hook))
+        .expect("No plugin provides this hook");
 
-        let result = serde_json::json!({
-            "name": plugin.name,
-            "methods": plugin.methods,
-        });
-        event.return_string(&result.to_string());
-    }
+    let result = serde_json::json!({
+        "name": plugin.name,
+        "methods": plugin.methods,
+    });
+    event.return_string(&result.to_string());
 }
 
 fn call_hook_handler(event: Event) {
@@ -229,40 +225,30 @@ fn call_hook_handler(event: Event) {
     let params_str = event.get_string_at(2);
     let params: Value = serde_json::from_str(&params_str).unwrap_or(serde_json::json!({}));
 
-    unsafe {
-        let handles = PLUGIN_HANDLES.as_ref().unwrap();
-        let plugin = handles
-            .iter()
-            .find(|p| p.hooks.contains(&hook))
-            .expect("No plugin provides this hook");
+    let handles = PLUGIN_HANDLES.get().unwrap().read().unwrap();
+    let plugin = handles
+        .iter()
+        .find(|p| p.hooks.contains(&hook))
+        .expect("No plugin provides this hook");
 
-        let action = if method_arg.is_empty() {
-            plugin
-                .methods
-                .first()
-                .expect("Plugin has no methods")
-                .clone()
-        } else {
-            method_arg
-        };
+    let action = if method_arg.is_empty() {
+        plugin.methods.first().expect("Plugin has no methods").clone()
+    } else {
+        method_arg
+    };
+    let full_method = format!("{}.{}", plugin.name, action);
+    drop(handles);
 
-        let full_method = format!("{}.{}", plugin.name, action);
-        drop(handles);
+    let dot = full_method.find('.').unwrap();
+    let plugin_name = &full_method[..dot];
+    let action = &full_method[dot + 1..];
 
-        let dot = full_method.find('.').unwrap();
-        let plugin_name = &full_method[..dot];
-        let action = &full_method[dot + 1..];
+    let handles = PLUGIN_HANDLES.get().unwrap().read().unwrap();
+    let plugin = handles.iter().find(|p| p.name == plugin_name).unwrap();
 
-        let handles = PLUGIN_HANDLES.as_ref().unwrap();
-        let plugin = handles
-            .iter()
-            .find(|p| p.name == plugin_name)
-            .unwrap();
-
-        match plugin.send_request(action, params) {
-            Ok(val) => event.return_string(&val.to_string()),
-            Err(e) => event.return_string(&format!("{{\"error\":\"{}\"}}", e)),
-        }
+    match plugin.send_request(action, params) {
+        Ok(val) => event.return_string(&val.to_string()),
+        Err(e) => event.return_string(&format!("{{\"error\":\"{}\"}}", e)),
     }
 }
 
@@ -289,9 +275,7 @@ fn main() {
 
     println!("[host] {} plugins running", handles.len());
 
-    unsafe {
-        PLUGIN_HANDLES = Some(handles);
-    }
+    PLUGIN_HANDLES.set(std::sync::RwLock::new(handles)).ok();
 
     // After:
     let win = Window::new();

@@ -1,4 +1,5 @@
 use tauri::Manager;
+use tauri::http::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -318,6 +319,50 @@ pub fn run() {
             }
 
             Ok(())
+        })
+        .register_uri_scheme_protocol("stream", |_app, request| {
+            let uri = request.uri().to_string();
+            let target_url = uri.split("u=").nth(1).unwrap_or("");
+            let decoded_url = urlencoding::decode(target_url).unwrap_or_default().to_string();
+        
+            // Use a dedicated thread to avoid blocking the main/UI thread
+            let (tx, rx) = std::sync::mpsc::channel();
+        
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                let response = rt.block_on(async move {
+                    let client = reqwest::Client::new();
+                    let mut req = client.get(&decoded_url)
+                        .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        
+                    if let Some(range) = request.headers().get("range") {
+                        req = req.header("Range", range);
+                    }
+        
+                    let res = match req.send().await {
+                        Ok(r) => r,
+                        Err(e) => return Response::builder().status(500).body(e.to_string().into_bytes()).unwrap(),
+                    };
+        
+                    let status = res.status().as_u16();
+                    let ct = res.headers().get("content-type").cloned();
+                    let cl = res.headers().get("content-length").cloned();
+                    let cr = res.headers().get("content-range").cloned();
+                    let body = res.bytes().await.unwrap_or_default().to_vec();
+        
+                    let mut builder = Response::builder()
+                        .status(status)
+                        .header("accept-ranges", "bytes");
+                    if let Some(ct) = ct { builder = builder.header("content-type", ct); }
+                    if let Some(cl) = cl { builder = builder.header("content-length", cl); }
+                    if let Some(cr) = cr { builder = builder.header("content-range", cr); }
+        
+                    builder.body(body).unwrap()
+                });
+                let _ = tx.send(response);
+            });
+        
+            rx.recv().unwrap()
         })
         .invoke_handler(tauri::generate_handler![
             plugin_request,

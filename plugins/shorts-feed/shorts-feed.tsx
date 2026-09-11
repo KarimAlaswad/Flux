@@ -143,7 +143,7 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
   // Snap-settle conductor: commits active short only when scroll snap settles
   useEffect(() => {
     const root = containerRef.current;
-    if (!root || items.length === 0) return;
+    if (!root) return;
 
     let debounceTimer: any = null;
 
@@ -212,7 +212,7 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
       root.removeEventListener("scrollend", onScrollEnd);
       root.removeEventListener("wheel", onWheel);
     };
-  }, [items.length]);
+  }, [items.length, loading]);
 
   // Keyboard nav: arrows move one short, Home jumps to top
   useEffect(() => {
@@ -232,103 +232,101 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [activeIdx, items.length]);
 
-  if (items.length === 0 && !loading) {
-    return (
-      <div className="flex h-[60vh] flex-col items-center justify-center gap-3 text-sm">
-        <div style={{ color: "var(--text-muted)" }}>
-          {feedError ? "Feed failed to load" : "No shorts — install a source"}
-        </div>
-        {feedError && (
-          <div
-            className="text-xs max-w-[300px] break-words"
-            style={{ color: "var(--text-muted)", opacity: 0.7 }}
-          >
-            {feedError}
-          </div>
-        )}
-        <button
-          onClick={reload}
-          className="px-4 py-2 rounded-md text-sm transition-colors"
-          style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-        >
-          ↻ Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-y-scroll snap-y snap-mandatory bg-black"
     >
-      {items.map((item, idx) => (
-        <div
-          key={(item.videoId ?? "noid") + "_" + idx}
-          ref={(el) => {
-            itemRefs.current[idx] = el;
-          }}
-          className="relative h-full w-full snap-start flex items-center justify-center bg-black"
-        >
-          {/* Centered player column with side gutters for arrows/info */}
-          <div className="relative h-full w-full max-w-[420px] flex items-center justify-center mx-auto">
+      {items.length === 0 && !loading ? (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-sm">
+          <div style={{ color: "var(--text-muted)" }}>
+            {feedError ? "Feed failed to load" : "No shorts — install a source"}
+          </div>
+          {feedError && (
             <div
-              ref={(el) => {
-                if (!el) return;
-                const tag = "shorts-player";
-                customElements.whenDefined(tag).then(() => {
-                  if (!el.isConnected) return;
-                  // Reuse existing or create new
-                  let wc = el.querySelector(tag) as any;
-                  if (!wc) {
-                    wc = document.createElement(tag);
-                    // Custom elements are inline by default — force block + fill parent
-                    wc.style.display = "block";
-                    wc.style.width = "100%";
-                    wc.style.height = "100%";
-                    el.appendChild(wc);
-                  }
-                  // Guard: only update item if video ID or slot changed 
-                  if (wc._currentVideoId !== item.videoId || wc._currentIndex !== idx) {
-                    wc._currentVideoId = item.videoId;
-                    wc._currentIndex = idx;
-                    wc.item = { ...item, index: idx };
-                  }
-                });
-              }}
-              className="h-full w-full flex items-center justify-center"
-            />
-            {/* Up/down arrows - jump to exact item, disabled at ends */}
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
-              <button
-                onClick={() => scrollToIdx(Math.max(idx - 1, 0))}
-                disabled={idx === 0}
-                className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors disabled:opacity-20 disabled:pointer-events-none"
-                style={{
-                  background: "var(--surface)",
-                  color: "var(--text-muted)",
-                  border: "1px solid var(--border)",
+              className="text-xs max-w-[300px] break-words"
+              style={{ color: "var(--text-muted)", opacity: 0.7 }}
+            >
+              {feedError}
+            </div>
+          )}
+          <button
+            onClick={reload}
+            className="px-4 py-2 rounded-md text-sm transition-colors"
+            style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+          >
+            ↻ Retry
+          </button>
+        </div>
+      ) : (
+        items.map((item, idx) => (
+          <div
+            key={(item.videoId ?? "noid") + "_" + idx}
+            ref={(el) => {
+              itemRefs.current[idx] = el;
+            }}
+            className="relative h-full w-full snap-start flex items-center justify-center bg-black"
+          >
+            {/* Centered player column with side gutters for arrows/info */}
+            <div className="relative h-full w-full max-w-[420px] flex items-center justify-center mx-auto">
+              <div
+                ref={(el) => {
+                  if (!el) return;
+                  const tag = "shorts-player";
+                  customElements.whenDefined(tag).then(() => {
+                    if (!el.isConnected) return;
+                    // Reuse existing or create new
+                    let wc = el.querySelector(tag) as any;
+                    if (!wc) {
+                      wc = document.createElement(tag);
+                      // Custom elements are inline by default — force block + fill parent
+                      wc.style.display = "block";
+                      wc.style.width = "100%";
+                      wc.style.height = "100%";
+                      el.appendChild(wc);
+                    }
+                    // Guard: only update item if video ID or slot changed 
+                    if (wc._currentVideoId !== item.videoId || wc._currentIndex !== idx) {
+                      wc._currentVideoId = item.videoId;
+                      wc._currentIndex = idx;
+                      wc.item = { ...item, index: idx };
+                    }
+                  });
                 }}
-                aria-label="Previous"
-              >
-                ↑
-              </button>
-              <button
-                onClick={() => scrollToIdx(idx + 1)}
-                className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors"
-                style={{
-                  background: "var(--surface)",
-                  color: "var(--text-muted)",
-                  border: "1px solid var(--border)",
-                }}
-                aria-label="Next"
-              >
-                ↓
-              </button>
+                className="h-full w-full flex items-center justify-center"
+              />
+              {/* Up/down arrows - jump to exact item, disabled at ends */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
+                <button
+                  onClick={() => scrollToIdx(Math.max(idx - 1, 0))}
+                  disabled={idx === 0}
+                  className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors disabled:opacity-20 disabled:pointer-events-none"
+                  style={{
+                    background: "var(--surface)",
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border)",
+                  }}
+                  aria-label="Previous"
+                >
+                  ↑
+                </button>
+                <button
+                  onClick={() => scrollToIdx(idx + 1)}
+                  className="h-9 w-9 rounded-full text-xs font-medium backdrop-blur-sm transition-colors"
+                  style={{
+                    background: "var(--surface)",
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border)",
+                  }}
+                  aria-label="Next"
+                >
+                  ↓
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
       <div ref={sentinelRef} className="h-1 w-full" />
       {loading && (
         <div
@@ -374,6 +372,3 @@ export default function ShortsFeed({ manifests = [] }: { manifests?: any[] }) {
     </div>
   );
 }
-
-// Ensure WC registration happens via build-plugins.ts wrapping — this file is the React source
-// The actual element <shorts-feed> is defined by the generated entry.tsx

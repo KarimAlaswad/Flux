@@ -68,18 +68,25 @@ export default function ShortsPlayer({ item }: { item: any }) {
           return null;
         }
 
+        // Tauri
+
+        // let finalUrl = streamUrl;
+        // if (streamUrl.includes("googlevideo.com")) {
+        //   finalUrl = `stream://stream?u=${encodeURIComponent(streamUrl)}`;
+        // }
+
+        // WebUi 
+        let streamBase = "http://127.0.0.1:1935";
+        try {
+          const r = await (window as any).__pluginRpc?.(
+            "core-stream.getUrl",
+            {},
+          );
+          if (r?.base) streamBase = r.base;
+        } catch {}
         let finalUrl = streamUrl;
         if (streamUrl.includes("googlevideo.com")) {
-          let base: string | null = null;
-          try {
-            const proxy: any = await (window as any).__pluginRpc?.(
-              "core-stream.getUrl",
-              {},
-            );
-            base = proxy?.base || proxy?.result?.base || null;
-          } catch {}
-          if (!base) base = "http://127.0.0.1:1935";
-          finalUrl = `${base}/stream?u=${encodeURIComponent(streamUrl)}`;
+          finalUrl = `${streamBase}/stream?u=${encodeURIComponent(streamUrl)}`;
         }
 
         if (cancelled || !ref.current) return null;
@@ -104,16 +111,8 @@ export default function ShortsPlayer({ item }: { item: any }) {
           for (const fmt of formatList) {
             let fmtUrl = fmt.url;
             if (fmtUrl.includes("googlevideo.com")) {
-              let base: string | null = null;
-              try {
-                const proxy: any = await (window as any).__pluginRpc?.(
-                  "core-stream.getUrl",
-                  {},
-                );
-                base = proxy?.base || proxy?.result?.base || null;
-              } catch {}
-              if (!base) base = "http://127.0.0.1:1935";
-              fmtUrl = `${base}/stream?u=${encodeURIComponent(fmtUrl)}`;
+              // fmtUrl = `stream://stream?u=${encodeURIComponent(fmtUrl)}`; // Tauri
+              fmtUrl = `${streamBase}/stream?u=${encodeURIComponent(fmtUrl)}`;
             }
 
             const sourceEl = document.createElement("source");
