@@ -33,3 +33,4 @@ opencode.json
 prompt.txt
 docs/*
 .playwright-mcp/*
+src-tauri-webui/target/*
