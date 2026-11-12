@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flux</title>
+    <script>
+      const parse = (r) => {
+        try {
+          return typeof r === "string" ? JSON.parse(r) : r;
+        } catch {
+          return r;
+        }
+      };
+      window.__flux_host__ = {
+        request: async (m, p) => parse(await window.webui.call("plugin_request", m, JSON.stringify(p ?? {}))),
+        resolveHook: async (h) => parse(await window.webui.call("resolve_hook", h)),
+        callHook: async (h, m, p) => parse(await window.webui.call("call_hook", h, m || "", JSON.stringify(p ?? {}))),
+      };
+    </script>
     <script src="webui.js"></script>
   </head>
   <body>

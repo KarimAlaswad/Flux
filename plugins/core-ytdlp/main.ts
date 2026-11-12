@@ -11,7 +11,8 @@ startStdin(async ({ method, params, id }, send) => {
       return;
     }
 
-    const cached = cache.get(url);
+    const forceRefresh = !!params?.forceRefresh;
+    const cached = forceRefresh ? undefined : cache.get(url);
     if (cached && Date.now() - cached.at < TTL) {
       send(id, cached.data);
       return;

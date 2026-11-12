@@ -3,16 +3,16 @@
   "permission": {
     "bash": {
       "rm *": "deny",
-      "git *": "ask",
+      "git *": "allow",
     },
-    "edit": {
-      "*": "deny",
-      "*.md": "allow",
-      "**/*.md": "allow",
-      ".scratch/**/*": "allow",
-      "lessons/*.html": "allow",
-      "assets/*": "allow",
-      "reference/*.html": "allow"
-    }
+    // "edit": {
+    //   "*": "deny",
+    //   "*.md": "allow",
+    //   "**/*.md": "allow",
+    //   ".scratch/**/*": "allow",
+    //   "lessons/*.html": "allow",
+    //   "assets/*": "allow",
+    //   "reference/*.html": "allow"
+    // }
   }
 }

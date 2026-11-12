@@ -1,7 +1,0 @@
-    WebUi
-    
-    "dev": "bun run build:plugins && bunx vite build && cargo run --manifest-path src-tauri-webui/Cargo.toml",
-
-    Tauri
-
-    "dev": "bun run build:plugins && bun run tauri dev"

@@ -126,8 +126,10 @@ startStdin(async ({ method, params, id }, send) => {
         send(id, null, "Missing videoId/url");
         return;
       }
-      // Serve cached resolve first — scrolling back up shouldn't re-hit YouTube
-      const cached = resolveCache.get(videoId);
+      const forceRefresh = !!params?.forceRefresh;
+      const cached = forceRefresh
+        ? undefined
+        : resolveCache.get(videoId);
       if (cached && Date.now() - cached.at < RESOLVE_TTL_MS) {
         console.log(`[yt-shorts] resolve ${videoId} -> cache hit`);
         send(id, {
@@ -148,8 +150,11 @@ startStdin(async ({ method, params, id }, send) => {
 
       try {
         const ytdlpRes: any = await (window as any).__pluginRpc?.("core-ytdlp.resolve",
-        { url: `https://www.youtube.com/watch?v=${videoId}` },
-        );
+          { 
+            url: `https://www.youtube.com/watch?v=${videoId}`,
+            ...(forceRefresh ? { forceRefresh: true } : {}),
+          },
+        )
         if (ytdlpRes?.url || ytdlpRes?.formats?.length) {
           console.log(`[yt-shorts] resolve ${videoId} -> core-ytdlp OK`);
           resolveCache.set(videoId, { url: ytdlpRes.url, at: Date.now() });

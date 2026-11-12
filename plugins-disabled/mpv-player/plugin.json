@@ -1,8 +1,0 @@
-{
-  "name": "mpv-player",
-  "version": "1.0.0",
-  "description": "Video player using mpv via libmpv",
-  "author": "Me",
-  "hooks": ["video.player"],
-  "ui": "mpv-player"
-}

@@ -1,0 +1,13 @@
+[package]
+name = "flux-webui"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "flux-webui"
+path = "src/main.rs"
+
+[dependencies]
+webui = { git = "https://github.com/webui-dev/rust-webui", package = "webui-rs" }
+serde_json = "1"
+flux-core = { path = "../../crates/flux-core" }

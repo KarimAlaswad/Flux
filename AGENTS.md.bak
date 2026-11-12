@@ -1,0 +1,87 @@
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles use their default label names. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Agent behavior rules
+
+- Before acting, read `okf/index.md`. Use `okf/log.md` for unknowns. Follow `okf/constraints/agent-safety-rules.md`. Use the /vetting skill.
+
+- When the user asks for code changes, highlight the old lines that needs changing with the lines of new code and not the full file(s), only the lines that need change, don't include any lines that don't need change, and an explanation of what these code changes do exactly as detailed as possible.
+
+# Vetting
+
+Every feature request gets vetted before it touches code. Three phases,
+each feeding the next. No shortcuts.
+
+## Phase 1: Research
+
+Spin up a **background research agent** (via the `research` skill)
+to investigate two fronts in parallel:
+
+1. **External** — case studies, similar apps, first-party and third-party
+   implementations of the requested feature. How have others solved this?
+   What tools, libraries, patterns exist? Read actual codebases where
+   possible, not just docs.
+
+2. **Internal** — the project's own history. Read `.scratch/` for prior
+   specs on this feature area. Read `okf/` for relevant system knowledge.
+   Check `docs/adr/` for decisions already made that constrain this work.
+
+Save findings to `.scratch/<feature>/research.md`. Wait for the research
+agent to finish — do not proceed to Phase 2 until findings are written.
+
+**Completion criterion:** `.scratch/<feature>/research.md` exists and
+contains: (a) at least 2 external case studies with code references,
+(b) a summary of internal history in this area, (c) a list of
+alternatives identified.
+
+## Phase 2: Architecture Check
+
+Run the `/improve-codebase-architecture` skill, scoped to the area
+the feature touches. This surfaces whether the current architecture
+supports the feature cleanly or needs deepening first.
+
+Feed the research findings into the architecture scan — the agent
+should know what the feature requires and evaluate whether the
+codebase is ready for it.
+
+**Completion criterion:** Architecture analysis complete. Either:
+(a) the current architecture supports the feature (proceed), or
+(b) deepening opportunities are identified (these become options
+in Phase 3 alongside the feature itself).
+
+## Phase 3: Grill
+
+Run the `/grill-with-docs` skill. The interview must cover:
+
+1. **From research** — present the case studies and alternatives found.
+   "Option A is how YouTube does it. Option B is how PeerTube does it.
+   Option C is a different approach entirely."
+2. **From architecture** — if deepening was flagged, present it as an
+   option. "We could also refactor X first, which would make this
+   feature simpler."
+3. **From the user's goals** — connect back to the project's philosophy.
+   "Given your rules about recursive modularity and protocol
+   independence, does Option A still make sense?"
+4. **Force the choice** — do not let the user skip. Every decision
+   from the ground up: why this approach, why not the others, what
+   gets sacrificed.
+
+Crystallize decisions inline:
+
+- Domain terms → update `CONTEXT.md`
+- Hard-to-reverse decisions → offer to write `docs/adr/`
+- The chosen approach + reasoning → update `.scratch/<feature>/spec.md`
+
+**Completion criterion:** The user has explicitly chosen an approach
+and can articulate why. No implicit defaults, no "just do whatever."

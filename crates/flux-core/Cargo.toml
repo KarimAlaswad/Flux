@@ -1,0 +1,9 @@
+[package]
+name = "flux-core"
+version = "0.1.0"
+edition = "2021"
+description = "Skeleton-independent core: content root, plugin discovery, process supervision, JSON-over-stdio routing"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
