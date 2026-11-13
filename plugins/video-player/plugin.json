@@ -1,0 +1,8 @@
+{
+	"name": "video-player",
+	"version": "1.0.0",
+	"description": "Video player: one UI, swappable backends",
+	"author": "Me",
+	"hooks": ["video.player"],
+	"components": ["video-player"]
+}

@@ -41,6 +41,9 @@ pub struct PluginManifest {
     pub components: Option<Vec<String>>,
     pub feeds: Option<Vec<FeedContrib>>,
     pub hooks: Option<Vec<String>>,
+    /// "supervisor" = the process that owns the others. A skeleton starts it
+    /// itself, so the core must never spawn it as an ordinary plugin.
+    pub role: Option<String>,
 }
 
 // ------------------------------------------------------------ content root --
@@ -257,7 +260,7 @@ impl Supervisor {
         for (manifest, dir) in &discovered {
             // No `run` = a frontend-only plugin (components, hooks, feeds).
             // It has no process, so there is nothing to start and nothing failed.
-            if manifest.run.is_none() {
+            if manifest.run.is_none() || manifest.role.as_deref() == Some("supervisor") {
                 continue;
             }
             match PluginHandle::spawn(manifest, &root, dir) {

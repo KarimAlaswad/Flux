@@ -14,16 +14,8 @@ const loaded = new Set<string>();
 
 export default function App() {
 	const [manifests, setManifests] = useState<PluginManifest[]>([]);
-	// Tauri
-	// useEffect(() => {
-	//   init().catch(e => {
-	//     console.error("[app] init() failed:", e)
-	//     const c = document.getElementById("feed-container")
-	//     if (c) c.innerHTML = `<p style="color:red;padding:20px;font-family:monospace">Init error: ${e.message}</p>`
-	//   })
-	// }, [])
 
-	// Webui
+	// Bootstrap — skeleton-neutral
 	useEffect(() => {
 		let cancelled = false;
 
@@ -31,11 +23,7 @@ export default function App() {
 			try {
 				await init();
 			} catch (e: any) {
-				if (
-					!cancelled &&
-					retries > 0 &&
-					e.message?.includes("WebSocket is not connected")
-				) {
+				if (!cancelled && retries > 0) {
 					await new Promise((r) => setTimeout(r, 200));
 					return tryInit(retries - 1);
 				}
@@ -92,11 +80,7 @@ export default function App() {
 			}
 		}
 
-		// Step 3: Mount components that need to live in the DOM.
-		// These are components that listen for global events or provide
-		// overlay shells — they must exist before anything else runs.
-		// Each one is resolved via its hook.
-		const hooksToMount = ["feed.tabs", "video.modal"];
+		const hooksToMount = ["feed.tabs", "video.player"];
 
 		for (const hookName of hooksToMount) {
 			const provider = all.find((m: any) => m.hooks?.includes(hookName));

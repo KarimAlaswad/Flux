@@ -1,0 +1,9 @@
+{
+  "name": "core-supervisor",
+  "version": "1.0.0",
+  "description": "Core plugin: starts every other plugin process and routes messages to them",
+  "author": "Me",
+  "role": "supervisor",
+  "run": "bun ./main.ts",
+  "methods": ["request", "resolveHook", "callHook"]
+}

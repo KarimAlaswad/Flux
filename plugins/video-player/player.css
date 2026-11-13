@@ -1,0 +1,849 @@
+/* ── Flux video player: movi-player's visual language ─────────────────────
+   Every token and every number here is copied from movi-player's own
+   stylesheet (node_modules/movi-player/dist/render/MoviElement.js) so both
+   players read as the same product. Names stay 1:1 where possible
+   (--movi-x → --vp-x) so any value can be traced back to its source line.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.vp-root {
+	/* ── palette (MoviElement.js:710400) ── */
+	--vp-primary: #8b5cf6;
+	--vp-primary-light: color-mix(in srgb, var(--vp-primary) 70%, white);
+	--vp-fg: #fff;
+	--vp-fg2: rgba(255, 255, 255, 0.7);
+	--vp-fg3: rgba(255, 255, 255, 0.5);
+	--vp-group: rgba(255, 255, 255, 0.065);
+	--vp-track: rgba(255, 255, 255, 0.15);
+	--vp-glass: rgba(0, 0, 0, 0.92);
+	--vp-border: rgba(255, 255, 255, 0.1);
+
+	/* ── sizing ── */
+	--vp-btn: 38px;
+	--vp-inset: 20px;
+	--vp-bar-h: 72px;
+	--vp-title-font: clamp(16px, 4vw, 20px);
+	--vp-title-line: calc(var(--vp-title-font) * 1.4);
+	--vp-title-pad: 16px;
+
+	/* ── motion ── */
+	--vp-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+	--vp-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	--vp-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	background: #0c0c0f;
+	color: var(--vp-fg);
+	font-family:
+		"Inter",
+		-apple-system,
+		BlinkMacSystemFont,
+		"Segoe UI",
+		Roboto,
+		sans-serif;
+	overflow: hidden;
+	user-select: none;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* ── layers ───────────────────────────────────────────────────────────── */
+
+.vp-click {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+}
+
+/* ── control bar (MoviElement.js:752871) ──────────────────────────────── */
+
+.vp-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	padding: 4px var(--vp-inset) 11px;
+	min-height: var(--vp-bar-h);
+	background: linear-gradient(
+		to top,
+		rgba(0, 0, 0, 0.8) 0%,
+		rgba(0, 0, 0, 0.4) 45%,
+		transparent 100%
+	);
+	transition:
+		opacity var(--vp-normal),
+		transform var(--vp-normal);
+}
+
+.vp-bar--hidden {
+	opacity: 0;
+	transform: translateY(10px);
+	pointer-events: none;
+}
+
+/* ── seek bar: 4px hairline that doubles under the pointer (:756120) ──── */
+
+.vp-seek {
+	position: relative;
+	padding: 10px 0;
+	cursor: pointer;
+	touch-action: none;
+}
+
+.vp-seek-track {
+	position: relative;
+	width: 100%;
+	height: 4px;
+	border-radius: 100px;
+	background: var(--vp-track);
+	transition:
+		height 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+		background 0.18s ease;
+}
+
+.vp-seek:hover .vp-seek-track {
+	height: 8px;
+	background: rgba(255, 255, 255, 0.25);
+}
+
+/* Pill on the leading end only — the buffer carries on from the square end
+   without a pinch of bare track between them (:781424). */
+.vp-seek-fill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	background: var(--vp-primary);
+	border-radius: 100px 0 0 100px;
+	transition: width 0.1s linear;
+}
+
+.vp-seek-knob {
+	position: absolute;
+	top: 50%;
+	width: 16px;
+	height: 16px;
+	margin-left: -8px;
+	border-radius: 50%;
+	background: #fff;
+	transform: translateY(-50%) scale(0);
+	opacity: 0;
+	pointer-events: none;
+	box-shadow:
+		0 2px 8px rgba(0, 0, 0, 0.3),
+		0 0 0 3px rgba(139, 92, 246, 0.3);
+	transition: all var(--vp-fast);
+}
+
+.vp-seek:hover .vp-seek-knob,
+.vp-seek:active .vp-seek-knob {
+	opacity: 1;
+	transform: translateY(-50%) scale(1);
+}
+
+.vp-seek:active .vp-seek-knob {
+	transform: translateY(-50%) scale(1.2);
+	box-shadow:
+		0 2px 12px rgba(0, 0, 0, 0.4),
+		0 0 0 5px rgba(139, 92, 246, 0.4);
+}
+
+/* ── rows and capsules (:756505, :765378) ─────────────────────────────── */
+
+.vp-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.vp-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.vp-right {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	flex-shrink: 0;
+	background: var(--vp-group);
+	border-radius: 999px;
+	padding: 2px;
+}
+
+.vp-capsule {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	background: var(--vp-group);
+	border-radius: 999px;
+	padding: 2px;
+}
+
+/* ── buttons (:765378) ────────────────────────────────────────────────── */
+
+.vp-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--vp-btn);
+	height: var(--vp-btn);
+	padding: 7px;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	transition:
+		background var(--vp-fast),
+		transform var(--vp-fast);
+}
+
+.vp-btn:hover {
+	background: rgba(255, 255, 255, 0.1);
+	transform: scale(1.06);
+}
+
+.vp-btn:active {
+	transform: scale(0.94);
+}
+
+.vp-btn svg {
+	width: 24px;
+	height: 24px;
+}
+
+/* Play is a capsule made of one button (:764078): it carries the capsule
+   background itself, so it stands exactly as tall as every capsule beside
+   it instead of a wrapper making it 4px taller. */
+.vp-play {
+	--vp-btn: 42px;
+	background: var(--vp-group);
+}
+
+/* The speed button tints while the rate is off normal (:732636). */
+.vp-btn--on {
+	background: color-mix(in srgb, var(--vp-primary) 15%, transparent);
+}
+
+/* ── volume (:786401) ─────────────────────────────────────────────────── */
+
+.vp-vol-wrap {
+	gap: 4px;
+}
+
+/* 0px wide until the capsule is hovered, then 80px (:786808). */
+.vp-vol {
+	width: 0;
+	opacity: 0;
+	height: 4px;
+	padding: 0;
+	margin: 0;
+	appearance: none;
+	background: linear-gradient(
+		to right,
+		var(--vp-primary) 0%,
+		var(--vp-primary) var(--vp-vol-pct, 100%),
+		rgba(255, 255, 255, 0.2) var(--vp-vol-pct, 100%),
+		rgba(255, 255, 255, 0.2) 100%
+	);
+	border-radius: 100px;
+	cursor: pointer;
+	transition:
+		width var(--vp-normal),
+		opacity var(--vp-normal),
+		margin var(--vp-normal);
+}
+
+.vp-vol-wrap:hover .vp-vol,
+.vp-vol:focus-visible {
+	width: 80px;
+	opacity: 1;
+	margin: 0 8px;
+}
+
+.vp-vol::-webkit-slider-runnable-track {
+	height: 4px;
+	background: transparent;
+	border-radius: 100px;
+}
+
+.vp-vol::-webkit-slider-thumb {
+	appearance: none;
+	width: 14px;
+	height: 14px;
+	margin-top: -5px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+}
+
+/* ── clock (:775866) ──────────────────────────────────────────────────── */
+
+.vp-time {
+	align-self: stretch;
+	padding: 0 12px;
+	margin-left: 6px;
+	gap: 4px;
+	font-size: 13px;
+	font-weight: 500;
+	letter-spacing: 0.01em;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* The playhead is the primary read; the total sits secondary (:.movi-current-time). */
+.vp-now {
+	font-weight: 600;
+}
+
+.vp-sep {
+	color: var(--vp-fg3);
+	font-weight: 400;
+}
+
+.vp-dur {
+	color: var(--vp-fg2);
+}
+
+/* ── centre play (:898004) ────────────────────────────────────────────── */
+
+.vp-center {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* movi lifts it off the bar: top: calc(50% - 72px / 4) (:901700). */
+	transform: translateY(-18px);
+	pointer-events: none;
+}
+
+.vp-center button {
+	pointer-events: auto;
+	width: clamp(96px, 10vw, 112px);
+	height: clamp(96px, 10vw, 112px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--vp-primary) 25%, transparent);
+	border: 2px solid color-mix(in srgb, var(--vp-primary) 40%, transparent);
+	box-shadow:
+		0 8px 32px color-mix(in srgb, var(--vp-primary) 25%, transparent),
+		0 0 0 1px rgba(0, 0, 0, 0.18),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+	color: var(--vp-fg);
+	cursor: pointer;
+	animation: vp-center-in var(--vp-bounce) both;
+	transition:
+		background var(--vp-fast),
+		border-color var(--vp-fast),
+		box-shadow var(--vp-fast);
+}
+
+.vp-center button:hover {
+	background: color-mix(in srgb, var(--vp-primary) 40%, transparent);
+	border-color: color-mix(in srgb, var(--vp-primary) 60%, transparent);
+	box-shadow:
+		0 8px 40px color-mix(in srgb, var(--vp-primary) 40%, transparent),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.vp-center svg {
+	width: clamp(52px, 5.4vw, 60px);
+	height: clamp(52px, 5.4vw, 60px);
+	margin-left: 2px;
+	filter: drop-shadow(
+		0 0 4px color-mix(in srgb, var(--vp-primary) 30%, transparent)
+	);
+}
+
+/* movi animates scale(.8) -> scale(1) on the bounce curve. Our button mounts
+   instead of hiding, so the same move is written as a keyframe. */
+@keyframes vp-center-in {
+	from {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* ── loader (:894122) ─────────────────────────────────────────────────── */
+
+.vp-loader {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: translateY(-18px);
+	pointer-events: none;
+}
+
+.vp-loader-mark {
+	width: 68px;
+	height: 68px;
+	display: block;
+	color: var(--vp-fg);
+	/* Two tight shadows before the soft one: on a light backdrop the soft
+	   shadow alone leaves a white smudge with no edge in it. */
+	filter:
+		drop-shadow(0 0 1px rgba(0, 0, 0, 0.55))
+		drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4))
+		drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.vp-loader-track,
+.vp-loader-chase {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 4;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.vp-loader-track {
+	opacity: 0.2;
+}
+
+/* 28% of the triangle's 67.2666-unit perimeter, chasing the rest. */
+.vp-loader-chase {
+	stroke-dasharray: 18.8347 48.4319;
+	animation: vp-loader-chase 1.35s linear infinite;
+}
+
+@keyframes vp-loader-chase {
+	to {
+		stroke-dashoffset: -67.2666;
+	}
+}
+
+/* ── title bar (:743957) ──────────────────────────────────────────────── */
+
+.vp-title {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: var(--vp-title-pad) 62px var(--vp-title-pad) 10px;
+	background: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.7) 0%,
+		transparent 100%
+	);
+	opacity: 0;
+	transform: translateY(-10px);
+	pointer-events: none;
+	transition:
+		opacity 0.3s ease,
+		transform 0.3s ease;
+}
+
+.vp-title--on {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* The 40px hit target bleeds out symmetrically (:745439) so the arrow's box is
+   exactly one title line tall and the row never grows under it. */
+.vp-title-back {
+	flex: 0 0 auto;
+	width: 40px;
+	height: 40px;
+	margin: calc((var(--vp-title-line) - 40px) / 2) 0;
+	padding: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--vp-fg);
+	cursor: pointer;
+	pointer-events: none;
+	transition:
+		background var(--vp-fast),
+		transform var(--vp-fast);
+}
+
+.vp-title--on .vp-title-back {
+	pointer-events: auto;
+}
+
+.vp-title-back:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+.vp-title-back:active {
+	transform: scale(0.88);
+}
+
+.vp-title-back svg {
+	width: 26px;
+	height: 26px;
+	filter:
+		drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))
+		drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+}
+
+.vp-title-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: var(--vp-title-font);
+	font-weight: 500;
+	line-height: 1.4;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── error ────────────────────────────────────────────────────────────── */
+
+.vp-error {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 24px;
+	text-align: center;
+}
+
+.vp-error-title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.vp-error-body {
+	margin: 0;
+	max-width: 520px;
+	font-size: 13px;
+	color: var(--vp-fg2);
+	word-break: break-word;
+}
+
+/* ── bar dropdown (:820076) ───────────────────────────────────────────── */
+
+.vp-menu {
+	position: absolute;
+	right: var(--vp-inset);
+	bottom: 96px;
+	z-index: 5;
+	min-width: 140px;
+	max-height: min(70vh, 380px);
+	overflow-y: auto;
+	padding: 8px 0;
+	border: 1px solid var(--vp-border);
+	border-radius: 10px;
+	background: var(--vp-glass);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.vp-menu-head {
+	padding: 12px 16px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--vp-fg3);
+}
+
+.vp-item {
+	display: flex;
+	align-items: center;
+	width: auto;
+	margin: 2px 6px;
+	padding: 11px 16px;
+	border: 0;
+	border-radius: 7px;
+	background: none;
+	color: var(--vp-fg);
+	font: inherit;
+	font-size: 14px;
+	text-align: left;
+	cursor: pointer;
+	transition: background var(--vp-fast);
+}
+
+.vp-item:hover {
+	background: color-mix(in srgb, var(--vp-primary) 15%, transparent);
+}
+
+.vp-item--on {
+	background: color-mix(in srgb, var(--vp-primary) 25%, transparent);
+	font-weight: 600;
+}
+
+.vp-item--on::before {
+	content: "✓";
+	margin-right: 8px;
+	color: var(--vp-primary);
+}
+
+.vp-normal {
+	margin-left: 6px;
+	font-size: 12px;
+	font-weight: 400;
+	color: var(--vp-fg2);
+}
+
+/* ── top-right "more" button (:748729) ────────────────────────────────── */
+
+.vp-gear {
+	position: absolute;
+	top: calc(var(--vp-title-pad) + var(--vp-title-line) / 2);
+	right: max(4px, calc(var(--vp-inset) - 8px));
+	z-index: 30;
+	width: var(--vp-btn);
+	height: var(--vp-btn);
+	padding: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.35);
+	color: var(--vp-fg);
+	cursor: pointer;
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(calc(-50% - 4px));
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease,
+		background 0.2s ease;
+	pointer-events: none;
+}
+
+.vp-gear--on {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(-50%);
+	pointer-events: auto;
+}
+
+.vp-gear:hover {
+	background: rgba(0, 0, 0, 0.55);
+}
+
+.vp-gear svg {
+	width: 22px;
+	height: 22px;
+}
+
+/* ── context menu (:913495) ───────────────────────────────────────────── */
+
+.vp-ctx-backdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 6;
+}
+
+.vp-ctx {
+	position: absolute;
+	top: calc(
+		var(--vp-title-pad) + var(--vp-title-line) + 8px
+	);
+	right: max(4px, calc(var(--vp-inset) - 8px));
+	z-index: 7;
+	min-width: 220px;
+	max-height: calc(100vh - 120px);
+	overflow-y: auto;
+	padding: 8px 4px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 10px;
+	background: var(--vp-glass);
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+	color: var(--vp-fg);
+	font-size: 14px;
+	letter-spacing: 0.01em;
+	overscroll-behavior: contain;
+	animation: vp-ctx-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vp-ctx-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Rows are cards: the row's own height IS the card, with 9px of air around
+   the label (:915025). */
+.vp-ctx-item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: calc(100% - 8px);
+	margin: 0 4px;
+	padding: 9px 16px;
+	border: 0;
+	border-radius: 7px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vp-ctx-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.vp-ctx-item:active {
+	background: rgba(255, 255, 255, 0.12);
+	transform: scale(0.98);
+	transition: transform 0.1s ease;
+}
+
+.vp-ctx-icon {
+	display: inline-flex;
+	width: 16px;
+	height: 16px;
+	margin-right: 12px;
+	opacity: 0.7;
+	flex: 0 0 auto;
+}
+
+.vp-ctx-item:hover .vp-ctx-icon {
+	opacity: 1;
+	color: var(--vp-primary-light);
+}
+
+.vp-ctx-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+.vp-ctx-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vp-ctx-key {
+	margin-left: 16px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--vp-fg3);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.vp-ctx-key:empty {
+	display: none;
+}
+
+.vp-ctx-arrow {
+	margin-left: 8px;
+	color: var(--vp-fg3);
+	font-size: 10px;
+	transition: transform var(--vp-fast);
+}
+
+.vp-ctx-item:hover .vp-ctx-arrow {
+	transform: translateX(2px);
+	color: var(--vp-primary-light);
+}
+
+/* A rail and a tint, not a colour change (:917291). */
+.vp-ctx-item--on {
+	background: color-mix(in srgb, var(--vp-primary) 13%, transparent);
+}
+
+.vp-ctx-item--on::before {
+	content: "";
+	position: absolute;
+	left: 6px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 3px;
+	height: 20px;
+	border-radius: 999px;
+	background: var(--vp-primary-light);
+}
+
+.vp-ctx-item--on .vp-ctx-label {
+	color: var(--vp-primary-light);
+	font-weight: 600;
+}
+
+/* movi keeps this for a control that exists but cannot act right now (:916389). */
+.vp-ctx-item--off {
+	opacity: 0.3;
+	pointer-events: none;
+}
+
+.vp-ctx-divider {
+	height: 1px;
+	margin: 8px 0;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── tooltip (:754327) ────────────────────────────────────────────────── */
+
+.vp-tip {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 9px;
+	background: var(--vp-glass);
+	color: var(--vp-fg);
+	border: 1px solid var(--vp-border);
+	border-radius: 8px;
+	font-size: 12px;
+	line-height: 1.2;
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 20;
+}
+
+.vp-tip-key {
+	padding: 1px 5px;
+	border: 1px solid var(--vp-border);
+	border-radius: 3px;
+	color: var(--vp-fg);
+	opacity: 0.75;
+	font-family: inherit;
+	font-size: 11px;
+}
+
+.vp-tip-key:empty {
+	display: none;
+}

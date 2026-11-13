@@ -1,0 +1,16 @@
+{
+	"name": "flux-electron",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"main": "main.mjs",
+	"scripts": {
+		"start": "electron ."
+	},
+	"dependencies": {
+	  "@mpv-prism/electron": "https://seanime.app/assets/mpv-prism/0.1.9/packages/mpv-prism-electron-0.1.9.tgz"
+	},
+	"devDependencies": {
+		"electron": "42.4.0"
+	}
+}
