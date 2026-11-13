@@ -47,6 +47,11 @@
 	-webkit-font-smoothing: antialiased;
 }
 
+.vp-root--pip {
+	visibility: hidden;
+	pointer-events: none;
+}
+
 /* ── layers ───────────────────────────────────────────────────────────── */
 
 .vp-click {

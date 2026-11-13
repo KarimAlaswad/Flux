@@ -484,7 +484,7 @@ function Player({
   return (
     <div
       ref={rootRef}
-      className="vp-root"
+      className={`vp-root${state.pip ? " vp-root--pip" : ""}`}
       onPointerMove={poke}
       onPointerDown={poke}
     >

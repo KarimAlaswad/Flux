@@ -25,6 +25,7 @@ export interface VideoState {
 	error: string | null;
 	ended: boolean;
 	tracks: Track[];
+	pip: boolean;
 }
 
 export interface VideoActions {
@@ -67,115 +68,154 @@ const INITIAL: VideoState = {
 	error: null,
 	ended: false,
 	tracks: [],
+	pip: false,
 };
 
 function mapTracks(raw?: MpvPrismTrack[]): Track[] {
-  if (!raw) return [];
-  return raw
-    .filter((t) => t.type === "audio" || t.type === "sub" || t.type === "subtitle")
-    .map((t) => ({
-      id: (t.id ?? 0) as number,
-      kind: t.type === "audio" ? "audio" : "subtitle",
-      label:
-        t.title ||
-        t.lang ||
-        `${t.type === "audio" ? "Audio" : "Subtitle"} ${t.id ?? "?"}`,
-      selected: Boolean(t.selected),
-    }));
+	if (!raw) return [];
+	return raw
+		.filter(
+			(t) => t.type === "audio" || t.type === "sub" || t.type === "subtitle",
+		)
+		.map((t) => ({
+			id: (t.id ?? 0) as number,
+			kind: t.type === "audio" ? "audio" : "subtitle",
+			label:
+				t.title ||
+				t.lang ||
+				`${t.type === "audio" ? "Audio" : "Subtitle"} ${t.id ?? "?"}`,
+			selected: Boolean(t.selected),
+		}));
 }
 
 export function useVideo(url: string): VideoApi {
-  const player = useMpvPrismPlayer({
-    playerId: "flux-video-player",
-    mpv: MPV_CONFIG,
-  });
+	const player = useMpvPrismPlayer({
+		playerId: "flux-video-player",
+		mpv: MPV_CONFIG,
+	});
 
-  const [state, setState] = useState<VideoState>(INITIAL);
-  const patch = (p: Partial<VideoState>) =>
-    setState((s) => ({ ...s, ...p }));
+	const [state, setState] = useState<VideoState>(INITIAL);
+	const patch = (p: Partial<VideoState>) => setState((s) => ({ ...s, ...p }));
 
-  // mpv property events -> our state.
-  useMpvPrismEvent(player, "paused", (e) => patch({ paused: e.paused }));
-  useMpvPrismEvent(player, "position", (e) => patch({ position: e.position ?? 0 }));
-  useMpvPrismEvent(player, "duration", (e) => patch({ duration: e.duration ?? 0 }));
-  useMpvPrismEvent(player, "volume", (e) => patch({ volume: e.volume ?? 0 }));
-  useMpvPrismEvent(player, "mute", (e) => patch({ muted: e.muted }));
-  useMpvPrismEvent(player, "speed", (e) => patch({ speed: e.speed ?? 1 }));
-  useMpvPrismEvent(player, "error", (e) => patch({ error: e.message }));
-  useMpvPrismEvent(player, "ended", () => patch({ ended: true, paused: true }));
-  useMpvPrismEvent(player, "tracks", (e) => patch({ tracks: mapTracks(e.tracks) }));
+	// mpv property events -> our state.
+	useMpvPrismEvent(player, "paused", (e) => patch({ paused: e.paused }));
+	useMpvPrismEvent(player, "position", (e) =>
+		patch({ position: e.position ?? 0 }),
+	);
+	useMpvPrismEvent(player, "duration", (e) =>
+		patch({ duration: e.duration ?? 0 }),
+	);
+	useMpvPrismEvent(player, "volume", (e) => patch({ volume: e.volume ?? 0 }));
+	useMpvPrismEvent(player, "mute", (e) => patch({ muted: e.muted }));
+	useMpvPrismEvent(player, "speed", (e) => patch({ speed: e.speed ?? 1 }));
+	useMpvPrismEvent(player, "error", (e) => patch({ error: e.message }));
+	useMpvPrismEvent(player, "ended", () => patch({ ended: true, paused: true }));
+	useMpvPrismEvent(player, "tracks", (e) =>
+		patch({ tracks: mapTracks(e.tracks) }),
+	);
+	useMpvPrismEvent(player, "pip", (e) => patch({ pip: e.enabled }));
 
-  // The cache event carries either a number (cache-buffering-state, 0-100)
-  // or an object (demuxer-cache-state, with an `underrun` flag).
-  useMpvPrismEvent(player, "cache", (e) => {
-    const v = e.state as any;
-    if (typeof v === "number") patch({ buffering: v < 100 });
-    else if (v && typeof v.underrun === "boolean") patch({ buffering: v.underrun });
-  });
+	useEffect(() => {
+		const onLeave = () => patch({ pip: false });
+		document.addEventListener("leavepictureinpicture", onLeave);
+		return () => document.removeEventListener("leavepictureinpicture", onLeave);
+	}, []);
 
-  // Load (or reload) the source. This effect MUST live below every
-  // useMpvPrismEvent call, because effects run in declaration order and
-  // load() emits `paused:false` synchronously (MpvPrismPlayer.load ->
-  // syncPlaybackPaused(false)). Declared above the subscriptions, that event
-  // fires with nobody listening and the UI keeps INITIAL.paused = true while
-  // the file plays. Reading player.paused back afterwards is the belt to this
-  // braces, so a future effect added below cannot resurrect the bug.
-  useEffect(() => {
-    if (!player || !url) return;
-    player.load(url).catch((e: any) => patch({ error: String(e?.message ?? e) }));
-    // Fresh file => fresh UI state, plus the one fact load() just set.
-    setState({ ...INITIAL, paused: player.paused ?? false });
-  }, [player, url]);
+	// The cache event carries either a number (cache-buffering-state, 0-100)
+	// or an object (demuxer-cache-state, with an `underrun` flag).
+	useMpvPrismEvent(player, "cache", (e) => {
+		const v = e.state as any;
+		if (typeof v === "number") patch({ buffering: v < 100 });
+		else if (v && typeof v.underrun === "boolean")
+			patch({ buffering: v.underrun });
+	});
 
-  const actions: VideoActions = {
-    toggle: () => player?.setPaused(!player.paused),
-    seek: (t) => player?.seek(t, "absolute+exact"),
-    seekBy: (d) =>
-      player?.seek(Math.max(0, state.position + d), "absolute+exact"),
-    setVolume: (v) => player?.setVolume(Math.max(0, Math.min(100, v))),
-    setMute: (m) => player?.setMute(m),
-    setSpeed: (s) => player?.setSpeed(s),
+	// Load (or reload) the source. This effect MUST live below every
+	// useMpvPrismEvent call, because effects run in declaration order and
+	// load() emits `paused:false` synchronously (MpvPrismPlayer.load ->
+	// syncPlaybackPaused(false)). Declared above the subscriptions, that event
+	// fires with nobody listening and the UI keeps INITIAL.paused = true while
+	// the file plays. Reading player.paused back afterwards is the belt to this
+	// braces, so a future effect added below cannot resurrect the bug.
+	useEffect(() => {
+		if (!player || !url) return;
+		player
+			.load(url)
+			.catch((e: any) => patch({ error: String(e?.message ?? e) }));
+		// Fresh file => fresh UI state, plus the one fact load() just set.
+		setState({
+			...INITIAL,
+			paused: player.paused ?? false,
+			pip: player.isPip ?? false,
+		});
+	}, [player, url]);
 
-    setAudioTrack: (id) => player?.setAudioTrack(id),
-    setSubtitleTrack: (id) =>
-      player?.setSubtitleTrack(id === false ? "no" : id),
-    pip: () => player?.enterPip(),
+	const actions: VideoActions = {
+		toggle: () => {
+			if (!player) return;
+			const isAtEnd =
+				state.ended ||
+				(state.duration > 0 && state.position >= state.duration - 0.5);
+			if (isAtEnd) {
+				player.seek(0, "absolute+exact");
+				player.setPaused(false);
+				patch({ ended: false, paused: false, position: 0 });
+			} else {
+				player.setPaused(!player.paused);
+			}
+		},
+		seek: (t) => {
+			if (state.ended) patch({ ended: false });
+			player?.seek(t, "absolute+exact");
+		},
+		seekBy: (d) => {
+			if (state.ended) patch({ ended: false });
+			player?.seek(Math.max(0, state.position + d), "absolute+exact");
+		},
+		setVolume: (v) => player?.setVolume(Math.max(0, Math.min(100, v))),
+		setMute: (m) => player?.setMute(m),
+		setSpeed: (s) => player?.setSpeed(s),
 
-    stats: async () => {
-      if (!player) return {};
-      const read = (p: string) => player.getProperty(p).catch(() => null);
-      const [w, h, fps, hw, cache, drops] = await Promise.all([
-        read("width"),
-        read("height"),
-        read("container-fps"),
-        read("hwdec-current"),
-        read("cache-buffering-state"),
-        read("frame-drop-count"),
-      ]);
-      return {
-        resolution: `${w ?? "?"}x${h ?? "?"}`,
-        fps,
-        hwdec: hw,
-        cache,
-        dropped: drops,
-      };
-    },
-    raw: (cmd, ...args) => player?.runCommand(cmd, ...(args as any)),
-  };
+		setAudioTrack: (id) => player?.setAudioTrack(id),
+		setSubtitleTrack: (id) =>
+			player?.setSubtitleTrack(id === false ? "no" : id),
+		pip: () => (player?.isPip ? player.exitPip() : player?.enterPip()),
 
-  return {
-    state,
-    actions,
-    surface: player ? (
-      <MpvPrismVideo
-        player={player}
-        style={{ position: "absolute", inset: 0 }}
-        fit="contain"
-        presentationMode="canvas"
-        frameTransport="cpu"
-      />
-    ) : null,
-  };
+		stats: async () => {
+			if (!player) return {};
+			const read = (p: string) => player.getProperty(p).catch(() => null);
+			const [w, h, fps, hw, cache, drops] = await Promise.all([
+				read("width"),
+				read("height"),
+				read("container-fps"),
+				read("hwdec-current"),
+				read("cache-buffering-state"),
+				read("frame-drop-count"),
+			]);
+			return {
+				resolution: `${w ?? "?"}x${h ?? "?"}`,
+				fps,
+				hwdec: hw,
+				cache,
+				dropped: drops,
+			};
+		},
+		raw: (cmd, ...args) => player?.runCommand(cmd, ...(args as any)),
+	};
+
+	return {
+		state,
+		actions,
+		surface: player ? (
+			<MpvPrismVideo
+				player={player}
+				style={{ position: "absolute", inset: 0 }}
+				fit="contain"
+				presentationMode="canvas"
+				frameTransport="cpu"
+			/>
+		) : null,
+	};
 }
 
 /* When the web backend lands, this is the only line that changes:
